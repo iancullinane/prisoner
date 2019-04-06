@@ -1,5 +1,7 @@
 package entity
 
+import "fmt"
+
 type Entity struct {
 	Name        string
 	Score       int32
@@ -31,6 +33,10 @@ func (e *Entity) Play() string {
 
 	move := e.behavior(memory)
 	return move
+}
+
+func (e *Entity) GetBehavior() string {
+	return fmt.Sprintf("%T", e.behavior)
 }
 
 // RecordMoves updates the object with its last move and the opponents move

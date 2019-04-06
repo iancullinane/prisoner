@@ -1,7 +1,6 @@
 package entity
 
 import (
-	"log"
 	"math/rand"
 	"time"
 )
@@ -29,7 +28,7 @@ func NewBehaviorFactory() *BehaviorFactory {
 }
 
 func (f *BehaviorFactory) GetRandomBehavior() func(Memory) string {
-	rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
+
 	return f.behaviors[rand.Intn(len(f.behaviors))]
 }
 
@@ -46,7 +45,6 @@ func AlwaysCheat(mem Memory) string {
 // CopyCat will blindly do whatever their opponent did last time, excpet the
 // first round where they will COOOPERATE
 func CopyCat(mem Memory) string {
-	log.Printf("CopyCat will copy: %s", mem.oppLastMove)
 	return mem.oppLastMove
 }
 
@@ -54,7 +52,6 @@ func CopyCat(mem Memory) string {
 func Revenge(mem Memory) string {
 
 	if mem.betrayed > 0 {
-		log.Printf("Revenge has been betrayed")
 		return "CHEAT"
 	}
 
