@@ -45,16 +45,3 @@ func PlayOneTournament(agents []*entity.Entity, turns int) {
 	}
 
 }
-
-// PD.playOneTournament = function(agents, turns){
-
-// 	// Round robin!
-// 	for(var i=0; i<agents.length; i++){
-// 		var playerA = agents[i];
-// 		for(var j=i+1; j<agents.length; j++){
-// 			var playerB = agents[j];
-// 			PD.playRepeatedGame(playerA, playerB, turns);
-// 		}
-// 	}
-
-// };

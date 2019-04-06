@@ -26,6 +26,7 @@ func (e *Entity) Play() string {
 	memory := Memory{
 		lastMove:    e.lastMove,
 		oppLastMove: e.oppLastMove,
+		betrayed:    e.betrayed,
 	}
 
 	move := e.behavior(memory)
@@ -36,6 +37,10 @@ func (e *Entity) Play() string {
 func (e *Entity) RecordMoves(move, oppMove string) {
 	e.lastMove = move
 	e.oppLastMove = oppMove
+
+	if oppMove == "CHEAT" {
+		e.betrayed = true
+	}
 }
 
 // Reset the score for a new round

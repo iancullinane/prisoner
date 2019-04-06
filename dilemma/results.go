@@ -9,14 +9,6 @@ var (
 	}
 )
 
-// PD.getPayoffs = function(move1, move2){
-// 	var payoffs = PD.PAYOFFS;
-// 	if(move1==PD.CHEAT && move2==PD.CHEAT) return [payoffs.P, payoffs.P]; // both punished
-// 	if(move1==PD.COOPERATE && move2==PD.CHEAT) return [payoffs.S, payoffs.T]; // sucker - temptation
-// 	if(move1==PD.CHEAT && move2==PD.COOPERATE) return [payoffs.T, payoffs.S]; // temptation - sucker
-// 	if(move1==PD.COOPERATE && move2==PD.COOPERATE) return [payoffs.R, payoffs.R]; // both rewarded
-// };
-
 func Compute(move1, move2 string) (int32, int32) {
 	if move1 == "COOPERATE" && move2 == "COOPERATE" {
 		return outcomes["R"], outcomes["R"]

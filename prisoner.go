@@ -19,7 +19,7 @@ func main() {
 
 	log.Println("Prisoners dilemma")
 	entA := entity.New("steve", entity.Random)
-	entB := entity.New("steve2", entity.CopyCat)
+	entB := entity.New("steve2", entity.Revenge)
 
 	dilemma.PlayRepeated(entA, entB, 10)
 

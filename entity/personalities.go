@@ -25,13 +25,19 @@ func AlwaysCheat(mem Memory) string {
 // CopyCat will blindly do whatever their opponent did last time, excpet the
 // first round where they will COOOPERATE
 func CopyCat(mem Memory) string {
-	log.Printf("Copy cat will copy: %s", mem.oppLastMove)
+	log.Printf("CopyCat will copy: %s", mem.oppLastMove)
 	return mem.oppLastMove
 }
 
-// func Revenge(lastMove, oppLastMove string) string {
+func Revenge(mem Memory) string {
 
-// }
+	if mem.betrayed == true {
+		log.Printf("Revenge has been betrayed")
+		return "CHEAT"
+	}
+
+	return "COOPERATE"
+}
 
 // Random is random
 func Random(mem Memory) string {
@@ -46,5 +52,5 @@ func Random(mem Memory) string {
 
 func rand1() bool {
 	val := rand.Float32()
-	return val < 0.4
+	return val < 0.5
 }
