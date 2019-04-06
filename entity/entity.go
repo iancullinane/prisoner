@@ -6,7 +6,7 @@ type Entity struct {
 	behavior    func(mem Memory) string
 	lastMove    string
 	oppLastMove string
-	betrayed    bool
+	betrayed    int
 }
 
 func New(name string, behavior func(mem Memory) string) *Entity {
@@ -16,7 +16,7 @@ func New(name string, behavior func(mem Memory) string) *Entity {
 		behavior:    behavior,
 		lastMove:    "COOPERATE", // Assume cooperation
 		oppLastMove: "COOPERATE", // ...from everyone
-		betrayed:    false,
+		betrayed:    0,
 	}
 }
 
@@ -39,7 +39,7 @@ func (e *Entity) RecordMoves(move, oppMove string) {
 	e.oppLastMove = oppMove
 
 	if oppMove == "CHEAT" {
-		e.betrayed = true
+		e.betrayed += 1
 	}
 }
 

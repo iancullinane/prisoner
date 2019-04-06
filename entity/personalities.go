@@ -6,10 +6,31 @@ import (
 	"time"
 )
 
+type BehaviorFactory struct {
+	behaviors []func(Memory) string
+}
+
 type Memory struct {
 	lastMove    string
 	oppLastMove string
-	betrayed    bool
+	betrayed    int
+}
+
+func NewBehaviorFactory() *BehaviorFactory {
+	return &BehaviorFactory{
+		behaviors: []func(Memory) string{
+			AlwaysCheat,
+			AlwaysCooperate,
+			CopyCat,
+			Revenge,
+			Random,
+		},
+	}
+}
+
+func (f *BehaviorFactory) GetRandomBehavior() func(Memory) string {
+	rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
+	return f.behaviors[rand.Intn(len(f.behaviors))]
 }
 
 // AlwaysCooperate will always act altruistically, giving 3
@@ -29,9 +50,10 @@ func CopyCat(mem Memory) string {
 	return mem.oppLastMove
 }
 
+// Revenge will always cheat if it has been cheated against once
 func Revenge(mem Memory) string {
 
-	if mem.betrayed == true {
+	if mem.betrayed > 0 {
 		log.Printf("Revenge has been betrayed")
 		return "CHEAT"
 	}

@@ -4,6 +4,8 @@ import (
 	"flag"
 	"log"
 
+	"github.com/iancullinane/prisoner/utils"
+
 	"github.com/iancullinane/prisoner/dilemma"
 	"github.com/iancullinane/prisoner/entity"
 )
@@ -17,12 +19,22 @@ func init() {
 
 func main() {
 
-	log.Println("Prisoners dilemma")
-	entA := entity.New("steve", entity.Random)
-	entB := entity.New("steve2", entity.Revenge)
+	entities := make([]*entity.Entity, 0)
+	behaviors := entity.NewBehaviorFactory()
 
-	dilemma.PlayRepeated(entA, entB, 10)
+	for i := 1; i <= 10; i++ {
 
-	log.Printf("Player 1: %d\tPlayer 2: %d", entA.Score, entB.Score)
+		tmpEntity := entity.New(
+			utils.GetRandomName(),
+			behaviors.GetRandomBehavior(),
+		)
+		entities = append(entities, tmpEntity)
+	}
+
+	dilemma.PlayOneTournament(entities, 10)
+
+	for _, e := range entities {
+		log.Printf("%-10s\t%d", e.Name, e.Score)
+	}
 
 }
