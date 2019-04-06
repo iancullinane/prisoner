@@ -27,3 +27,34 @@ func PlayRepeated(player1, player2 *entity.Entity, rounds int) {
 	}
 
 }
+
+func PlayOneTournament(agents []*entity.Entity, turns int) {
+
+	for i := 0; i < len(agents); i++ {
+		agents[i].Reset()
+	}
+
+	// Round robin
+	for i := 0; i < len(agents); i++ {
+		playerA := agents[i]
+
+		for j := i + 1; j < len(agents); j++ {
+			playerB := agents[j]
+			PlayRepeated(playerA, playerB, 10)
+		}
+	}
+
+}
+
+// PD.playOneTournament = function(agents, turns){
+
+// 	// Round robin!
+// 	for(var i=0; i<agents.length; i++){
+// 		var playerA = agents[i];
+// 		for(var j=i+1; j<agents.length; j++){
+// 			var playerB = agents[j];
+// 			PD.playRepeatedGame(playerA, playerB, turns);
+// 		}
+// 	}
+
+// };

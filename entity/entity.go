@@ -3,24 +3,32 @@ package entity
 type Entity struct {
 	Name        string
 	Score       int32
-	behavior    func(lastMove, oppLastMove string) string
+	behavior    func(mem Memory) string
 	lastMove    string
 	oppLastMove string
+	betrayed    bool
 }
 
-func New(name string, behavior func(lastMove, oppLastMove string) string) *Entity {
+func New(name string, behavior func(mem Memory) string) *Entity {
 	return &Entity{
 		Name:        name,
 		Score:       0,
 		behavior:    behavior,
 		lastMove:    "COOPERATE", // Assume cooperation
 		oppLastMove: "COOPERATE", // ...from everyone
+		betrayed:    false,
 	}
 }
 
 // Play entity will return either "COOPERATE" or "CHEAT"
 func (e *Entity) Play() string {
-	move := e.behavior(e.lastMove, e.oppLastMove)
+
+	memory := Memory{
+		lastMove:    e.lastMove,
+		oppLastMove: e.oppLastMove,
+	}
+
+	move := e.behavior(memory)
 	return move
 }
 
