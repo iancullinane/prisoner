@@ -44,7 +44,7 @@ func PlayOneTournament(agents []*entity.Entity, turns int) {
 
 		for j := i + 1; j < len(agents); j++ {
 			playerB := agents[j]
-			PlayRepeated(playerA, playerB, 2)
+			PlayRepeated(playerA, playerB, turns)
 		}
 	}
 

@@ -26,7 +26,7 @@ func main() {
 
 		tmpEntity := entity.New(
 			utils.GetRandomName(),
-			behaviors.GetBehaviorByName("niceguy"),
+			behaviors.GetRandomBehavior(),
 		)
 		entities = append(entities, tmpEntity)
 	}
