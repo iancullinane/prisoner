@@ -1,21 +1,19 @@
 package entity
 
-import "fmt"
-
 type Entity struct {
 	Name        string
 	Score       int32
-	behavior    func(mem Memory) string
+	b           Behavior
 	lastMove    string
 	oppLastMove string
 	betrayed    int
 }
 
-func New(name string, behavior func(mem Memory) string) *Entity {
+func New(name string, behavior Behavior) *Entity {
 	return &Entity{
 		Name:        name,
 		Score:       0,
-		behavior:    behavior,
+		b:           behavior,
 		lastMove:    "COOPERATE", // Assume cooperation
 		oppLastMove: "COOPERATE", // ...from everyone
 		betrayed:    0,
@@ -31,12 +29,16 @@ func (e *Entity) Play() string {
 		betrayed:    e.betrayed,
 	}
 
-	move := e.behavior(memory)
+	move := e.b.behavior(memory)
 	return move
 }
 
-func (e *Entity) GetBehavior() string {
-	return fmt.Sprintf("%T", e.behavior)
+func (e *Entity) GetBehavior() Behavior {
+	return e.b
+}
+
+func (e *Entity) GetBehaviorName() string {
+	return e.b.behaviorName
 }
 
 // RecordMoves updates the object with its last move and the opponents move

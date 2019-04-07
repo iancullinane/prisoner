@@ -34,7 +34,7 @@ func main() {
 	dilemma.PlayOneTournament(entities, 10)
 
 	for _, e := range entities {
-		log.Printf("%-10s\t%d\t%s", e.Name, e.Score, e.GetBehavior())
+		log.Printf("%-10s\t%d\t%s", e.Name, e.Score, e.GetBehaviorName())
 	}
 
 }

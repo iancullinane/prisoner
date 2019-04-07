@@ -6,7 +6,12 @@ import (
 )
 
 type BehaviorFactory struct {
-	behaviors []func(Memory) string
+	behaviors []Behavior
+}
+
+type Behavior struct {
+	behaviorName string
+	behavior     func(Memory) string
 }
 
 type Memory struct {
@@ -17,19 +22,23 @@ type Memory struct {
 
 func NewBehaviorFactory() *BehaviorFactory {
 	return &BehaviorFactory{
-		behaviors: []func(Memory) string{
-			AlwaysCheat,
-			AlwaysCooperate,
-			CopyCat,
-			Revenge,
-			Random,
+		behaviors: []Behavior{
+			{"cheater", AlwaysCheat},
+			{"niceguy", AlwaysCooperate},
+			{"copycat", CopyCat},
+			{"revenge", Revenge},
+			{"random", Random},
 		},
 	}
 }
 
-func (f *BehaviorFactory) GetRandomBehavior() func(Memory) string {
+func (f *BehaviorFactory) GetRandomBehavior() Behavior {
 
 	return f.behaviors[rand.Intn(len(f.behaviors))]
+}
+
+func (b *Behavior) GetName() string {
+	return b.behaviorName
 }
 
 // AlwaysCooperate will always act altruistically, giving 3
@@ -42,13 +51,13 @@ func AlwaysCheat(mem Memory) string {
 	return "CHEAT"
 }
 
-// CopyCat will blindly do whatever their opponent did last time, excpet the
+// CopyCat will blindly do whatever their opponent did last time, except the
 // first round where they will COOOPERATE
 func CopyCat(mem Memory) string {
 	return mem.oppLastMove
 }
 
-// Revenge will always cheat if it has been cheated against once
+// Revenge will always CHEAT if it has been cheated against once
 func Revenge(mem Memory) string {
 
 	if mem.betrayed > 0 {
