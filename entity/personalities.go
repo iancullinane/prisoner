@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"log"
 	"math/rand"
 	"time"
 )
@@ -30,6 +31,18 @@ func NewBehaviorFactory() *BehaviorFactory {
 			{"random", Random},
 		},
 	}
+}
+
+func (f *BehaviorFactory) GetBehaviorByName(name string) Behavior {
+
+	keys := make(map[string]int, len(f.behaviors))
+	for i, v := range f.behaviors {
+		keys[v.behaviorName] = i
+	}
+
+	log.Printf("%v", f.behaviors[keys[name]])
+
+	return f.behaviors[keys[name]]
 }
 
 func (f *BehaviorFactory) GetRandomBehavior() Behavior {

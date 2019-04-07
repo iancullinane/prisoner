@@ -28,7 +28,11 @@ func PlayRepeated(player1, player2 *entity.Entity, rounds int) {
 
 }
 
+// PlayOneTournament will pit every entity against every other entity one
+// time for the amount of rounds passed in.
 func PlayOneTournament(agents []*entity.Entity, turns int) {
+
+	// agentsCopy := agents
 
 	for i := 0; i < len(agents); i++ {
 		agents[i].Reset()
@@ -40,7 +44,7 @@ func PlayOneTournament(agents []*entity.Entity, turns int) {
 
 		for j := i + 1; j < len(agents); j++ {
 			playerB := agents[j]
-			PlayRepeated(playerA, playerB, 10)
+			PlayRepeated(playerA, playerB, 2)
 		}
 	}
 

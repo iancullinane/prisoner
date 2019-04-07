@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"sort"
 
 	"github.com/iancullinane/prisoner/utils"
 
@@ -27,16 +26,14 @@ func main() {
 
 		tmpEntity := entity.New(
 			utils.GetRandomName(),
-			behaviors.GetRandomBehavior(),
+			behaviors.GetBehaviorByName("niceguy"),
 		)
 		entities = append(entities, tmpEntity)
 	}
 
-	dilemma.PlayOneTournament(entities, 10)
+	dilemma.PlayOneTournament(entities, 5)
 
-	sort.Slice(entities, func(i, j int) bool {
-		return entities[i].Score < entities[j].Score
-	})
+	utils.SortByScore(entities)
 
 	log.Printf("%-10s\t%s\t%s", "Name", "Score", "Personality")
 	log.Printf("------------------------------------")

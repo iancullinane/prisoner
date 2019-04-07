@@ -47,7 +47,7 @@ func (e *Entity) RecordMoves(move, oppMove string) {
 	e.oppLastMove = oppMove
 
 	if oppMove == "CHEAT" {
-		e.betrayed += 1
+		e.betrayed++
 	}
 }
 
