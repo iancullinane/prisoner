@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"sort"
 
 	"github.com/iancullinane/prisoner/utils"
 
@@ -33,6 +34,12 @@ func main() {
 
 	dilemma.PlayOneTournament(entities, 10)
 
+	sort.Slice(entities, func(i, j int) bool {
+		return entities[i].Score < entities[j].Score
+	})
+
+	log.Printf("%-10s\t%s\t%s", "Name", "Score", "Personality")
+	log.Printf("------------------------------------")
 	for _, e := range entities {
 		log.Printf("%-10s\t%d\t%s", e.Name, e.Score, e.GetBehaviorName())
 	}
