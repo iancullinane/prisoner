@@ -28,6 +28,7 @@ func NewBehaviorFactory() *BehaviorFactory {
 			{"niceguy", AlwaysCooperate},
 			{"copycat", CopyCat},
 			{"revenge", Revenge},
+			{"tolerant", Tolerant},
 			{"random", Random},
 		},
 	}
@@ -62,6 +63,15 @@ func AlwaysCooperate(mem Memory) string {
 // AlwaysCheat will never add +1
 func AlwaysCheat(mem Memory) string {
 	return "CHEAT"
+}
+
+// AlwaysCheat will never add +1
+func Tolerant(mem Memory) string {
+	if mem.betrayed > 5 {
+		return "CHEAT"
+	}
+
+	return "COOPERATE"
 }
 
 // CopyCat will blindly do whatever their opponent did last time, except the

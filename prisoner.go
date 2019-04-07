@@ -22,7 +22,7 @@ func main() {
 	entities := make([]*entity.Entity, 0)
 	behaviors := entity.NewBehaviorFactory()
 
-	for i := 1; i <= 10; i++ {
+	for i := 1; i <= 20; i++ {
 
 		tmpEntity := entity.New(
 			utils.GetRandomName(),
@@ -31,7 +31,7 @@ func main() {
 		entities = append(entities, tmpEntity)
 	}
 
-	dilemma.PlayOneTournament(entities, 5)
+	dilemma.PlayOneTournament(entities, 10)
 
 	utils.SortByScore(entities)
 
