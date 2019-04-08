@@ -10,19 +10,22 @@ import (
 	"github.com/iancullinane/prisoner/entity"
 )
 
-var value string
+var numOfEnts, numOfRounds int
 
 func init() {
 
-	flag.StringVar(&value, "value", "", "")
+	flag.IntVar(&numOfEnts, "entities", 10, "")
+	flag.IntVar(&numOfRounds, "rounds", 10, "")
 }
 
 func main() {
 
+	flag.Parse()
+
 	entities := make([]*entity.Entity, 0)
 	behaviors := entity.NewBehaviorFactory()
 
-	for i := 1; i <= 20; i++ {
+	for i := 1; i <= numOfEnts; i++ {
 
 		tmpEntity := entity.New(
 			utils.GetRandomName(),
@@ -31,7 +34,7 @@ func main() {
 		entities = append(entities, tmpEntity)
 	}
 
-	dilemma.PlayOneTournament(entities, 10)
+	dilemma.PlayOneTournament(entities, numOfRounds)
 
 	utils.SortByScore(entities)
 
