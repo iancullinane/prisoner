@@ -14,8 +14,8 @@ var numOfEnts, numOfRounds int
 
 func init() {
 
-	flag.IntVar(&numOfEnts, "entities", 10, "")
-	flag.IntVar(&numOfRounds, "rounds", 10, "")
+	flag.IntVar(&numOfEnts, "entities", 150, "")
+	flag.IntVar(&numOfRounds, "rounds", 5, "")
 }
 
 func main() {

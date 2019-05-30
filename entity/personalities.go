@@ -34,6 +34,7 @@ func NewBehaviorFactory() *BehaviorFactory {
 	}
 }
 
+// GetBehaviorByName is to set a behavior
 func (f *BehaviorFactory) GetBehaviorByName(name string) Behavior {
 
 	keys := make(map[string]int, len(f.behaviors))
@@ -46,11 +47,13 @@ func (f *BehaviorFactory) GetBehaviorByName(name string) Behavior {
 	return f.behaviors[keys[name]]
 }
 
+// GetRandomBehavior returns a random behavior
 func (f *BehaviorFactory) GetRandomBehavior() Behavior {
 
 	return f.behaviors[rand.Intn(len(f.behaviors))]
 }
 
+// GetName returns the name of this instance
 func (b *Behavior) GetName() string {
 	return b.behaviorName
 }
@@ -65,7 +68,7 @@ func AlwaysCheat(mem Memory) string {
 	return "CHEAT"
 }
 
-// AlwaysCheat will never add +1
+// Tolerant will only CHEAT after it has been betrayed n times
 func Tolerant(mem Memory) string {
 	if mem.betrayed > 5 {
 		return "CHEAT"
