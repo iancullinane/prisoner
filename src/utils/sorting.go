@@ -3,7 +3,7 @@ package utils
 import (
 	"sort"
 
-	"github.com/iancullinane/prisoner/entity"
+	"github.com/iancullinane/prisoner/src/entity"
 )
 
 func SortByScore(entities []*entity.Entity) {

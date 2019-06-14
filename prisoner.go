@@ -4,10 +4,10 @@ import (
 	"flag"
 	"log"
 
-	"github.com/iancullinane/prisoner/utils"
+	"github.com/iancullinane/prisoner/src/utils"
 
-	"github.com/iancullinane/prisoner/dilemma"
-	"github.com/iancullinane/prisoner/entity"
+	"github.com/iancullinane/prisoner/src/dilemma"
+	"github.com/iancullinane/prisoner/src/entity"
 )
 
 var numOfEnts, numOfRounds int

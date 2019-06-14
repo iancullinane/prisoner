@@ -1,6 +1,6 @@
 package dilemma
 
-import "github.com/iancullinane/prisoner/entity"
+import "github.com/iancullinane/prisoner/src/entity"
 
 // Once will play the prisoners dilemma one time
 func Once(player1, player2 *entity.Entity) {
