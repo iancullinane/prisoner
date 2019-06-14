@@ -4,10 +4,8 @@ import (
 	"flag"
 	"log"
 
+	"github.com/iancullinane/prisoner/src/game"
 	"github.com/iancullinane/prisoner/src/utils"
-
-	"github.com/iancullinane/prisoner/src/dilemma"
-	"github.com/iancullinane/prisoner/src/entity"
 )
 
 var numOfEnts, numOfRounds int
@@ -19,28 +17,20 @@ func init() {
 }
 
 func main() {
-
 	flag.Parse()
 
-	entities := make([]*entity.Entity, 0)
-	behaviors := entity.NewBehaviorFactory()
+	game := game.New(10)
+	game.FillEntities()
 
-	for i := 1; i <= numOfEnts; i++ {
+	game.PlayOneTournament(10)
 
-		tmpEntity := entity.New(
-			utils.GetRandomName(),
-			behaviors.GetRandomBehavior(),
-		)
-		entities = append(entities, tmpEntity)
-	}
+	// dilemma.PlayOneTournament(entities, numOfRounds)
 
-	dilemma.PlayOneTournament(entities, numOfRounds)
-
-	utils.SortByScore(entities)
+	utils.SortByScore(game.GetEntities())
 
 	log.Printf("%-10s\t%s\t%s", "Name", "Score", "Personality")
 	log.Printf("------------------------------------")
-	for _, e := range entities {
+	for _, e := range game.GetEntities() {
 		log.Printf("%-10s\t%d\t%s", e.Name, e.Score, e.GetBehaviorName())
 	}
 
