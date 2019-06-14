@@ -4,21 +4,24 @@ import (
 	"github.com/iancullinane/prisoner/src/dilemma"
 	"github.com/iancullinane/prisoner/src/entity"
 	"github.com/iancullinane/prisoner/src/utils"
+	"github.com/jroimartin/gocui"
 )
 
 type Game struct {
 	entities []*entity.Entity
 	behavior *entity.BehaviorFactory
+	gui      *gocui.Gui
 }
 
 // behaviors := entity.NewBehaviorFactory()
-func New(numEntities int) *Game {
+func New(gui *gocui.Gui, numEntities int) *Game {
 
 	entityList := make([]*entity.Entity, numEntities)
 
 	return &Game{
 		entities: entityList,
 		behavior: entity.NewBehaviorFactory(),
+		gui:      gui,
 	}
 }
 
