@@ -7,13 +7,7 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-func Init() *gocui.Gui {
-	// Initialize gui
-	g, err := gocui.NewGui(gocui.OutputNormal)
-	if err != nil {
-		log.Panicln(err)
-	}
-	defer g.Close()
+func Init(g *gocui.Gui) {
 
 	// g.Highlight = true
 	// g.SelFgColor = gocui.ColorRed
@@ -35,7 +29,6 @@ func Init() *gocui.Gui {
 		log.Panicln(err)
 	}
 
-	return g
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
@@ -43,6 +36,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 func layout(g *gocui.Gui) error {
+
 	maxX, maxY := g.Size()
 	v, err := g.SetView("size", 1, 1, maxX/2-1, maxY-1)
 	if err != nil && err != gocui.ErrUnknownView {

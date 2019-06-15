@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/iancullinane/prisoner/src/game"
-	"github.com/iancullinane/prisoner/src/ui"
 	"github.com/iancullinane/prisoner/src/utils"
 )
 
@@ -20,11 +19,12 @@ func init() {
 func main() {
 	flag.Parse()
 
-	ui := ui.Init()
+	// ui := ui.Init()
 
-	game := game.New(ui, 10)
+	game := game.New(10)
+	game.Start()
+
 	game.FillEntities()
-
 	game.PlayOneTournament(10)
 
 	utils.SortByScore(game.GetEntities())

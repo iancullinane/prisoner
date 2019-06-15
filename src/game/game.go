@@ -3,6 +3,7 @@ package game
 import (
 	"github.com/iancullinane/prisoner/src/dilemma"
 	"github.com/iancullinane/prisoner/src/entity"
+	"github.com/iancullinane/prisoner/src/ui"
 	"github.com/iancullinane/prisoner/src/utils"
 	"github.com/jroimartin/gocui"
 )
@@ -14,15 +15,28 @@ type Game struct {
 }
 
 // behaviors := entity.NewBehaviorFactory()
-func New(gui *gocui.Gui, numEntities int) *Game {
+func New(numEntities int) *Game {
 
 	entityList := make([]*entity.Entity, numEntities)
 
 	return &Game{
 		entities: entityList,
 		behavior: entity.NewBehaviorFactory(),
-		gui:      gui,
+		// gui:      gui,
 	}
+}
+
+func (g *Game) Start() error {
+
+	gui, err := gocui.NewGui(gocui.Output256)
+	if err != nil {
+		return err
+	}
+	defer gui.Close()
+
+	ui.Init(gui)
+
+	return nil
 }
 
 func (g *Game) GetEntities() []*entity.Entity {
