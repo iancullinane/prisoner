@@ -18,26 +18,26 @@ type viewPosition struct {
 
 // Views
 const (
-	leftView   = "left"
-	rightView  = "right"
-	bottomView = "bottom"
+	LeftView   = "left"
+	RightView  = "right"
+	BottomView = "bottom"
 	// helpView = "help"
 )
 
 var viewPositions = map[string]viewPosition{
-	leftView: {
+	LeftView: {
 		position{0.0, 0},
 		position{0.0, 0},
 		position{0.3, 2},
 		position{0.9, 2},
 	},
-	rightView: {
+	RightView: {
 		position{0.3, 0},
 		position{0.0, 0},
 		position{1.0, 2},
 		position{0.9, 2},
 	},
-	bottomView: {
+	BottomView: {
 		position{0.0, 0},
 		position{0.89, 0},
 		position{1.0, 2},

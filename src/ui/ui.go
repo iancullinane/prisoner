@@ -36,7 +36,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 
 func layout(g *gocui.Gui) error {
 
-	var views = []string{leftView, rightView, bottomView}
+	var views = []string{LeftView, RightView, BottomView}
 	maxX, maxY := g.Size()
 	for _, view := range views {
 		x0, y0, x1, y1 := viewPositions[view].getCoordinates(maxX, maxY)

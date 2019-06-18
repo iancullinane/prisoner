@@ -29,6 +29,8 @@ func main() {
 
 	utils.SortByScore(game.GetEntities())
 
+	game.Update("Whatever")
+
 	log.Printf("%-10s\t%s\t%s", "Name", "Score", "Personality")
 	log.Printf("------------------------------------")
 	for _, e := range game.GetEntities() {

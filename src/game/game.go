@@ -1,6 +1,9 @@
 package game
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/iancullinane/prisoner/src/dilemma"
 	"github.com/iancullinane/prisoner/src/entity"
 	"github.com/iancullinane/prisoner/src/ui"
@@ -35,8 +38,19 @@ func (g *Game) Start() error {
 	defer gui.Close()
 
 	ui.Init(gui)
+	g.gui = gui
 
 	return nil
+}
+
+func (g *Game) Update(str string) {
+
+	v, err := g.gui.View(ui.LeftView)
+	if err != nil {
+		log.Fatal("failed to get treeView", err)
+	}
+	v.Clear()
+	fmt.Fprintf(v, str)
 }
 
 func (g *Game) GetEntities() []*entity.Entity {
