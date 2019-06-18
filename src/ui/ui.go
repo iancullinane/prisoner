@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/jroimartin/gocui"
@@ -24,10 +25,24 @@ func Init(g *gocui.Gui) {
 	// 	log.Panicln(err)
 	// }
 
+	go g.Update(func(g *gocui.Gui) error {
+		return updateView(g, "Hello")
+	})
+
 	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
 		log.Panicln(err)
 	}
 
+}
+
+func updateView(g *gocui.Gui, str string) error {
+
+	v, err := g.View(RightView)
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(v, str)
+	return nil
 }
 
 func quit(g *gocui.Gui, v *gocui.View) error {
