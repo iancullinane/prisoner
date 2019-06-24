@@ -1,8 +1,6 @@
 package game
 
 import (
-	"fmt"
-
 	"github.com/iancullinane/prisoner/src/dilemma"
 	"github.com/iancullinane/prisoner/src/entity"
 	"github.com/iancullinane/prisoner/src/ui"
@@ -13,6 +11,7 @@ import (
 type Game struct {
 	entities []*entity.Entity
 	behavior *entity.BehaviorFactory
+	ui       *ui.UI
 	gui      *gocui.Gui
 }
 
@@ -23,6 +22,7 @@ func New(numEntities int) *Game {
 	return &Game{
 		entities: entityList,
 		behavior: entity.NewBehaviorFactory(),
+		ui:       ui.New(),
 	}
 }
 
@@ -34,42 +34,14 @@ func (g *Game) Start() error {
 	}
 	defer gui.Close()
 
-	ui.Init(gui)
+	g.ui.Init(gui)
 	g.gui = gui
 
 	return nil
 }
 
-func (g *Game) Update(str string) error {
-
-	// v, err := g.gui.View(ui.LeftView)
-	// if err != nil {
-	// 	log.Fatal("failed to get treeView", err)
-
-	// }
-
-	if v, err := g.gui.View(ui.LeftView); err != nil {
-		if err != gocui.ErrUnknownView {
-			return err
-		}
-		fmt.Fprintln(v, str)
-	}
-
-	// v.Clear()
-	return nil
-
-}
-
 func (g *Game) GetEntities() []*entity.Entity {
 	return g.entities
-}
-
-func (g *Game) AddEntity(entIn *entity.Entity) {
-	tmpEntity := entity.New(
-		utils.GetRandomName(),
-		g.behavior.GetRandomBehavior(),
-	)
-	g.entities = append(g.entities, tmpEntity)
 }
 
 func (g *Game) FillEntities() {
