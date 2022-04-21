@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	game := pkg.New()
+	game := prisoner.New()
 	players := prisoner.GetPersonalities(10)
 	game.PlayTournament(players, 5)
 	game.PrintResults(players)
