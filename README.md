@@ -14,7 +14,7 @@ import (
 
 func main() {
 	game := prisoner.New()
-	players := prisoner.GetPersonalities(10)
+	players := game.GetPersonalities(10)
 	game.PlayTournament(players, 5)
 	game.PrintResults(players)
 }
