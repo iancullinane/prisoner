@@ -6,12 +6,18 @@ Implementation of the prisoners dilemma in go.
 ## As a package
 
 ```
-import (
-  "fmt"
-  "bytes"
+package main
 
-  "github.com/iancullinane/prisoner/pkg/prisoner"
+import (
+	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
+
+func main() {
+	game := pkg.New()
+	players := prisoner.GetPersonalities(10)
+	game.PlayTournament(players, 5)
+	game.PrintResults(players)
+}
 ```
 
 ## As a command
