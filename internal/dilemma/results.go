@@ -13,12 +13,11 @@ func Compute(move1, move2 string) (int32, int32) {
 	if move1 == "COOPERATE" && move2 == "COOPERATE" {
 		return outcomes["R"], outcomes["R"]
 	} else if move1 == "CHEAT" && move2 == "COOPERATE" {
-		return outcomes["T"], outcomes["R"]
+		return outcomes["T"], outcomes["S"]
 	} else if move1 == "COOPERATE" && move2 == "CHEAT" {
 		return outcomes["S"], outcomes["T"]
 	}
-
 	// Both Cheated
-	return outcomes["R"], outcomes["R"]
+	return outcomes["P"], outcomes["P"]
 
 }
