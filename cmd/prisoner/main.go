@@ -18,7 +18,7 @@ func main() {
 	flag.Parse()
 
 	prisoner := pkg.New()
-	players := prisoner.GetPersonalities(10)
-	prisoner.PlayTournament(players, 5)
+	players := prisoner.GetPersonalities(numOfEnts)
+	prisoner.PlayTournament(players, numOfRounds)
 	prisoner.PrintResults(players)
 }
