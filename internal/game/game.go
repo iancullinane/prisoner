@@ -22,7 +22,7 @@ func New(numEntities int) *Game {
 }
 
 func (g *Game) GetEntities() []*entity.Entity {
-	return g.entities
+	return utils.SortByScore(g.entities)
 }
 
 func (g *Game) FillEntities() {
@@ -41,7 +41,7 @@ func (g *Game) FillEntities() {
 func (g *Game) PlayOneTournament(numOfRounds int) {
 
 	dilemma.PlayOneTournament(g.entities, numOfRounds)
-	utils.SortByScore(g.entities)
+	g.entities = utils.SortByScore(g.entities)
 }
 
 func (g *Game) GetGameID() string {
