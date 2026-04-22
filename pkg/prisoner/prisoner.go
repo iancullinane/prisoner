@@ -8,11 +8,6 @@ import (
 	"github.com/iancullinane/prisoner/internal/utils"
 )
 
-//
-// Many sites masking the dilmena
-//
-//
-
 // Client represents a prisoner's dilemma game client
 type Client struct {
 }
