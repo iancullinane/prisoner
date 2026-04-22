@@ -11,7 +11,7 @@ func TestResults(t *testing.T) {
 		want2 int32
 	}{
 		{"cooperate/cooperate", "COOPERATE", "COOPERATE", 2, 2},
-		{"cooperate/cooperate", "CHEAT", "COOPERATE", 3, -1},
+		{"cheat/cooperate", "CHEAT", "COOPERATE", 3, -1},
 		{"cooperate/cheat", "COOPERATE", "CHEAT", -1, 3},
 		{"cheat/cheat", "CHEAT", "CHEAT", 0, 0},
 	}
