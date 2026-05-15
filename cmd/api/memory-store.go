@@ -17,6 +17,14 @@ func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 	return i.store[name]
 }
 
+// in_memory_player_store.go
+func (i *InMemoryPlayerStore) GetLeague() []Player {
+	return nil
+}
+
+// MARK: Postgres
+// -------------------------------
+
 func NewPostgresMemoryStore() *PostgresMemoryStore {
 	return &PostgresMemoryStore{map[string]int{}}
 }
