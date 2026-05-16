@@ -10,6 +10,7 @@ import (
 
 	"github.com/iancullinane/prisoner/cmd"
 	"github.com/iancullinane/prisoner/cmd/api"
+	"github.com/iancullinane/prisoner/internal/store/memory"
 )
 
 func main() {
@@ -20,7 +21,7 @@ func main() {
 
 	if *runServer {
 
-		server := api.NewPlayerServer(api.NewInMemoryPlayerStore())
+		server := api.NewPlayerServer(memory.NewInMemoryPlayerStore())
 		log.Fatal(http.ListenAndServe(":5001", server))
 	}
 

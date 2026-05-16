@@ -1,4 +1,6 @@
-package api
+package memory
+
+import "github.com/iancullinane/prisoner/internal/playerstore"
 
 // in_memory_player_store.go
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
@@ -18,10 +20,10 @@ func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 }
 
 // in_memory_player_store.go
-func (i *InMemoryPlayerStore) GetLeague() []Player {
-	var league []Player
+func (i *InMemoryPlayerStore) GetLeague() []playerstore.Player {
+	var league []playerstore.Player
 	for name, wins := range i.store {
-		league = append(league, Player{name, wins})
+		league = append(league, playerstore.Player{Name: name, Wins: wins})
 	}
 	return league
 }

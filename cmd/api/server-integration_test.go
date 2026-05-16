@@ -4,10 +4,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/iancullinane/prisoner/internal/store/memory"
 )
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	store := NewInMemoryPlayerStore()
+	store := memory.NewInMemoryPlayerStore()
 	server := NewPlayerServer(store)
 	player := "Pepper"
 
@@ -30,7 +32,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 
 		got := getLeagueFromResponse(t, response.Body)
 		want := []Player{
-			{"Pepper", 3},
+			{Name: "Pepper", Wins: 3},
 		}
 		assertLeague(t, got, want)
 	})

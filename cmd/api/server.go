@@ -5,20 +5,14 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/iancullinane/prisoner/internal/playerstore"
 )
 
 const jsonContentType = "application/json"
 
-type Player struct {
-	Name string
-	Wins int
-}
-
-type PlayerStore interface {
-	GetPlayerScore(name string) int
-	RecordWin(name string)
-	GetLeague() []Player
-}
+type Player = playerstore.Player
+type PlayerStore = playerstore.PlayerStore
 
 type PlayerServer struct {
 	store PlayerStore
