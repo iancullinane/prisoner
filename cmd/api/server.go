@@ -26,6 +26,7 @@ type PlayerServer struct {
 }
 
 func NewPlayerServer(store PlayerStore) *PlayerServer {
+
 	p := new(PlayerServer)
 
 	p.store = store
@@ -41,7 +42,6 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
 
 // server.go
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	router := http.NewServeMux()
 	router.Handle("/league", http.HandlerFunc(p.leagueHandler))
 	router.Handle("/players/", http.HandlerFunc(p.playersHandler))
@@ -50,11 +50,7 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
-	leagueTable := []Player{
-		{"Cleo", 32},
-		{"Chris", 20},
-		{"Tiest", 14},
-	}
+	leagueTable := p.store.GetLeague()
 
 	w.Header().Set("content-type", jsonContentType)
 	json.NewEncoder(w).Encode(leagueTable)

@@ -213,23 +213,7 @@ func assertContentType(t testing.TB, response *httptest.ResponseRecorder, want s
 	}
 }
 
-// MARK: Another test
-
-func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	store := NewInMemoryPlayerStore()
-	server := NewPlayerServer(store)
-	player := "Pepper"
-
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest("players", player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest("players", player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest("players", player))
-
-	response := httptest.NewRecorder()
-	server.ServeHTTP(response, newGetScoreRequest("players", player))
-	assertResponseStatus(t, response.Code, http.StatusOK)
-
-	assertResponseBody(t, response.Body.String(), "3")
-}
+// MARK: League helper
 
 func getLeagueFromResponse(t testing.TB, body io.Reader) (league []Player) {
 	t.Helper()

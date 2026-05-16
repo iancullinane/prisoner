@@ -19,24 +19,28 @@ func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 
 // in_memory_player_store.go
 func (i *InMemoryPlayerStore) GetLeague() []Player {
-	return nil
+	var league []Player
+	for name, wins := range i.store {
+		league = append(league, Player{name, wins})
+	}
+	return league
 }
 
 // MARK: Postgres
 // -------------------------------
 
-func NewPostgresMemoryStore() *PostgresMemoryStore {
-	return &PostgresMemoryStore{map[string]int{}}
-}
+// func NewPostgresMemoryStore() *PostgresMemoryStore {
+// 	return &PostgresMemoryStore{map[string]int{}}
+// }
 
-type PostgresMemoryStore struct {
-	store map[string]int
-}
+// type PostgresMemoryStore struct {
+// 	store map[string]int
+// }
 
-func (p *PostgresMemoryStore) RecordWin(name string) {
+// func (p *PostgresMemoryStore) RecordWin(name string) {
+// 	p.store[name]++
+// }
 
-}
-
-func (p *PostgresMemoryStore) GetPlayerScore(name string) int {
-	return p.store[name]
-}
+// func (p *PostgresMemoryStore) GetPlayerScore(name string) int {
+// 	return p.store[name]
+// }
