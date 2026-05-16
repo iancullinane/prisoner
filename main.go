@@ -14,8 +14,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/iancullinane/prisoner/api"
 	"github.com/iancullinane/prisoner/cmd"
-	"github.com/iancullinane/prisoner/cmd/api"
 	"github.com/iancullinane/prisoner/internal/store/memory"
 	storepostgres "github.com/iancullinane/prisoner/internal/store/postgres"
 	"github.com/iancullinane/prisoner/internal/types"

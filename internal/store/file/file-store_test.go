@@ -10,21 +10,24 @@ import (
 
 func TestFileSystemStore(t *testing.T) {
 	t.Run("league from a reader", func(t *testing.T) {
-		database := strings.NewReader(`
-			{"Name": "Chris" , "Wins": 10}
-			{"Name": "Cleo" , "Wins": 10}
+		database := strings.NewReader(`[
+			{"Name": "Chris", "Wins": 10},
+			{"Name": "Cleo", "Wins": 10}
 		]`)
 
-		store := FilesSystemPlayerStore(database)
+		store := NewFilesSystemPlayerStore(database)
 
 		got := store.GetLeague()
 
 		want := []types.Player{
-			{Name: "Cleo", Wins: 10},
 			{Name: "Chris", Wins: 10},
+			{Name: "Cleo", Wins: 10},
 		}
 
 		testhelpers.AssertLeague(t, got, want)
+		got = store.GetLeague()
+		testhelpers.AssertLeague(t, got, want)
+
 	})
 
 }

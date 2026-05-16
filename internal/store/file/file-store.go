@@ -1,7 +1,22 @@
 package file
 
-import "strings"
+import (
+	"io"
+
+	"github.com/iancullinane/prisoner/api"
+	"github.com/iancullinane/prisoner/internal/types"
+)
 
 type FilesSystemPlayerStore struct {
-	strings.Reader
+	database io.ReadSeeker
+}
+
+func NewFilesSystemPlayerStore(database io.ReadSeeker) *FilesSystemPlayerStore {
+	return &FilesSystemPlayerStore{database: database}
+}
+
+func (f *FilesSystemPlayerStore) GetLeague() []types.Player {
+	f.database.Seek(0, io.SeekStart) // Always read from the beginning
+	league, _ := api.NewLeague(f.database)
+	return league
 }
