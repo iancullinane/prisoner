@@ -1,5 +1,5 @@
->[!NOTE] v2 is in development here
->This is super old and out-of-date but I am overhauling from the ground up and doing grug things like writing tests. See [here](https://github.com/iancullinane/prisoner/tree/icullinane/add-sqlc-testcontainer) until I merge it in.
+> [!NOTE] v2 is in development here
+> This is super old and out-of-date but I am overhauling from the ground up and doing grug things like writing tests. See [here](https://github.com/iancullinane/prisoner/tree/icullinane/add-sqlc-testcontainer) until I merge it in.
 
 prisoner
 ========
