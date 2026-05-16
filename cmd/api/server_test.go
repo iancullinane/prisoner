@@ -7,8 +7,9 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
+
+	"github.com/iancullinane/prisoner/internal/store/testhelpers"
 )
 
 type StubPlayerStore struct {
@@ -158,7 +159,7 @@ func TestLeague(t *testing.T) {
 
 		got := getLeagueFromResponse(t, response.Body)
 		assertResponseStatus(t, response.Code, http.StatusOK)
-		assertLeague(t, got, wantedLeague)
+		testhelpers.AssertLeague(t, got, wantedLeague)
 		assertContentType(t, response, jsonContentType)
 	})
 }
@@ -195,13 +196,6 @@ func assertResponseStatus(t testing.TB, got, want int) {
 	t.Helper()
 	if got != want {
 		t.Errorf("response header wrong, got %d, want %d", got, want)
-	}
-}
-
-func assertLeague(t testing.TB, got, want []Player) {
-	t.Helper()
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %v want %v", got, want)
 	}
 }
 

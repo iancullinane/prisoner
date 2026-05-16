@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/iancullinane/prisoner/internal/store/memory"
+	"github.com/iancullinane/prisoner/internal/store/testhelpers"
 )
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
@@ -36,6 +37,6 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 		want := []Player{
 			{Name: "Pepper", Wins: 3},
 		}
-		assertLeague(t, got, want)
+		testhelpers.AssertLeague(t, got, want)
 	})
 }

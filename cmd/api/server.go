@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/iancullinane/prisoner/internal/playerstore"
+	"github.com/iancullinane/prisoner/internal/types"
 )
 
 const jsonContentType = "application/json"
 
-type Player = playerstore.Player
-type PlayerStore = playerstore.PlayerStore
+type Player = types.Player
+type PlayerStore = types.PlayerStore
 
 type PlayerServer struct {
 	store PlayerStore
@@ -45,11 +45,8 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 	leagueTable := p.store.GetLeague()
-
 	w.Header().Set("content-type", jsonContentType)
 	json.NewEncoder(w).Encode(leagueTable)
-
-	w.WriteHeader(http.StatusOK)
 }
 
 func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {

@@ -7,7 +7,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/iancullinane/prisoner/internal/playerstore"
+	"github.com/iancullinane/prisoner/internal/types"
 	sqlcdb "github.com/iancullinane/prisoner/prisonerdb"
 )
 
@@ -39,15 +39,15 @@ func (s *PlayerStore) RecordWin(name string) {
 	}
 }
 
-func (s *PlayerStore) GetLeague() []playerstore.Player {
+func (s *PlayerStore) GetLeague() []types.Player {
 	ctx := context.Background()
 	rows, err := s.q.ListPlayers(ctx)
 	if err != nil {
 		panic(err)
 	}
-	out := make([]playerstore.Player, 0, len(rows))
+	out := make([]types.Player, 0, len(rows))
 	for _, r := range rows {
-		out = append(out, playerstore.Player{Name: r.Name, Wins: int(r.Wins)})
+		out = append(out, types.Player{Name: r.Name, Wins: int(r.Wins)})
 	}
 	return out
 }

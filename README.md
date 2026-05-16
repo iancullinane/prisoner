@@ -16,3 +16,10 @@ In no particular order and with a note on why this particular tech:
 	- Data strorage is a requirement of mine and I needed to practice on something of mine so...
 	- [SQLC](https://github.com/sqlc-dev/sqlc) - Finally somethine we don't use at work, though the reason I found it is because we basically have this at work but a bespoke version and I wanted something off-the-shelf, I like it 👍
 	- [testcontainers](https://golang.testcontainers.org/modules/postgres/) - This is new, part of a general effort to just get better at testing
+- [make](https://en.wikipedia.org/wiki/Make_(software)) - We actually don't use this at work which is _wild_ because we have this complicated mess of insanity instead
+- [Docker](https://en.wikipedia.org/wiki/Docker_(software)) - You would be crazy not to that 
+
+
+## Project Structure
+
+I try to follow Go standards here but I am not perfect I am sure I mess things up. In general I think it is pretty clear. Files to look our for are `Makefile` and `sqlc.yaml`. `sqlc` is used to take the db schema and generate the golang ready code. That is why `prisonerdb` is in the `.gitignore` but you can change it if you want the package will still be named `data`.
