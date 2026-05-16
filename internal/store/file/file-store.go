@@ -20,3 +20,7 @@ func (f *FilesSystemPlayerStore) GetLeague() []types.Player {
 	league, _ := api.NewLeague(f.database)
 	return league
 }
+
+func (f *FilesSystemPlayerStore) GetPlayerScore(name string) int {
+	return 5
+}
