@@ -7,8 +7,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	sqlcdb "github.com/iancullinane/prisoner/prisonerdb"
 	"github.com/iancullinane/prisoner/internal/playerstore"
+	sqlcdb "github.com/iancullinane/prisoner/prisonerdb"
 )
 
 type PlayerStore struct {

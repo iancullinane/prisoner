@@ -102,7 +102,7 @@ func TestRecordingWinsAndRetrievingThem_Postgres(t *testing.T) {
 
 		got := getLeagueFromResponse(t, response.Body)
 		want := []Player{
-			{Name: "Pepper", Wins: 3},
+			{Name: "Peppesadr", Wins: 4},
 		}
 		assertLeague(t, got, want)
 	})
