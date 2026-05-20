@@ -1,26 +1,52 @@
 package file
 
 import (
+	"encoding/json"
 	"io"
+	"os"
 
-	"github.com/iancullinane/prisoner/api"
 	"github.com/iancullinane/prisoner/internal/types"
 )
 
-type FilesSystemPlayerStore struct {
-	database io.ReadSeeker
+type FileSystemPlayerStore struct {
+	database *json.Encoder
+	league   types.League
 }
 
-func NewFilesSystemPlayerStore(database io.ReadSeeker) *FilesSystemPlayerStore {
-	return &FilesSystemPlayerStore{database: database}
+func NewFileSystemPlayerStore(file *os.File) *FileSystemPlayerStore {
+	file.Seek(0, io.SeekStart)
+	league, _ := types.NewLeague(file)
+
+	return &FileSystemPlayerStore{
+		database: json.NewEncoder(&tape{file}),
+		league:   league,
+	}
+
 }
 
-func (f *FilesSystemPlayerStore) GetLeague() []types.Player {
-	f.database.Seek(0, io.SeekStart) // Always read from the beginning
-	league, _ := api.NewLeague(f.database)
-	return league
+func (f *FileSystemPlayerStore) GetLeague() types.League {
+	return f.league
 }
 
-func (f *FilesSystemPlayerStore) GetPlayerScore(name string) int {
-	return 5
+func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
+
+	player := f.league.Find(name)
+
+	if player != nil {
+		return player.Wins
+	}
+
+	return 0
+}
+
+func (f *FileSystemPlayerStore) RecordWin(name string) {
+	player := f.league.Find(name)
+
+	if player != nil {
+		player.Wins++
+	} else {
+		f.league = append(f.league, types.Player{name, 1})
+	}
+
+	f.database.Encode(f.league)
 }

@@ -16,6 +16,7 @@ import (
 
 	"github.com/iancullinane/prisoner/api"
 	"github.com/iancullinane/prisoner/cmd"
+	storefile "github.com/iancullinane/prisoner/internal/store/file"
 	"github.com/iancullinane/prisoner/internal/store/memory"
 	storepostgres "github.com/iancullinane/prisoner/internal/store/postgres"
 	"github.com/iancullinane/prisoner/internal/types"
@@ -27,11 +28,13 @@ var schemaSQL string
 const (
 	storeMemory   = "memory"
 	storePostgres = "postgres"
+	storeFile     = "file"
+	dbFileName    = "game.db.json"
 )
 
 func main() {
 	runServer := flag.Bool("server", false, "set to run the server, otherwise execute cli")
-	storeFlag := flag.String("store", storeMemory, "player store backend: memory or postgres")
+	storeFlag := flag.String("store", storeMemory, "player store backend: memory, file, or postgres")
 
 	flag.Parse()
 
@@ -63,8 +66,10 @@ func newPlayerStore(kind string) (types.PlayerStore, func(), error) {
 			return nil, nil, err
 		}
 		return newPostgresStore(pool), func() { pool.Close() }, nil
+	case storeFile:
+		return newFileStore()
 	default:
-		return nil, nil, fmt.Errorf("unknown store %q: want %q or %q", kind, storeMemory, storePostgres)
+		return nil, nil, fmt.Errorf("unknown store %q: want %q, %q, or %q", kind, storeMemory, storeFile, storePostgres)
 	}
 }
 
@@ -74,6 +79,14 @@ func newMemoryStore() types.PlayerStore {
 
 func newPostgresStore(pool *pgxpool.Pool) types.PlayerStore {
 	return storepostgres.NewPlayerStore(pool)
+}
+
+func newFileStore() (types.PlayerStore, func(), error) {
+	db, err := os.OpenFile(dbFileName, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return nil, nil, fmt.Errorf("open %s: %w", dbFileName, err)
+	}
+	return storefile.NewFileSystemPlayerStore(db), func() { db.Close() }, nil
 }
 
 func openPostgresPool(ctx context.Context) (*pgxpool.Pool, error) {

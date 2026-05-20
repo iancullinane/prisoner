@@ -39,7 +39,7 @@ func (s *PlayerStore) RecordWin(name string) {
 	}
 }
 
-func (s *PlayerStore) GetLeague() []types.Player {
+func (s *PlayerStore) GetLeague() types.League {
 	ctx := context.Background()
 	rows, err := s.q.ListPlayers(ctx)
 	if err != nil {

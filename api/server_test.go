@@ -9,12 +9,13 @@ import (
 	"testing"
 
 	"github.com/iancullinane/prisoner/internal/store/testhelpers"
+	"github.com/iancullinane/prisoner/internal/types"
 )
 
 type StubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
-	league   []Player
+	league   types.League
 }
 
 func (s *StubPlayerStore) GetPlayerScore(name string) int {
@@ -27,7 +28,7 @@ func (s *StubPlayerStore) RecordWin(name string) {
 }
 
 // server_test.go
-func (s *StubPlayerStore) GetLeague() []Player {
+func (s *StubPlayerStore) GetLeague() types.League {
 	return s.league
 }
 
@@ -173,7 +174,6 @@ func newGetScoreRequest(route, name string) *http.Request {
 
 func newPostWinRequest(route, name string) *http.Request {
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/%s/%s", route, name), nil)
-
 	return req
 }
 
@@ -210,7 +210,7 @@ func assertContentType(t testing.TB, response *httptest.ResponseRecorder, want s
 
 func getLeagueFromResponse(t testing.TB, body io.Reader) (league []Player) {
 	t.Helper()
-	league, err := NewLeague(body)
+	league, err := types.NewLeague(body)
 
 	if err != nil {
 		t.Fatalf("unable to parse response into []Player: %v", err)
