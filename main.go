@@ -86,7 +86,12 @@ func newFileStore() (types.PlayerStore, func(), error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("open %s: %w", dbFileName, err)
 	}
-	return storefile.NewFileSystemPlayerStore(db), func() { db.Close() }, nil
+
+	store, err := storefile.NewFileSystemPlayerStore(db)
+	if err != nil {
+		return nil, nil, fmt.Errorf("new file system player store: %w", err)
+	}
+	return store, func() { db.Close() }, nil
 }
 
 func openPostgresPool(ctx context.Context) (*pgxpool.Pool, error) {

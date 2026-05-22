@@ -12,9 +12,11 @@ import (
 )
 
 func TestRecordingWinsAndRetrievingThemFromFile(t *testing.T) {
-	database, cleanDatabase := createTempFile(t, "")
+	database, cleanDatabase := createTempFile(t, `[]`)
 	defer cleanDatabase()
-	store := file.NewFileSystemPlayerStore(database)
+	store, err := file.NewFileSystemPlayerStore(database)
+	assertNoError(t, err)
+
 	server := NewPlayerServer(store)
 	player := "Pepper"
 
@@ -90,5 +92,12 @@ func createTempFile(t testing.TB, initialData string) (*os.File, func()) {
 	return tempfile, func() {
 		tempfile.Close()
 		os.Remove(tempfile.Name())
+	}
+}
+
+func assertNoError(t testing.TB, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatalf("got an error but didn't want one %v", err)
 	}
 }

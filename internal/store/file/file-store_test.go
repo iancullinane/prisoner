@@ -16,7 +16,8 @@ func TestFileSystemStore(t *testing.T) {
 	newTempStore, closer := createTempFile(t, goldenTest)
 	defer closer()
 	t.Run("get score for a placer", func(t *testing.T) {
-		store := NewFileSystemPlayerStore(newTempStore)
+		store, err := NewFileSystemPlayerStore(newTempStore)
+		assertNoError(t, err)
 
 		got := store.GetPlayerScore("Chris")
 		want := 33
@@ -29,7 +30,8 @@ func TestFileSystemStore(t *testing.T) {
 		newTempStore, closer := createTempFile(t, goldenTest)
 		defer closer()
 
-		store := NewFileSystemPlayerStore(newTempStore)
+		store, err := NewFileSystemPlayerStore(newTempStore)
+		assertNoError(t, err)
 
 		got := store.GetLeague()
 
@@ -49,7 +51,8 @@ func TestFileSystemStore(t *testing.T) {
 		newTempStore, closer := createTempFile(t, goldenTest)
 		defer closer()
 
-		store := NewFileSystemPlayerStore(newTempStore)
+		store, err := NewFileSystemPlayerStore(newTempStore)
+		assertNoError(t, err)
 
 		store.RecordWin("Chris")
 
@@ -62,7 +65,8 @@ func TestFileSystemStore(t *testing.T) {
 		newTempStore, closer := createTempFile(t, goldenTest)
 		defer closer()
 
-		store := NewFileSystemPlayerStore(newTempStore)
+		store, err := NewFileSystemPlayerStore(newTempStore)
+		assertNoError(t, err)
 
 		store.RecordWin("Ian")
 
@@ -71,4 +75,46 @@ func TestFileSystemStore(t *testing.T) {
 		assertScoreEquals(t, got, want)
 	})
 
+	// file_system_store_test.go
+	t.Run("works with an empty file", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, "")
+		defer cleanDatabase()
+
+		_, err := NewFileSystemPlayerStore(database)
+
+		assertNoError(t, err)
+	})
+
+	// file_system_store_test.go
+	t.Run("league sorted", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, `[
+		{"Name": "Cleo", "Wins": 10},
+		{"Name": "Chris", "Wins": 33}]`)
+		defer cleanDatabase()
+
+		store, err := NewFileSystemPlayerStore(database)
+
+		assertNoError(t, err)
+
+		got := store.GetLeague()
+
+		want := types.League{
+			{"Chris", 33},
+			{"Cleo", 10},
+		}
+
+		testhelpers.AssertLeague(t, got, want)
+
+		// read again
+		got = store.GetLeague()
+		testhelpers.AssertLeague(t, got, want)
+	})
+
+}
+
+func assertNoError(t testing.TB, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatalf("got an error but didn't want one %v", err)
+	}
 }
