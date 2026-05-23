@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/iancullinane/prisoner/pkg/prisoner"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +16,8 @@ var playCmd = &cobra.Command{
 	Short: "Play prisoner's dilemna",
 	Long:  `Provide a move and get a result`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("play called")
+		r1, r2 := prisoner.Play('C', 'C')
+		fmt.Println(r1, r2)
 	},
 }
 

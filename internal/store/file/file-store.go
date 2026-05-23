@@ -59,7 +59,7 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 	if player != nil {
 		player.Wins++
 	} else {
-		f.league = append(f.league, types.Player{name, 1})
+		f.league = append(f.league, types.Player{Name: name, Wins: 1})
 	}
 
 	f.database.Encode(f.league)

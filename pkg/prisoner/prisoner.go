@@ -27,6 +27,22 @@ type Payoff[T any] struct {
 	Punish T // Sucker payoff
 }
 
+// Classic: T=0, R=-1, P=0, S=-3
+var Classic = Payoff[int]{
+	High:   0,
+	Low:    -1,
+	None:   0,
+	Punish: -3,
+}
+
+// Positive: T=+3, R=+2, P=0, S=-1
+var Positive = Payoff[int]{
+	High:   3,
+	Low:    2,
+	None:   0,
+	Punish: -1,
+}
+
 func (payoff Payoff[T]) Compute(result Result) T {
 	switch result {
 	case Temptation:
@@ -47,9 +63,9 @@ func Play(m1, m2 Move) (r1, r2 Result) {
 	case m1 == Cooperate && m2 == Cooperate:
 		return Reward, Reward
 	case m1 == Cooperate && m2 == Betray:
-		return Punish, Temptation
+		return Sucker, Temptation
 	case m1 == Betray && m2 == Cooperate:
-		return Temptation, Punish
+		return Temptation, Sucker
 	case m1 == Betray && m2 == Betray:
 		return Punish, Punish
 	default:

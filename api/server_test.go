@@ -184,9 +184,9 @@ func TestCompute_Post(t *testing.T) {
 func TestLeague(t *testing.T) {
 	t.Run("it returns 200 on /league", func(t *testing.T) {
 		wantedLeague := []Player{
-			{"Cleo", 32},
-			{"Chris", 20},
-			{"Tiest", 14},
+			{Name: "Cleo", Wins: 32},
+			{Name: "Chris", Wins: 20},
+			{Name: "Tiest", Wins: 14},
 		}
 
 		store := StubPlayerStore{nil, nil, wantedLeague}

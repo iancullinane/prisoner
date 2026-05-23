@@ -6,28 +6,39 @@ import (
 	"time"
 )
 
-var traditionalIntRewardSpec = []struct {
-	result Result
-	want   int
-}{
-	{Temptation, 2},
-	{Reward, 1},
-	{Punish, 0},
-	{Sucker, -1},
+func TestPayoff_Classic(t *testing.T) {
+	spec := []struct {
+		result Result
+		want   int
+	}{
+		{Temptation, 0},
+		{Reward, -1},
+		{Punish, 0},
+		{Sucker, -3},
+	}
+	for _, tc := range spec {
+		t.Run(string(tc.result), func(t *testing.T) {
+			if got := Classic.Compute(tc.result); got != tc.want {
+				t.Errorf("Classic.Compute(%q): got %d, want %d", tc.result, got, tc.want)
+			}
+		})
+	}
 }
 
-func TestRefactor_Reward_resultMapsToInt(t *testing.T) {
-	traditional := Payoff[int]{
-		High:   2,
-		Low:    1,
-		None:   0,
-		Punish: -1,
+func TestPayoff_Positive(t *testing.T) {
+	spec := []struct {
+		result Result
+		want   int
+	}{
+		{Temptation, 3},
+		{Reward, 2},
+		{Punish, 0},
+		{Sucker, -1},
 	}
-	for _, tc := range traditionalIntRewardSpec {
+	for _, tc := range spec {
 		t.Run(string(tc.result), func(t *testing.T) {
-			got := traditional.Compute(tc.result)
-			if got != tc.want {
-				t.Errorf("For(%q): got %d, want %d", tc.result, got, tc.want)
+			if got := Positive.Compute(tc.result); got != tc.want {
+				t.Errorf("Positive.Compute(%q): got %d, want %d", tc.result, got, tc.want)
 			}
 		})
 	}
@@ -70,8 +81,8 @@ func TestRefactor_Result(t *testing.T) {
 	}{
 		{"both_cooperate", Cooperate, Cooperate, Reward, Reward},
 		{"both_betray", Betray, Betray, Punish, Punish},
-		{"p1_cooperate_p2_betray", Cooperate, Betray, Punish, Temptation},
-		{"p1_betray_p2_cooperate", Betray, Cooperate, Temptation, Punish},
+		{"p1_cooperate_p2_betray", Cooperate, Betray, Sucker, Temptation},
+		{"p1_betray_p2_cooperate", Betray, Cooperate, Temptation, Sucker},
 	}
 	for _, tc := range tests {
 		got1, got2 := Play(tc.m1, tc.m2)

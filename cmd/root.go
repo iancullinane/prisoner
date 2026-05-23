@@ -16,11 +16,23 @@ var cfgFile string
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "prisoner",
-	Short: "Command line implementation of prionser's dilemna game",
-	Long:  `This is a toy app for running prisoner's dilemna simulations`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Short: "Command line playing of prionser's dilemna",
+	Long: `A small laboratory for the Prisoner's Dilemma.
+
+Two players choose to cooperate or defect. The payoff matrix rewards
+temptation and punishment, but mutual cooperation beats mutual defection—
+so trust is fragile and interesting.
+
+Scores are recorded via their algebraic symbols as follows:
+- Temptation: T
+- Reward: R
+- Punish: P
+- Sucker: S	
+
+Scoring mechanisms convert these symbols based on the payoff matrix used.
+
+Use this CLI to play rounds from the terminal and to experiment with
+strategies and simulations as the tool grows.`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

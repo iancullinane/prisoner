@@ -99,8 +99,8 @@ func TestFileSystemStore(t *testing.T) {
 		got := store.GetLeague()
 
 		want := types.League{
-			{"Chris", 33},
-			{"Cleo", 10},
+			{Name: "Chris", Wins: 33},
+			{Name: "Cleo", Wins: 10},
 		}
 
 		testhelpers.AssertLeague(t, got, want)
