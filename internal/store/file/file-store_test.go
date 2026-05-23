@@ -118,3 +118,15 @@ func assertNoError(t testing.TB, err error) {
 		t.Fatalf("got an error but didn't want one %v", err)
 	}
 }
+
+func TestFileSystemPlayerStore_Contract(t *testing.T) {
+	testhelpers.RunPlayerStoreContract(t, func() types.PlayerStore {
+		f, cleanup := createTempFile(t, "[]")
+		t.Cleanup(cleanup)
+		store, err := NewFileSystemPlayerStore(f)
+		if err != nil {
+			t.Fatalf("could not create store: %v", err)
+		}
+		return store
+	})
+}

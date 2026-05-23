@@ -40,5 +40,5 @@ type Round struct {
 }
 
 func (r Round) String() string {
-	return fmt.Sprintf("%s vs %s: %s, %s", r.ProtagonistMove, r.OpponentMove, r.ProtagonistResult, r.OpponentResult)
+	return fmt.Sprintf("%v vs %v: %v, %v", r.ProtagonistMove, r.OpponentMove, r.ProtagonistResult, r.OpponentResult)
 }
