@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/iancullinane/prisoner/internal/types"
+	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
 
 const jsonContentType = "application/json"
@@ -26,21 +26,14 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
 	p.store = store
 
 	router := http.NewServeMux()
-	router.Handle("/league", http.HandlerFunc(p.leagueHandler))
-	router.Handle("/players/", http.HandlerFunc(p.playersHandler))
+	router.Handle("GET /league", http.HandlerFunc(p.leagueHandler))
+	router.Handle("GET /players/{name}", http.HandlerFunc(p.playersHandler))
+	router.Handle("POST /players/{name}", http.HandlerFunc(p.playersHandler))
+	router.Handle("/play/", http.HandlerFunc(p.playHandler))
 
 	p.Handler = router
 
 	return p
-}
-
-// server.go
-func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	router := http.NewServeMux()
-	router.Handle("/league", http.HandlerFunc(p.leagueHandler))
-	router.Handle("/players/", http.HandlerFunc(p.playersHandler))
-
-	router.ServeHTTP(w, r)
 }
 
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
@@ -49,8 +42,14 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(leagueTable)
 }
 
+func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
+	r1, _ := prisoner.Play('C', 'C')
+
+	fmt.Fprint(w, r1)
+}
+
 func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
-	player := strings.TrimPrefix(r.URL.Path, "/players/")
+	player := r.PathValue("name")
 
 	switch r.Method {
 	case http.MethodPost:

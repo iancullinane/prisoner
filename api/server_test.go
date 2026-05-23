@@ -76,7 +76,7 @@ func TestPOSTPlayers(t *testing.T) {
 
 // MARK: GET test
 
-func TestGETPlayers(t *testing.T) {
+func TestPlayers_Get(t *testing.T) {
 
 	store := StubPlayerStore{
 		map[string]int{
@@ -138,7 +138,47 @@ func TestGETPlayers(t *testing.T) {
 	}
 }
 
-// MARK: Leagure Test
+//MARK: Prisoner Test
+// ========================================
+
+func TestCompute_Post(t *testing.T) {
+
+	store := StubPlayerStore{}
+	server := NewPlayerServer(&store)
+
+	tests := []struct {
+		name       string
+		url        string
+		playerName string
+		response   string
+		code       int
+	}{
+		{
+			"base test",
+			"play",
+			"Pepper",
+			"R",
+			http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			request := newGetScoreRequest(tc.url, tc.playerName)
+			response := httptest.NewRecorder()
+
+			server.ServeHTTP(response, request)
+
+			got := response.Body.String()
+			want := tc.response
+
+			assertResponseStatus(t, response.Code, tc.code)
+			assertResponseBody(t, got, want)
+		})
+	}
+}
+
+// MARK: League Test
 // ========================================
 
 func TestLeague(t *testing.T) {
@@ -172,7 +212,7 @@ func newGetScoreRequest(route, name string) *http.Request {
 	return req
 }
 
-func newPostWinRequest(route, name string) *http.Request {
+func newPostRequest(route, name string) *http.Request {
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/%s/%s", route, name), nil)
 	return req
 }

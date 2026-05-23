@@ -85,9 +85,9 @@ func TestRecordingWinsAndRetrievingThem_Postgres(t *testing.T) {
 	server := NewPlayerServer(store)
 	player := "Pepper"
 
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest("players", player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest("players", player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest("players", player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostRequest("players", player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostRequest("players", player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostRequest("players", player))
 
 	t.Run("get score", func(t *testing.T) {
 		response := httptest.NewRecorder()

@@ -23,3 +23,4 @@ In no particular order and with a note on why this particular tech:
 ## Project Structure
 
 I try to follow Go standards here but I am not perfect I am sure I mess things up. In general I think it is pretty clear. Files to look our for are `Makefile` and `sqlc.yaml`. `sqlc` is used to take the db schema and generate the golang ready code. That is why `prisonerdb` is in the `.gitignore` but you can change it if you want the package will still be named `data`.
+
