@@ -1,3 +1,6 @@
+> [!NOTE] 
+> 🏗️ This is an in-progress refactor that totally changes the original. See `main` for more information but I have changed the default branch to `icullinane/version2` because my previous implementation is not reflective of my modern knowledge of the Go programming language, AWS, and the other technologies I plan or am using.
+
 # prisoner
 
 This is v2 of my personal repo that is both portfolio project (I try to use different features of Go for professional development) and fun side project. 
