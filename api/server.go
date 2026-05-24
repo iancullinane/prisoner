@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/iancullinane/prisoner/internal/types"
@@ -13,21 +14,12 @@ const jsonContentType = "application/json"
 
 type Player = types.Player
 
-// PlayerStore defines the capabilities the server requires.
-// Stores may implement additional interfaces for extended functionality
-// without breaking this contract.
-type PlayerStore interface {
-	GetPlayerScore(name string) int
-	RecordWin(name string)
-	GetLeague() types.League
-}
-
 type PlayerServer struct {
-	store PlayerStore
+	store types.PlayerStore
 	http.Handler
 }
 
-func NewPlayerServer(store PlayerStore) *PlayerServer {
+func NewPlayerServer(store types.PlayerStore) *PlayerServer {
 
 	p := new(PlayerServer)
 
@@ -45,7 +37,12 @@ func NewPlayerServer(store PlayerStore) *PlayerServer {
 }
 
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
-	leagueTable := p.store.GetLeague()
+	leagueTable, err := p.store.GetLeague()
+	if err != nil {
+		log.Printf("league: %v", err)
+		http.Error(w, "could not load league", http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("content-type", jsonContentType)
 	json.NewEncoder(w).Encode(leagueTable)
 }
@@ -68,7 +65,12 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
-	score := p.store.GetPlayerScore(player)
+	score, err := p.store.GetPlayerScore(player)
+	if err != nil {
+		log.Printf("get score for %q: %v", player, err)
+		http.Error(w, "could not load score", http.StatusInternalServerError)
+		return
+	}
 	if score == 0 {
 		w.WriteHeader(http.StatusNotFound)
 	}
@@ -77,6 +79,10 @@ func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
 }
 
 func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
-	p.store.RecordWin(player)
+	if err := p.store.RecordWin(player); err != nil {
+		log.Printf("record win for %q: %v", player, err)
+		http.Error(w, "could not record win", http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusAccepted)
 }

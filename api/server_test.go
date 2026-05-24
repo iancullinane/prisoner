@@ -20,17 +20,18 @@ type StubPlayerStore struct {
 	league   types.League
 }
 
-func (s *StubPlayerStore) GetPlayerScore(name string) int {
+func (s *StubPlayerStore) GetPlayerScore(name string) (int, error) {
 	score := s.scores[name]
-	return score
+	return score, nil
 }
 
-func (s *StubPlayerStore) RecordWin(name string) {
+func (s *StubPlayerStore) RecordWin(name string) error {
 	s.winCalls = append(s.winCalls, name)
+	return nil
 }
 
-func (s *StubPlayerStore) GetLeague() types.League {
-	return s.league
+func (s *StubPlayerStore) GetLeague() (types.League, error) {
+	return s.league, nil
 }
 
 // MARK: POST test

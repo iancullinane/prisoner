@@ -47,7 +47,11 @@ var playCmd = &cobra.Command{
 			return fmt.Errorf("unknown scoring %q: use classic or positive", scoring)
 		}
 
-		fmt.Printf("Using %s store (%d players in league)\n", storeKind, len(store.GetLeague()))
+		league, err := store.GetLeague()
+		if err != nil {
+			return fmt.Errorf("loading league from %s store: %w", storeKind, err)
+		}
+		fmt.Printf("Using %s store (%d players in league)\n", storeKind, len(league))
 
 		roundCount, err := strconv.Atoi(args[0])
 		if err != nil {

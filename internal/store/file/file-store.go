@@ -35,25 +35,25 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
 
 }
 
-func (f *FileSystemPlayerStore) GetLeague() types.League {
+func (f *FileSystemPlayerStore) GetLeague() (types.League, error) {
 	sort.Slice(f.league, func(i, j int) bool {
 		return f.league[i].Wins > f.league[j].Wins
 	})
-	return f.league
+	return f.league, nil
 }
 
-func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
+func (f *FileSystemPlayerStore) GetPlayerScore(name string) (int, error) {
 
 	player := f.league.Find(name)
 
 	if player != nil {
-		return player.Wins
+		return player.Wins, nil
 	}
 
-	return 0
+	return 0, nil
 }
 
-func (f *FileSystemPlayerStore) RecordWin(name string) {
+func (f *FileSystemPlayerStore) RecordWin(name string) error {
 	player := f.league.Find(name)
 
 	if player != nil {
@@ -62,7 +62,10 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 		f.league = append(f.league, types.Player{Name: name, Wins: 1})
 	}
 
-	f.database.Encode(f.league)
+	if err := f.database.Encode(f.league); err != nil {
+		return fmt.Errorf("encoding league to file: %w", err)
+	}
+	return nil
 }
 
 // file_system_store.go

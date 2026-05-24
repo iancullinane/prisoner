@@ -19,7 +19,8 @@ func TestFileSystemStore(t *testing.T) {
 		store, err := NewFileSystemPlayerStore(newTempStore)
 		assertNoError(t, err)
 
-		got := store.GetPlayerScore("Chris")
+		got, err := store.GetPlayerScore("Chris")
+		assertNoError(t, err)
 		want := 33
 
 		assertScoreEquals(t, got, want)
@@ -33,7 +34,8 @@ func TestFileSystemStore(t *testing.T) {
 		store, err := NewFileSystemPlayerStore(newTempStore)
 		assertNoError(t, err)
 
-		got := store.GetLeague()
+		got, err := store.GetLeague()
+		assertNoError(t, err)
 
 		want := []types.Player{
 			{Name: "Chris", Wins: 33},
@@ -42,7 +44,8 @@ func TestFileSystemStore(t *testing.T) {
 
 		testhelpers.AssertLeague(t, got, want)
 		// should get the same result every time
-		got = store.GetLeague()
+		got, err = store.GetLeague()
+		assertNoError(t, err)
 		testhelpers.AssertLeague(t, got, want)
 
 	})
@@ -54,9 +57,11 @@ func TestFileSystemStore(t *testing.T) {
 		store, err := NewFileSystemPlayerStore(newTempStore)
 		assertNoError(t, err)
 
-		store.RecordWin("Chris")
+		err = store.RecordWin("Chris")
+		assertNoError(t, err)
 
-		got := store.GetPlayerScore("Chris")
+		got, err := store.GetPlayerScore("Chris")
+		assertNoError(t, err)
 		want := 34
 		assertScoreEquals(t, got, want)
 	})
@@ -68,9 +73,11 @@ func TestFileSystemStore(t *testing.T) {
 		store, err := NewFileSystemPlayerStore(newTempStore)
 		assertNoError(t, err)
 
-		store.RecordWin("Ian")
+		err = store.RecordWin("Ian")
+		assertNoError(t, err)
 
-		got := store.GetPlayerScore("Ian")
+		got, err := store.GetPlayerScore("Ian")
+		assertNoError(t, err)
 		want := 1
 		assertScoreEquals(t, got, want)
 	})
@@ -96,7 +103,8 @@ func TestFileSystemStore(t *testing.T) {
 
 		assertNoError(t, err)
 
-		got := store.GetLeague()
+		got, err := store.GetLeague()
+		assertNoError(t, err)
 
 		want := types.League{
 			{Name: "Chris", Wins: 33},
@@ -106,7 +114,8 @@ func TestFileSystemStore(t *testing.T) {
 		testhelpers.AssertLeague(t, got, want)
 
 		// read again
-		got = store.GetLeague()
+		got, err = store.GetLeague()
+		assertNoError(t, err)
 		testhelpers.AssertLeague(t, got, want)
 	})
 
