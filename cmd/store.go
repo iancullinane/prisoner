@@ -21,6 +21,8 @@ const (
 	dbFileName    = "game.db.json"
 )
 
+// openPlayerStore lets us optionally set an in-memory, file-based, or database backed
+// storage system.
 func openPlayerStore(ctx context.Context, kind string) (types.PlayerStore, func(), error) {
 	switch kind {
 	case StoreMemory, "":
@@ -41,6 +43,8 @@ func openPlayerStore(ctx context.Context, kind string) (types.PlayerStore, func(
 	}
 }
 
+// openFileStore will open or create a new json file to use as storage
+// behind the application
 func openFileStore() (types.PlayerStore, func(), error) {
 	f, err := os.OpenFile(dbFileName, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
