@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 
+	"github.com/Pallinder/go-randomdata"
 	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
@@ -13,10 +14,26 @@ type Player struct {
 	Wins int
 }
 
+func NewPlayer(name string) *Player {
+	if name == "" {
+		name = randomdata.FirstName(randomdata.RandomGender)
+	}
+
+	id, err := uuid.NewRandom()
+	if err != nil {
+		panic(fmt.Sprintf("failed to generate uuid for player: %v", err))
+	}
+
+	return &Player{
+		ID:   id,
+		Name: name,
+	}
+}
+
 type PlayerStore interface {
-	GetPlayerScore(name string) int
-	RecordWin(name string)
-	GetLeague() League
+	GetPlayerScore(name string) (int, error)
+	RecordWin(name string) error
+	GetLeague() (League, error)
 }
 
 type League []Player
@@ -33,27 +50,27 @@ func (l League) Find(name string) *Player {
 // Round represents a single interaction between two players
 // resultint in betrayals or cooperations
 type Round struct {
-	Protagonist       uuid.UUID
-	Opponent          uuid.UUID
+	Protagonist       Player
+	Opponent          Player
 	ProtagonistMove   prisoner.Move
 	OpponentMove      prisoner.Move
 	ProtagonistResult prisoner.Result
 	OpponentResult    prisoner.Result
 }
 
-func NewRound(protagonist, opponent uuid.UUID, protagonistMove, opponentMove prisoner.Move) Round {
+func NewRound(protagonist, opponent *Player, protagonistMove, opponentMove prisoner.Move) Round {
 	return Round{
-		Protagonist:     protagonist,
-		Opponent:        opponent,
+		Protagonist:     *protagonist,
+		Opponent:        *opponent,
 		ProtagonistMove: protagonistMove,
 		OpponentMove:    opponentMove,
 	}
 }
 
 func (r Round) PrintScore(scoring prisoner.Payoff[int]) string {
-	return fmt.Sprintf("%s vs %s: %s, %s", r.Protagonist, r.Opponent, r.ProtagonistMove, r.OpponentMove)
+	return fmt.Sprintf("%s vs %s: %s, %s", r.Protagonist.Name, r.Opponent.Name, r.ProtagonistMove, r.OpponentMove)
 }
 
 func (r Round) String() string {
-	return fmt.Sprintf("%s vs %s: %s, %s", r.Protagonist, r.Opponent, r.ProtagonistMove, r.OpponentMove)
+	return fmt.Sprintf("%s vs %s: %s, %s", r.Protagonist.Name, r.Opponent.Name, r.ProtagonistMove, r.OpponentMove)
 }

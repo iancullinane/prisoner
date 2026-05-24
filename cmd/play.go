@@ -8,17 +8,16 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/internal/types"
 	"github.com/iancullinane/prisoner/pkg/prisoner"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var (
-	player1, _ = uuid.FromBytes([]byte("player1"))
-	player2, _ = uuid.FromBytes([]byte("player2"))
-)
+// var (
+// 	player1, _ = uuid.FromBytes([]byte("player1"))
+// 	player2, _ = uuid.FromBytes([]byte("player2"))
+// )
 
 // playCmd represents the play command
 var playCmd = &cobra.Command{
@@ -36,20 +35,27 @@ var playCmd = &cobra.Command{
 			defer cleanup()
 		}
 
-		scoring, err := cmd.Flags().GetString("scoring")
-		if err != nil {
-			return err
+		scoring := viper.GetString("scoring")
+
+		var payoff prisoner.Payoff[int]
+		switch scoring {
+		case "positive", "":
+			payoff = prisoner.Positive
+		case "classic":
+			payoff = prisoner.Classic
+		default:
+			return fmt.Errorf("unknown scoring %q: use classic or positive", scoring)
 		}
 
 		fmt.Printf("Using %s store (%d players in league)\n", storeKind, len(store.GetLeague()))
-		payoff := prisoner.Positive
 
 		roundCount, err := strconv.Atoi(args[0])
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Using %s scoring\n", scoring)
+		player1 := types.NewPlayer("")
+		player2 := types.NewPlayer("")
 
 		rounds := make([]types.Round, 0, roundCount)
 		for i := 0; i < roundCount; i++ {
@@ -66,6 +72,8 @@ var playCmd = &cobra.Command{
 		for _, round := range rounds {
 			fmt.Println(round.PrintScore(payoff))
 		}
+
+		// TODO: Store the results of the game for later, only applies to file or database storage
 		return nil
 	},
 }
@@ -74,6 +82,7 @@ func init() {
 	rootCmd.AddCommand(playCmd)
 
 	playCmd.Flags().String("scoring", "positive", "scoring system to use, accepts, classic or positive")
+	_ = viper.BindPFlag("scoring", playCmd.Flags().Lookup("scoring"))
 
 	// Here you will define your flags and configuration settings.
 
