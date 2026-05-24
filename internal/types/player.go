@@ -33,12 +33,27 @@ func (l League) Find(name string) *Player {
 // Round represents a single interaction between two players
 // resultint in betrayals or cooperations
 type Round struct {
+	Protagonist       uuid.UUID
+	Opponent          uuid.UUID
 	ProtagonistMove   prisoner.Move
 	OpponentMove      prisoner.Move
 	ProtagonistResult prisoner.Result
 	OpponentResult    prisoner.Result
 }
 
+func NewRound(protagonist, opponent uuid.UUID, protagonistMove, opponentMove prisoner.Move) Round {
+	return Round{
+		Protagonist:     protagonist,
+		Opponent:        opponent,
+		ProtagonistMove: protagonistMove,
+		OpponentMove:    opponentMove,
+	}
+}
+
+func (r Round) PrintScore(scoring prisoner.Payoff[int]) string {
+	return fmt.Sprintf("%s vs %s: %s, %s", r.Protagonist, r.Opponent, r.ProtagonistMove, r.OpponentMove)
+}
+
 func (r Round) String() string {
-	return fmt.Sprintf("%v vs %v: %v, %v", r.ProtagonistMove, r.OpponentMove, r.ProtagonistResult, r.OpponentResult)
+	return fmt.Sprintf("%s vs %s: %s, %s", r.Protagonist, r.Opponent, r.ProtagonistMove, r.OpponentMove)
 }

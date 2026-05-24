@@ -7,6 +7,10 @@ const (
 	Betray    Move = 'B'
 )
 
+func (m Move) String() string {
+	return string(m)
+}
+
 type Result rune
 
 const (
@@ -20,6 +24,9 @@ func (r Result) String() string {
 	return string(r)
 }
 
+// Payoff is a generic type for implementing scores
+// each score type could be different, including time
+// itself, but mostly just integers...
 type Payoff[T any] struct {
 	High   T // Temptation payoff
 	Low    T // Mutual cooperation

@@ -4,10 +4,20 @@ Copyright © 2026 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"strconv"
 
+	"github.com/google/uuid"
+	"github.com/iancullinane/prisoner/internal/types"
 	"github.com/iancullinane/prisoner/pkg/prisoner"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+)
+
+var (
+	player1, _ = uuid.FromBytes([]byte("player1"))
+	player2, _ = uuid.FromBytes([]byte("player2"))
 )
 
 // playCmd represents the play command
@@ -15,17 +25,47 @@ var playCmd = &cobra.Command{
 	Use:   "play",
 	Short: "Play prisoner's dilemna",
 	Long:  `Provide a move and get a result`,
+	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		storeKind := viper.GetString("store")
+		store, cleanup, err := openPlayerStore(context.Background(), storeKind)
+		if err != nil {
+			return err
+		}
+		if cleanup != nil {
+			defer cleanup()
+		}
+
 		scoring, err := cmd.Flags().GetString("scoring")
 		if err != nil {
 			return err
 		}
 
+		fmt.Printf("Using %s store (%d players in league)\n", storeKind, len(store.GetLeague()))
 		payoff := prisoner.Positive
 
+		roundCount, err := strconv.Atoi(args[0])
+		if err != nil {
+			return err
+		}
+
 		fmt.Printf("Using %s scoring\n", scoring)
-		r1, r2 := prisoner.Play(prisoner.Cooperate, prisoner.Cooperate)
-		fmt.Println(payoff.Compute(r1), payoff.Compute(r2))
+
+		rounds := make([]types.Round, 0, roundCount)
+		for i := 0; i < roundCount; i++ {
+			rounds = append(rounds,
+				types.NewRound(
+					player1,
+					player2,
+					prisoner.Cooperate,
+					prisoner.Cooperate))
+		}
+
+		fmt.Printf("Playing %d rounds\n", len(rounds))
+
+		for _, round := range rounds {
+			fmt.Println(round.PrintScore(payoff))
+		}
 		return nil
 	},
 }

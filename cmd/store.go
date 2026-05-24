@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/iancullinane/prisoner/db"
 	storefile "github.com/iancullinane/prisoner/internal/store/file"
 	"github.com/iancullinane/prisoner/internal/store/memory"
 	storepostgres "github.com/iancullinane/prisoner/internal/store/postgres"
@@ -13,25 +14,45 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func newMemoryStore() types.PlayerStore {
-	return memory.NewInMemoryPlayerStore()
+const (
+	StoreMemory   = "memory"
+	StorePostgres = "postgres"
+	StoreFile     = "file"
+	dbFileName    = "game.db.json"
+)
+
+func openPlayerStore(ctx context.Context, kind string) (types.PlayerStore, func(), error) {
+	switch kind {
+	case StoreMemory, "":
+		return memory.NewInMemoryPlayerStore(), nil, nil
+	case StorePostgres:
+		pool, err := openPostgresPool(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		return storepostgres.NewPlayerStore(pool), func() { pool.Close() }, nil
+	case StoreFile:
+		return openFileStore()
+	default:
+		return nil, nil, fmt.Errorf(
+			"unknown store %q: want %q, %q, or %q",
+			kind, StoreMemory, StoreFile, StorePostgres,
+		)
+	}
 }
 
-func newPostgresStore(pool *pgxpool.Pool) types.PlayerStore {
-	return storepostgres.NewPlayerStore(pool)
-}
-
-func newFileStore() (types.PlayerStore, func(), error) {
-	db, err := os.OpenFile(dbFileName, os.O_RDWR|os.O_CREATE, 0666)
+func openFileStore() (types.PlayerStore, func(), error) {
+	f, err := os.OpenFile(dbFileName, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, nil, fmt.Errorf("open %s: %w", dbFileName, err)
 	}
 
-	store, err := storefile.NewFileSystemPlayerStore(db)
+	store, err := storefile.NewFileSystemPlayerStore(f)
 	if err != nil {
+		f.Close()
 		return nil, nil, fmt.Errorf("new file system player store: %w", err)
 	}
-	return store, func() { db.Close() }, nil
+	return store, func() { f.Close() }, nil
 }
 
 func openPostgresPool(ctx context.Context) (*pgxpool.Pool, error) {
@@ -50,7 +71,7 @@ func openPostgresPool(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("postgres ping: %w", err)
 	}
 
-	if _, err := pool.Exec(ctx, schemaSQL); err != nil {
+	if _, err := pool.Exec(ctx, db.SchemaSQL); err != nil {
 		pool.Close()
 		return nil, fmt.Errorf("apply schema: %w", err)
 	}

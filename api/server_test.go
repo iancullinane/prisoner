@@ -8,12 +8,14 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/internal/store/testhelpers"
 	"github.com/iancullinane/prisoner/internal/types"
 )
 
 type StubPlayerStore struct {
 	scores   map[string]int
+	players  map[uuid.UUID]types.Player
 	winCalls []string
 	league   types.League
 }
@@ -78,15 +80,11 @@ func TestPOSTPlayers(t *testing.T) {
 func TestPlayers_Get(t *testing.T) {
 
 	store := StubPlayerStore{
-		map[string]int{
+		scores: map[string]int{
 			"Pepper": 20,
-			"Steve":  10,
+			"Chris":  10,
 		},
-		[]string{
-			"Pepper",
-			"Steve",
-		},
-		nil,
+		winCalls: nil,
 	}
 
 	server := NewPlayerServer(&store)
@@ -106,9 +104,9 @@ func TestPlayers_Get(t *testing.T) {
 			http.StatusOK,
 		},
 		{
-			"test_steve",
+			"test_chris",
 			"players",
-			"Steve",
+			"Chris",
 			"10",
 			http.StatusOK,
 		},
@@ -188,7 +186,7 @@ func TestLeague(t *testing.T) {
 			{Name: "Tiest", Wins: 14},
 		}
 
-		store := StubPlayerStore{nil, nil, wantedLeague}
+		store := StubPlayerStore{nil, nil, nil, wantedLeague}
 		server := NewPlayerServer(&store)
 
 		request := newLeagueRequest()
