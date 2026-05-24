@@ -15,14 +15,25 @@ var playCmd = &cobra.Command{
 	Use:   "play",
 	Short: "Play prisoner's dilemna",
 	Long:  `Provide a move and get a result`,
-	Run: func(cmd *cobra.Command, args []string) {
-		r1, r2 := prisoner.Play('C', 'C')
-		fmt.Println(r1, r2)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		scoring, err := cmd.Flags().GetString("scoring")
+		if err != nil {
+			return err
+		}
+
+		payoff := prisoner.Positive
+
+		fmt.Printf("Using %s scoring\n", scoring)
+		r1, r2 := prisoner.Play(prisoner.Cooperate, prisoner.Cooperate)
+		fmt.Println(payoff.Compute(r1), payoff.Compute(r2))
+		return nil
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(playCmd)
+
+	playCmd.Flags().String("scoring", "positive", "scoring system to use, accepts, classic or positive")
 
 	// Here you will define your flags and configuration settings.
 

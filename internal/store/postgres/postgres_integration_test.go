@@ -1,20 +1,18 @@
 //go:build integration
 
-package api
+package postgres
 
 import (
 	"context"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-
-	storepostgres "github.com/iancullinane/prisoner/internal/store/postgres"
-	"github.com/iancullinane/prisoner/internal/store/testhelpers"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
+
+	"github.com/iancullinane/prisoner/internal/store/testhelpers"
+	"github.com/iancullinane/prisoner/internal/types"
 )
 
 var integrationPool *pgxpool.Pool
@@ -80,32 +78,12 @@ func findRepoFile(rel string) (string, error) {
 	}
 }
 
-func TestRecordingWinsAndRetrievingThem_Postgres(t *testing.T) {
-	store := storepostgres.NewPlayerStore(integrationPool)
-	server := NewPlayerServer(store)
-	player := "Pepper"
-
-	server.ServeHTTP(httptest.NewRecorder(), newPostRequest("players", player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostRequest("players", player))
-	server.ServeHTTP(httptest.NewRecorder(), newPostRequest("players", player))
-
-	t.Run("get score", func(t *testing.T) {
-		response := httptest.NewRecorder()
-		server.ServeHTTP(response, newGetScoreRequest("players", player))
-		assertResponseStatus(t, response.Code, http.StatusOK)
-
-		assertResponseBody(t, response.Body.String(), "3")
-	})
-
-	t.Run("get league", func(t *testing.T) {
-		response := httptest.NewRecorder()
-		server.ServeHTTP(response, newLeagueRequest())
-		assertResponseStatus(t, response.Code, http.StatusOK)
-
-		got := getLeagueFromResponse(t, response.Body)
-		want := []Player{
-			{Name: "Pepper", Wins: 4},
+func TestPostgresPlayerStore_Contract(t *testing.T) {
+	testhelpers.RunPlayerStoreContract(t, func() types.PlayerStore {
+		// Truncate for a clean slate on each subtest.
+		if _, err := integrationPool.Exec(context.Background(), "TRUNCATE players"); err != nil {
+			t.Fatalf("could not truncate players table: %v", err)
 		}
-		testhelpers.AssertLeague(t, got, want)
+		return NewPlayerStore(integrationPool)
 	})
 }

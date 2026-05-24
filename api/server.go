@@ -12,7 +12,15 @@ import (
 const jsonContentType = "application/json"
 
 type Player = types.Player
-type PlayerStore = types.PlayerStore
+
+// PlayerStore defines the capabilities the server requires.
+// Stores may implement additional interfaces for extended functionality
+// without breaking this contract.
+type PlayerStore interface {
+	GetPlayerScore(name string) int
+	RecordWin(name string)
+	GetLeague() types.League
+}
 
 type PlayerServer struct {
 	store PlayerStore

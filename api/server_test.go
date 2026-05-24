@@ -27,7 +27,6 @@ func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
 }
 
-// server_test.go
 func (s *StubPlayerStore) GetLeague() types.League {
 	return s.league
 }
