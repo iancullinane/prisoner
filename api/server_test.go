@@ -6,42 +6,33 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/internal/store/testhelpers"
 	"github.com/iancullinane/prisoner/internal/types"
+	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
 
-type StubPlayerStore struct {
-	scores   map[string]int
-	players  map[uuid.UUID]types.Player
-	winCalls []string
-	league   types.League
-}
-
-func (s *StubPlayerStore) GetPlayerScore(name string) (int, error) {
-	score := s.scores[name]
-	return score, nil
-}
-
-func (s *StubPlayerStore) RecordWin(name string) error {
-	s.winCalls = append(s.winCalls, name)
-	return nil
-}
-
-func (s *StubPlayerStore) GetLeague() (types.League, error) {
-	return s.league, nil
-}
+var (
+	testID1, _ = uuid.Parse("00000000-0000-aaaa-2222-222222222222")
+	testID2, _ = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
+)
 
 // MARK: POST test
 
 func TestPOSTPlayers(t *testing.T) {
-	store := StubPlayerStore{
+	playerStore := StubPlayerStore{
 		scores:   map[string]int{},
 		winCalls: nil,
 	}
-	server := NewPlayerServer(&store)
+	historyStore := StubHistoryStore{
+		history:                types.History{types.Interaction{}},
+		recordInteractionCalls: []types.Interaction{},
+	}
+
+	server := NewPlayerServer(&playerStore, &historyStore)
 
 	tests := []struct {
 		name string
@@ -64,12 +55,12 @@ func TestPOSTPlayers(t *testing.T) {
 
 			assertResponseStatus(t, response.Code, tc.code)
 
-			if len(store.winCalls) != 1 {
-				t.Errorf("got %d calls to RecordWin want %d", len(store.winCalls), 1)
+			if len(playerStore.winCalls) != 1 {
+				t.Errorf("got %d calls to RecordWin want %d", len(playerStore.winCalls), 1)
 			}
 
-			if store.winCalls[0] != "Pepper" {
-				t.Errorf("did not store correct winner got %q want %q", store.winCalls[0], "Pepper")
+			if playerStore.winCalls[0] != "Pepper" {
+				t.Errorf("did not store correct winner got %q want %q", playerStore.winCalls[0], "Pepper")
 			}
 
 		})
@@ -87,8 +78,12 @@ func TestPlayers_Get(t *testing.T) {
 		},
 		winCalls: nil,
 	}
+	historyStore := StubHistoryStore{
+		history:                types.History{types.Interaction{}},
+		recordInteractionCalls: []types.Interaction{},
+	}
 
-	server := NewPlayerServer(&store)
+	server := NewPlayerServer(&store, &historyStore)
 
 	tests := []struct {
 		name       string
@@ -136,45 +131,90 @@ func TestPlayers_Get(t *testing.T) {
 	}
 }
 
-//MARK: Prisoner Test
-// ========================================
+// MARK: Play Test
 
-func TestCompute_Post(t *testing.T) {
-
-	store := StubPlayerStore{}
-	server := NewPlayerServer(&store)
-
+func TestHistory_Get(t *testing.T) {
 	tests := []struct {
-		name       string
-		url        string
-		playerName string
-		response   string
-		code       int
+		name    string
+		pID     uuid.UUID
+		history types.History
+		code    int
 	}{
 		{
-			"base test",
-			"play",
-			"Pepper",
-			"R",
-			http.StatusOK,
+			name: "should play the game - both cooperate",
+			pID:  testID1,
+			history: types.History{
+				types.Interaction{
+					Protagonist:     testID1,
+					Opponent:        testID2,
+					ProtagonistMove: prisoner.Cooperate,
+					OpponentMove:    prisoner.Cooperate,
+				},
+			},
+			code: http.StatusOK,
 		},
 	}
-
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request := newGetScoreRequest(tc.url, tc.playerName)
-			response := httptest.NewRecorder()
 
+			historyStore := StubHistoryStore{history: tc.history}
+			server := NewPlayerServer(&StubPlayerStore{}, &historyStore)
+
+			request := newHistoryRequest(tc.pID)
+			response := httptest.NewRecorder()
 			server.ServeHTTP(response, request)
 
-			got := response.Body.String()
-			want := tc.response
-
 			assertResponseStatus(t, response.Code, tc.code)
-			assertResponseBody(t, got, want)
+			assertContentType(t, response, jsonContentType)
+			assertHistory(t, getHistoryFromResponse(t, response.Body), tc.history)
 		})
 	}
 }
+
+// MARK: History Test
+// ========================================
+
+// func TestHistory_Get(t *testing.T) {
+
+// 	store := StubPlayerStore{}
+// 	historyStore := StubHistoryStore{
+// 		history:                types.History{types.Interaction{}},
+// 		recordInteractionCalls: []types.Interaction{},
+// 	}
+
+// 	server := NewPlayerServer(&store, &historyStore)
+
+// 	tests := []struct {
+// 		name       string
+// 		url        string
+// 		playerName string
+// 		response   string
+// 		code       int
+// 	}{
+// 		{
+// 			"test_pepper",
+// 			"players",
+// 			"Pepper",
+// 			"20",
+// 			http.StatusOK,
+// 		},
+// 	}
+
+// 	for _, tc := range tests {
+// 		t.Run(tc.name, func(t *testing.T) {
+// 			request := newGetScoreRequest(tc.url, tc.playerName)
+// 			response := httptest.NewRecorder()
+
+// 			server.ServeHTTP(response, request)
+
+// 			got := response.Body.String()
+// 			want := tc.response
+
+// 			assertResponseStatus(t, response.Code, tc.code)
+// 			assertResponseBody(t, got, want)
+// 		})
+// 	}
+// }
 
 // MARK: League Test
 // ========================================
@@ -188,7 +228,11 @@ func TestLeague(t *testing.T) {
 		}
 
 		store := StubPlayerStore{nil, nil, nil, wantedLeague}
-		server := NewPlayerServer(&store)
+		historyStore := StubHistoryStore{
+			history:                types.History{types.Interaction{}},
+			recordInteractionCalls: []types.Interaction{},
+		}
+		server := NewPlayerServer(&store, &historyStore)
 
 		request := newLeagueRequest()
 		response := httptest.NewRecorder()
@@ -204,6 +248,16 @@ func TestLeague(t *testing.T) {
 
 // MARK: Request Builders
 // ====================================
+
+func newHistoryRequest(id uuid.UUID) *http.Request {
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/history/%s", id.String()), nil)
+	return req
+}
+
+func newPlayRequest(id uuid.UUID) *http.Request {
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/play/%s", id.String()), nil)
+	return req
+}
 
 func newGetScoreRequest(route, name string) *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/%s/%s", route, name), nil)
@@ -255,4 +309,20 @@ func getLeagueFromResponse(t testing.TB, body io.Reader) (league []Player) {
 	}
 
 	return
+}
+
+func getHistoryFromResponse(t testing.TB, body io.Reader) types.History {
+	t.Helper()
+	h, err := types.NewHistory(body)
+	if err != nil {
+		t.Fatalf("unable to parse response into History: %v", err)
+	}
+	return h
+}
+
+func assertHistory(t testing.TB, got, want types.History) {
+	t.Helper()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("history mismatch\n  got:  %+v\n  want: %+v", got, want)
+	}
 }

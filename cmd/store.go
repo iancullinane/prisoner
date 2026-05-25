@@ -23,7 +23,7 @@ const (
 
 // openHistoryStore lets us optionally set an in-memory, file-based, or database backed
 // storage system.
-func openHistoryStore(ctx context.Context, kind string) (types.HistoryStore, func(), error) {
+func openHistoryStore(_ctx context.Context, kind string) (types.HistoryStore, func(), error) {
 	switch kind {
 	case StoreMemory, "":
 		return memory.NewInMemoryHistoryStore(), nil, nil
@@ -34,7 +34,7 @@ func openHistoryStore(ctx context.Context, kind string) (types.HistoryStore, fun
 		fmt.Println("file history store not implemented")
 		return nil, nil, nil
 	default:
-		fmt.Println("unknown history store %q: want %q, %q, or %q", kind, StoreMemory, StoreFile, StorePostgres)
+		fmt.Printf("unknown history store %q: want %q, %q, or %q", kind, StoreMemory, StoreFile, StorePostgres)
 		return nil, nil, nil
 	}
 }
@@ -52,7 +52,7 @@ func openPlayerStore(ctx context.Context, kind string) (types.PlayerStore, func(
 		}
 		return storepostgres.NewPlayerStore(pool), func() { pool.Close() }, nil
 	case StoreFile:
-		return openFileStore()
+		return openPlayerFileStore()
 	default:
 		return nil, nil, fmt.Errorf(
 			"unknown store %q: want %q, %q, or %q",
@@ -61,9 +61,9 @@ func openPlayerStore(ctx context.Context, kind string) (types.PlayerStore, func(
 	}
 }
 
-// openFileStore will open or create a new json file to use as storage
+// openPlayerFileStore will open or create a new json file to use as storage
 // behind the application
-func openFileStore() (types.PlayerStore, func(), error) {
+func openPlayerFileStore() (types.PlayerStore, func(), error) {
 	f, err := os.OpenFile(dbFileName, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, nil, fmt.Errorf("open %s: %w", dbFileName, err)

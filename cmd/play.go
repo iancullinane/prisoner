@@ -19,9 +19,9 @@ import (
 // 	player2, _ = uuid.FromBytes([]byte("player2"))
 // )
 
-// playCmd represents the play command
-var playCmd = &cobra.Command{
-	Use:   "play",
+// simulateCmd represents the play command
+var simulateCmd = &cobra.Command{
+	Use:   "simulate",
 	Short: "Play prisoner's dilemna",
 	Long:  `Provide a move and get a result`,
 	Args:  cobra.ExactArgs(1),
@@ -107,10 +107,10 @@ var playCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(playCmd)
+	rootCmd.AddCommand(simulateCmd)
 
-	playCmd.Flags().String("scoring", "positive", "scoring system to use, accepts, classic or positive")
-	_ = viper.BindPFlag("scoring", playCmd.Flags().Lookup("scoring"))
+	simulateCmd.Flags().String("scoring", "positive", "scoring system to use, accepts, classic or positive")
+	_ = viper.BindPFlag("scoring", simulateCmd.Flags().Lookup("scoring"))
 
 	// Here you will define your flags and configuration settings.
 

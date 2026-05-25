@@ -29,8 +29,17 @@ var serverCmd = &cobra.Command{
 			defer cleanup()
 		}
 
+		historyStoreKind := viper.GetString("history-store")
+		historyStore, cleanup, err := openHistoryStore(context.Background(), historyStoreKind)
+		if err != nil {
+			return err
+		}
+		if cleanup != nil {
+			defer cleanup()
+		}
+
 		fmt.Printf("starting server (%s store)...\n", storeKind)
-		server := api.NewPlayerServer(store)
+		server := api.NewPlayerServer(store, historyStore)
 		log.Println("listening on :5001")
 		log.Fatal(http.ListenAndServe(":5001", server))
 

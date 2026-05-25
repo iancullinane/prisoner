@@ -35,9 +35,4 @@ type PlayerStore interface {
 	GetLeague() (League, error)
 }
 
-type HistoryStore interface {
-	GetHistory() (History, error)
-	RecordInteraction(interaction Interaction) error
-}
-
 //

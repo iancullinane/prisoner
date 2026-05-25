@@ -4,13 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
 
 type History []Interaction
+
+type HistoryStore interface {
+	GetHistory() (History, error)
+	RecordInteraction(interaction Interaction) error
+}
 
 func NewHistory(rdr io.Reader) (History, error) {
 	var history History
@@ -28,7 +32,7 @@ type Interaction struct {
 	Opponent        uuid.UUID
 	ProtagonistMove prisoner.Move
 	OpponentMove    prisoner.Move
-	CreatedAt       time.Time
+	// CreatedAt       time.Time
 }
 
 func NewInteraction(protagonist, opponent uuid.UUID, protagonistMove, opponentMove prisoner.Move) Interaction {
@@ -38,7 +42,7 @@ func NewInteraction(protagonist, opponent uuid.UUID, protagonistMove, opponentMo
 		Opponent:        opponent,
 		ProtagonistMove: protagonistMove,
 		OpponentMove:    opponentMove,
-		CreatedAt:       time.Now(),
+		// CreatedAt:       time.Now(),
 	}
 }
 
