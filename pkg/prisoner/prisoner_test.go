@@ -1,6 +1,7 @@
 package prisoner
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -88,6 +89,33 @@ func TestRefactor_Result(t *testing.T) {
 		got1, got2 := Play(tc.m1, tc.m2)
 
 		assertResult(t, got1, tc.r1, got2, tc.r2)
+	}
+}
+
+func TestMove_JSON(t *testing.T) {
+	cases := []struct {
+		move Move
+		json string
+	}{
+		{Cooperate, `"C"`},
+		{Betray, `"B"`},
+	}
+	for _, c := range cases {
+		got, err := json.Marshal(c.move)
+		if err != nil || string(got) != c.json {
+			t.Errorf("marshal %v: got %s err=%v, want %s", c.move, got, err, c.json)
+		}
+		var back Move
+		if err := json.Unmarshal([]byte(c.json), &back); err != nil || back != c.move {
+			t.Errorf("unmarshal %s: got %v err=%v, want %v", c.json, back, err, c.move)
+		}
+	}
+
+	for _, in := range []string{`""`, `"CC"`, `123`} {
+		var m Move
+		if err := json.Unmarshal([]byte(in), &m); err == nil {
+			t.Errorf("unmarshal %s: expected error", in)
+		}
 	}
 }
 
