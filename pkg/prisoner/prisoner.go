@@ -1,5 +1,10 @@
 package prisoner
 
+import (
+	"encoding/json"
+	"fmt"
+)
+
 type Move rune
 
 const (
@@ -11,6 +16,23 @@ func (m Move) String() string {
 	return string(m)
 }
 
+func (m Move) MarshalJSON() ([]byte, error) {
+	return json.Marshal(string(m))
+}
+func (m *Move) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	if len(s) != 1 {
+		return fmt.Errorf("invalid Move: %q", s)
+	}
+	*m = Move(s[0])
+	return nil
+}
+
+// MARK: Result Types
+// ==================
 type Result rune
 
 const (
