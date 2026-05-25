@@ -171,51 +171,6 @@ func TestHistory_Get(t *testing.T) {
 	}
 }
 
-// MARK: History Test
-// ========================================
-
-// func TestHistory_Get(t *testing.T) {
-
-// 	store := StubPlayerStore{}
-// 	historyStore := StubHistoryStore{
-// 		history:                types.History{types.Interaction{}},
-// 		recordInteractionCalls: []types.Interaction{},
-// 	}
-
-// 	server := NewPlayerServer(&store, &historyStore)
-
-// 	tests := []struct {
-// 		name       string
-// 		url        string
-// 		playerName string
-// 		response   string
-// 		code       int
-// 	}{
-// 		{
-// 			"test_pepper",
-// 			"players",
-// 			"Pepper",
-// 			"20",
-// 			http.StatusOK,
-// 		},
-// 	}
-
-// 	for _, tc := range tests {
-// 		t.Run(tc.name, func(t *testing.T) {
-// 			request := newGetScoreRequest(tc.url, tc.playerName)
-// 			response := httptest.NewRecorder()
-
-// 			server.ServeHTTP(response, request)
-
-// 			got := response.Body.String()
-// 			want := tc.response
-
-// 			assertResponseStatus(t, response.Code, tc.code)
-// 			assertResponseBody(t, got, want)
-// 		})
-// 	}
-// }
-
 // MARK: League Test
 // ========================================
 
