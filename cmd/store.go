@@ -21,6 +21,24 @@ const (
 	dbFileName    = "game.db.json"
 )
 
+// openHistoryStore lets us optionally set an in-memory, file-based, or database backed
+// storage system.
+func openHistoryStore(ctx context.Context, kind string) (types.HistoryStore, func(), error) {
+	switch kind {
+	case StoreMemory, "":
+		return memory.NewInMemoryHistoryStore(), nil, nil
+	case StorePostgres:
+		fmt.Println("postgres history store not implemented")
+		return nil, nil, nil
+	case StoreFile:
+		fmt.Println("file history store not implemented")
+		return nil, nil, nil
+	default:
+		fmt.Println("unknown history store %q: want %q, %q, or %q", kind, StoreMemory, StoreFile, StorePostgres)
+		return nil, nil, nil
+	}
+}
+
 // openPlayerStore lets us optionally set an in-memory, file-based, or database backed
 // storage system.
 func openPlayerStore(ctx context.Context, kind string) (types.PlayerStore, func(), error) {

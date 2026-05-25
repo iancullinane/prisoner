@@ -61,23 +61,47 @@ var playCmd = &cobra.Command{
 		player1 := types.NewPlayer("")
 		player2 := types.NewPlayer("")
 
-		rounds := make([]types.Round, 0, roundCount)
-		for i := 0; i < roundCount; i++ {
-			rounds = append(rounds,
-				types.NewRound(
-					player1,
-					player2,
-					prisoner.Cooperate,
-					prisoner.Cooperate))
+		//------------------------/------------------------/------------------------
+
+		historyStore, cleanup, err := openHistoryStore(context.Background(), storeKind)
+		if err != nil {
+			return err
+		}
+		if cleanup != nil {
+			defer cleanup()
 		}
 
-		fmt.Printf("Playing %d rounds\n", len(rounds))
+		history, err := historyStore.GetHistory()
+		if err != nil {
+			return fmt.Errorf("loading history from %s store: %w", storeKind, err)
+		}
+		fmt.Printf("Using %s store (%d interactions in history)\n", storeKind, len(history))
 
-		for _, round := range rounds {
-			fmt.Println(round.PrintScore(payoff))
+		//------------------------/------------------------/------------------------
+		fmt.Printf("Playing %d rounds\n", roundCount)
+
+		// rounds := make([]types.Interaction, 0, roundCount)
+		for range roundCount {
+			interaction := types.NewInteraction(
+				player1.ID,
+				player2.ID,
+				prisoner.Cooperate,
+				prisoner.Cooperate)
+			err = historyStore.RecordInteraction(interaction)
+			if err != nil {
+				return fmt.Errorf("recording interaction in %s store: %w", storeKind, err)
+			}
 		}
 
-		// TODO: Store the results of the game for later, only applies to file or database storage
+		history, err = historyStore.GetHistory()
+		if err != nil {
+			return fmt.Errorf("loading history from %s store: %w", storeKind, err)
+		}
+
+		for _, interaction := range history {
+			fmt.Println(interaction.PrintScore(payoff))
+		}
+
 		return nil
 	},
 }

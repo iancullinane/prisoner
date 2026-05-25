@@ -1,6 +1,31 @@
 package memory
 
-import "github.com/iancullinane/prisoner/internal/types"
+import (
+	"github.com/iancullinane/prisoner/internal/types"
+)
+
+// MARK: HistoryStore
+// ------------------------------------------------------------
+
+type InMemoryHistoryStore struct {
+	store []types.Interaction
+}
+
+func NewInMemoryHistoryStore() *InMemoryHistoryStore {
+	return &InMemoryHistoryStore{[]types.Interaction{}}
+}
+
+func (i *InMemoryHistoryStore) GetHistory() (types.History, error) {
+	return i.store, nil
+}
+
+func (i *InMemoryHistoryStore) RecordInteraction(interaction types.Interaction) error {
+	i.store = append(i.store, interaction)
+	return nil
+}
+
+// MARK: PlayerStore
+// ------------------------------------------------------------
 
 // in_memory_player_store.go
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
