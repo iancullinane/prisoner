@@ -101,6 +101,13 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
 
 func (p *PlayerServer) historyHandler(w http.ResponseWriter, r *http.Request) {
 
+	// TODO: Get history per player
+	//   We need to be able to get the history of a player as well, since the data is flat
+	//   and only tracks the actual interactions, we can likely reduce on the map and get
+	//   what we need. This would operate differently depending on store types, ensure
+	//   it is behind a swappable interface. Different stores will have totally different
+	//   performance costs.
+	//  labels: story
 	pID := r.PathValue("id")
 	if pID == "" {
 		//do nothing
