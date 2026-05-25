@@ -30,8 +30,12 @@ func NewPlayerServer(playerStore types.PlayerStore, historyStore types.HistorySt
 
 	router := http.NewServeMux()
 	router.Handle("GET /league", http.HandlerFunc(p.leagueHandler))
+	// TODO: Update the player route to work with newer versions of player
+	//   Revamp player to search by name or ID, to post with the ID and Move. This would be usual `GET /players` which then gets a history of all interactions from that user.
+	// labels: feature
 	router.Handle("GET /players/{name}", http.HandlerFunc(p.playersHandler))
 	router.Handle("POST /players/{name}", http.HandlerFunc(p.playersHandler))
+	router.Handle("GET /history", http.HandlerFunc(p.historyHandler))
 	router.Handle("GET /history/{id}", http.HandlerFunc(p.historyHandler))
 	router.Handle("POST /play/{id}", http.HandlerFunc(p.playHandler))
 
@@ -52,10 +56,27 @@ func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: Implement play against a CPU opponent on the server
+	//  until real user backing exists (specifically UUID support) have the play response return a random move, but always set the opponent as uuid:uuid.Parse("00000000-0000-aaaa-2222-222222222222") for testing and development purposes.
+	// labels:story
+	devOpponent, err := types.NewPlayerFromID("00000000-0000-aaaa-2222-222222222222")
+	if err != nil {
+		http.Error(w, "could not create opponent", http.StatusInternalServerError)
+		return
+	}
+
+	proUUID, _ := uuid.NewRandom()
+
+	protagonist := types.Player{
+		ID:   proUUID,
+		Name: "Ian",
+		Wins: 0,
+	}
+
 	protagonistMove, opponentMove := prisoner.Cooperate, prisoner.Cooperate
 	protagonistResult, _ := prisoner.Play(protagonistMove, opponentMove)
 
-	interaction := types.NewInteraction(uuid.Nil, uuid.Nil, protagonistMove, opponentMove)
+	interaction := types.NewInteraction(protagonist.ID, devOpponent.ID, protagonistMove, opponentMove)
 	if err := p.historyStore.RecordInteraction(interaction); err != nil {
 		log.Printf("record interaction: %v", err)
 		http.Error(w, "could not record interaction", http.StatusInternalServerError)
@@ -119,6 +140,26 @@ func (p *PlayerServer) historyHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "could not load history", http.StatusInternalServerError)
 		return
 	}
+
+	if rawID := r.PathValue("id"); rawID != "" {
+		playerID, err := uuid.Parse(rawID)
+		if err != nil {
+			http.Error(w, "invalid player id", http.StatusBadRequest)
+			return
+		}
+		history = filterHistoryByPlayer(history, playerID)
+	}
+
 	w.Header().Set("content-type", jsonContentType)
 	json.NewEncoder(w).Encode(history)
+}
+
+func filterHistoryByPlayer(history types.History, playerID uuid.UUID) types.History {
+	filtered := make(types.History, 0, len(history))
+	for _, interaction := range history {
+		if interaction.Protagonist == playerID || interaction.Opponent == playerID {
+			filtered = append(filtered, interaction)
+		}
+	}
+	return filtered
 }

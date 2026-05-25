@@ -22,6 +22,7 @@ var (
 
 // MARK: POST test
 
+// This actually records wins, which we are removing
 func TestPOSTPlayers(t *testing.T) {
 	playerStore := StubPlayerStore{
 		scores:   map[string]int{},

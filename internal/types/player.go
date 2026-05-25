@@ -7,6 +7,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const devPlayerName = "Steve"
+
 type Player struct {
 	ID   uuid.UUID
 	Name string
@@ -27,6 +29,19 @@ func NewPlayer(name string) *Player {
 		ID:   id,
 		Name: name,
 	}
+}
+
+func NewPlayerFromID(id string) (*Player, error) {
+
+	uuid, err := uuid.Parse(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Player{
+		ID:   uuid,
+		Name: devPlayerName,
+	}, nil
 }
 
 type PlayerStore interface {
