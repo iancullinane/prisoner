@@ -4,13 +4,16 @@ package postgres
 
 import (
 	"context"
+	"database/sql"
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
+	"github.com/iancullinane/prisoner/db"
 	"github.com/iancullinane/prisoner/internal/store/testhelpers"
 	"github.com/iancullinane/prisoner/internal/types"
 )
@@ -39,15 +42,9 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	schemaPath, err := findRepoFile("db/schema.sql")
-	if err != nil {
-		panic(err)
-	}
-	schemaSQL, err := os.ReadFile(schemaPath)
-	if err != nil {
-		panic(err)
-	}
-	if _, err := pool.Exec(ctx, string(schemaSQL)); err != nil {
+	// Run goose migrations — same path as the server takes.
+	stdDB := stdlib.OpenDBFromPool(pool)
+	if err := runMigrations(stdDB); err != nil {
 		panic(err)
 	}
 
@@ -61,27 +58,18 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func findRepoFile(rel string) (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
+func runMigrations(stdDB *sql.DB) error {
+	goose.SetBaseFS(db.Migrations)
+	if err := goose.SetDialect("postgres"); err != nil {
+		return err
 	}
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
-			return filepath.Join(dir, rel), nil
-		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return "", os.ErrNotExist
-		}
-		dir = parent
-	}
+	return goose.Up(stdDB, "migrations")
 }
 
 func TestPostgresPlayerStore_Contract(t *testing.T) {
 	testhelpers.RunPlayerStoreContract(t, func() types.PlayerStore {
-		// Truncate for a clean slate on each subtest.
-		if _, err := integrationPool.Exec(context.Background(), "TRUNCATE players"); err != nil {
+		// CASCADE is required because interactions has a FK referencing players.
+		if _, err := integrationPool.Exec(context.Background(), "TRUNCATE players CASCADE"); err != nil {
 			t.Fatalf("could not truncate players table: %v", err)
 		}
 		return NewPlayerStore(integrationPool)

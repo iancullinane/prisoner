@@ -12,6 +12,8 @@ import (
 	storepostgres "github.com/iancullinane/prisoner/internal/store/postgres"
 	"github.com/iancullinane/prisoner/internal/types"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
 )
 
 const (
@@ -93,11 +95,14 @@ func openPostgresPool(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("postgres ping: %w", err)
 	}
 
-	if _, err := pool.Exec(ctx, db.SchemaSQL); err != nil {
+	stdDB := stdlib.OpenDBFromPool(pool)
+	goose.SetBaseFS(db.Migrations)
+	goose.SetDialect("postgres")
+	if err := goose.Up(stdDB, "migrations"); err != nil {
 		pool.Close()
-		return nil, fmt.Errorf("apply schema: %w", err)
+		return nil, fmt.Errorf("run migrations: %w", err)
 	}
 
-	log.Print("postgres: connected, schema applied")
+	log.Print("postgres: connected, migrations applied")
 	return pool, nil
 }
