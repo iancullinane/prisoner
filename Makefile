@@ -24,4 +24,4 @@ test-integration:
 
 run-server-postgres: build compose-up
 	@until docker compose exec -T db pg_isready -U prisoner -d prisoner >/dev/null 2>&1; do sleep 0.3; done
-	DATABASE_URL='postgres://prisoner:prisoner@127.0.0.1:5432/prisoner?sslmode=disable' ./bin/prisoner -server -store postgres
+	DATABASE_URL='postgres://prisoner:prisoner@127.0.0.1:5432/prisoner?sslmode=disable' ./bin/prisoner --store postgres server
