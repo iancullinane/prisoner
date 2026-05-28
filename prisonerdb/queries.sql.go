@@ -7,7 +7,42 @@ package data
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+const getHistory = `-- name: GetHistory :many
+SELECT id, protagonist_id, opponent_id, protagonist_move, opponent_move, played_at
+FROM interactions
+ORDER BY played_at DESC
+`
+
+func (q *Queries) GetHistory(ctx context.Context) ([]Interaction, error) {
+	rows, err := q.db.Query(ctx, getHistory)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Interaction
+	for rows.Next() {
+		var i Interaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.ProtagonistID,
+			&i.OpponentID,
+			&i.ProtagonistMove,
+			&i.OpponentMove,
+			&i.PlayedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
 
 const getPlayerByName = `-- name: GetPlayerByName :one
 SELECT id, name, wins FROM players WHERE name = $1
@@ -43,6 +78,28 @@ func (q *Queries) ListPlayers(ctx context.Context) ([]Player, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const recordInteraction = `-- name: RecordInteraction :exec
+INSERT INTO interactions (protagonist_id, opponent_id, protagonist_move, opponent_move)
+VALUES ($1, $2, $3, $4)
+`
+
+type RecordInteractionParams struct {
+	ProtagonistID   pgtype.UUID
+	OpponentID      pgtype.UUID
+	ProtagonistMove string
+	OpponentMove    string
+}
+
+func (q *Queries) RecordInteraction(ctx context.Context, arg RecordInteractionParams) error {
+	_, err := q.db.Exec(ctx, recordInteraction,
+		arg.ProtagonistID,
+		arg.OpponentID,
+		arg.ProtagonistMove,
+		arg.OpponentMove,
+	)
+	return err
 }
 
 const upsertPlayerWin = `-- name: UpsertPlayerWin :exec

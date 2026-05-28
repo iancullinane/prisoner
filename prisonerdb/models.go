@@ -8,6 +8,15 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Interaction struct {
+	ID              pgtype.UUID
+	ProtagonistID   pgtype.UUID
+	OpponentID      pgtype.UUID
+	ProtagonistMove string
+	OpponentMove    string
+	PlayedAt        pgtype.Timestamptz
+}
+
 type Player struct {
 	ID   pgtype.UUID
 	Name string
