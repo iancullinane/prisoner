@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -44,10 +43,24 @@ func NewPlayerServer(playerStore types.PlayerStore, historyStore types.HistorySt
 	return p
 }
 
+// MARK: Logging Setup
+// ==========================================
+
+// func newLogger() *slog.Logger {
+// 	h := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+// 		Level: slog.LevelInfo,
+// 	})
+// 	return slog.New(h).With(
+// 		slog.String("service", "prisoner"),
+// 	)
+// }
+
+// MARK: Handlers
+// ==========================================
+
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 	leagueTable, err := p.playerStore.GetLeague()
 	if err != nil {
-		log.Printf("league: %v", err)
 		http.Error(w, "could not load league", http.StatusInternalServerError)
 		return
 	}
@@ -61,6 +74,7 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 	// labels:story
 	devOpponent, err := types.NewPlayerFromID("00000000-0000-aaaa-2222-222222222222")
 	if err != nil {
+		fmt.Printf(fmt.Sprintf("could not create opponent: %w", err))
 		http.Error(w, "could not create opponent", http.StatusInternalServerError)
 		return
 	}
@@ -78,7 +92,8 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 
 	interaction := types.NewInteraction(protagonist.ID, devOpponent.ID, protagonistMove, opponentMove)
 	if err := p.historyStore.RecordInteraction(interaction); err != nil {
-		log.Printf("record interaction: %v", err)
+
+		fmt.Println("record interaction: %w", err)
 		http.Error(w, "could not record interaction", http.StatusInternalServerError)
 		return
 	}
@@ -100,7 +115,6 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
 	score, err := p.playerStore.GetPlayerScore(player)
 	if err != nil {
-		log.Printf("get score for %q: %v", player, err)
 		http.Error(w, "could not load score", http.StatusInternalServerError)
 		return
 	}
@@ -113,7 +127,6 @@ func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
 
 func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
 	if err := p.playerStore.RecordWin(player); err != nil {
-		log.Printf("record win for %q: %v", player, err)
 		http.Error(w, "could not record win", http.StatusInternalServerError)
 		return
 	}
@@ -136,7 +149,6 @@ func (p *PlayerServer) historyHandler(w http.ResponseWriter, r *http.Request) {
 
 	history, err := p.historyStore.GetHistory()
 	if err != nil {
-		log.Printf("get history: %v", err)
 		http.Error(w, "could not load history", http.StatusInternalServerError)
 		return
 	}

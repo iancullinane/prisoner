@@ -7,5 +7,3 @@ services:
       POSTGRES_DB: prisoner
     ports:
       - "5432:5432"
-    volumes:
-      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql

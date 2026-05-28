@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/iancullinane/prisoner/db"
@@ -25,13 +24,16 @@ const (
 
 // openHistoryStore lets us optionally set an in-memory, file-based, or database backed
 // storage system.
-func openHistoryStore(_ctx context.Context, kind string) (types.HistoryStore, func(), error) {
+func openHistoryStore(ctx context.Context, kind string) (types.HistoryStore, func(), error) {
 	switch kind {
 	case StoreMemory, "":
 		return memory.NewInMemoryHistoryStore(), nil, nil
 	case StorePostgres:
-		fmt.Println("postgres history store not implemented")
-		return nil, nil, nil
+		pool, err := openPostgresPool(ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		return storepostgres.NewHistoryStore(pool), func() { pool.Close() }, nil
 	case StoreFile:
 		fmt.Println("file history store not implemented")
 		return nil, nil, nil
@@ -95,7 +97,10 @@ func openPostgresPool(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("postgres ping: %w", err)
 	}
 
+	// needed for goose
 	stdDB := stdlib.OpenDBFromPool(pool)
+
+	// this is kind of the 'explicit' bit needed to use the embedded migrations
 	goose.SetBaseFS(db.Migrations)
 	goose.SetDialect("postgres")
 	if err := goose.Up(stdDB, "migrations"); err != nil {
@@ -103,6 +108,6 @@ func openPostgresPool(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("run migrations: %w", err)
 	}
 
-	log.Print("postgres: connected, migrations applied")
+	fmt.Print("postgres: connected, migrations applied")
 	return pool, nil
 }

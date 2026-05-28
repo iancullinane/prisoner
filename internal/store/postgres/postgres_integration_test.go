@@ -20,6 +20,8 @@ import (
 
 var integrationPool *pgxpool.Pool
 
+// TestMain is a special name used for "setting" up your tests,
+// which somehow I had no idea about until now....
 func TestMain(m *testing.M) {
 	ctx := context.Background()
 	c, err := tcpostgres.Run(ctx, "postgres:16-alpine",
@@ -73,5 +75,15 @@ func TestPostgresPlayerStore_Contract(t *testing.T) {
 			t.Fatalf("could not truncate players table: %v", err)
 		}
 		return NewPlayerStore(integrationPool)
+	})
+}
+
+func TestPostgresHistoryStore_Contract(t *testing.T) {
+	testhelpers.RunHistoryStoreContract(t, func() types.HistoryStore {
+		// CASCADE is required because interactions has a FK referencing players.
+		if _, err := integrationPool.Exec(context.Background(), "TRUNCATE interactions CASCADE"); err != nil {
+			t.Fatalf("could not truncate history table: %v", err)
+		}
+		return NewHistoryStore(integrationPool)
 	})
 }
