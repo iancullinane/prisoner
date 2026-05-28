@@ -74,7 +74,7 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 	// labels:story
 	devOpponent, err := types.NewPlayerFromID("00000000-0000-aaaa-2222-222222222222")
 	if err != nil {
-		fmt.Printf("could not create opponent: %w", err)
+		fmt.Println("could not create opponent: %w", err)
 		http.Error(w, "could not create opponent", http.StatusInternalServerError)
 		return
 	}
