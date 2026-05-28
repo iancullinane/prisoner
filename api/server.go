@@ -74,7 +74,7 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 	// labels:story
 	devOpponent, err := types.NewPlayerFromID("00000000-0000-aaaa-2222-222222222222")
 	if err != nil {
-		fmt.Printf(fmt.Sprintf("could not create opponent: %w", err))
+		fmt.Printf("could not create opponent: %w", err)
 		http.Error(w, "could not create opponent", http.StatusInternalServerError)
 		return
 	}
@@ -92,7 +92,9 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 
 	interaction := types.NewInteraction(protagonist.ID, devOpponent.ID, protagonistMove, opponentMove)
 	if err := p.historyStore.RecordInteraction(interaction); err != nil {
-
+		// TODO: Add createPlayer before recordInteraction
+		//  right now when you attempt to record an interaction it fails because the protagonist and opponent don't exit on the players table they are fk'd to
+		// labels: story
 		fmt.Println("record interaction: %w", err)
 		http.Error(w, "could not record interaction", http.StatusInternalServerError)
 		return
