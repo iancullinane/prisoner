@@ -49,5 +49,3 @@ type PlayerStore interface {
 	RecordWin(name string) error
 	GetLeague() (League, error)
 }
-
-//

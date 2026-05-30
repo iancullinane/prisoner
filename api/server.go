@@ -36,7 +36,7 @@ func NewPlayerServer(playerStore types.PlayerStore, historyStore types.HistorySt
 	router.Handle("POST /players/{name}", http.HandlerFunc(p.playersHandler))
 	router.Handle("POST /players/{id}", http.HandlerFunc(p.playersHandler))
 	router.Handle("GET /history", http.HandlerFunc(p.historyHandler))
-	router.Handle("GET /history/{id}", http.HandlerFunc(p.historyHandler))
+	// router.Handle("GET /history/{id}", http.HandlerFunc(p.historyHandler))
 	router.Handle("POST /play/{id}", http.HandlerFunc(p.playHandler))
 
 	p.Handler = router
