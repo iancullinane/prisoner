@@ -27,29 +27,6 @@ func TestFileSystemStore(t *testing.T) {
 
 	})
 
-	t.Run("league from a reader", func(t *testing.T) {
-		newTempStore, closer := createTempFile(t, goldenTest)
-		defer closer()
-
-		store, err := NewFileSystemPlayerStore(newTempStore)
-		assertNoError(t, err)
-
-		got, err := store.GetLeague()
-		assertNoError(t, err)
-
-		want := []types.Player{
-			{Name: "Chris", Wins: 33},
-			{Name: "Cleo", Wins: 10},
-		}
-
-		testhelpers.AssertLeague(t, got, want)
-		// should get the same result every time
-		got, err = store.GetLeague()
-		assertNoError(t, err)
-		testhelpers.AssertLeague(t, got, want)
-
-	})
-
 	t.Run("record player win", func(t *testing.T) {
 		newTempStore, closer := createTempFile(t, goldenTest)
 		defer closer()
@@ -90,33 +67,6 @@ func TestFileSystemStore(t *testing.T) {
 		_, err := NewFileSystemPlayerStore(database)
 
 		assertNoError(t, err)
-	})
-
-	// file_system_store_test.go
-	t.Run("league sorted", func(t *testing.T) {
-		database, cleanDatabase := createTempFile(t, `[
-		{"Name": "Cleo", "Wins": 10},
-		{"Name": "Chris", "Wins": 33}]`)
-		defer cleanDatabase()
-
-		store, err := NewFileSystemPlayerStore(database)
-
-		assertNoError(t, err)
-
-		got, err := store.GetLeague()
-		assertNoError(t, err)
-
-		want := types.League{
-			{Name: "Chris", Wins: 33},
-			{Name: "Cleo", Wins: 10},
-		}
-
-		testhelpers.AssertLeague(t, got, want)
-
-		// read again
-		got, err = store.GetLeague()
-		assertNoError(t, err)
-		testhelpers.AssertLeague(t, got, want)
 	})
 
 }

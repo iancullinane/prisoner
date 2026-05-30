@@ -47,5 +47,4 @@ func NewPlayerFromID(id string) (*Player, error) {
 type PlayerStore interface {
 	GetPlayerScore(name string) (int, error)
 	RecordWin(name string) error
-	GetLeague() (League, error)
 }

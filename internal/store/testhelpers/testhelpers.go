@@ -120,34 +120,34 @@ func RunPlayerStoreContract(t *testing.T, newStore func() types.PlayerStore) {
 		}
 	})
 
-	t.Run("RecordWin adds new player to league", func(t *testing.T) {
-		store := newStore()
-		mustRecordWin(t, store, "Bob")
-		league := mustGetLeague(t, store)
-		var found *types.Player
-		for i := range league {
-			if league[i].Name == "Bob" {
-				found = &league[i]
-				break
-			}
-		}
-		if found == nil {
-			t.Fatalf("expected Bob in league, got %v", league)
-		}
-		if found.Wins != 1 {
-			t.Errorf("got wins %d, want 1", found.Wins)
-		}
-	})
+	// t.Run("RecordWin adds new player to league", func(t *testing.T) {
+	// 	store := newStore()
+	// 	mustRecordWin(t, store, "Bob")
+	// 	league := mustGetLeague(t, store)
+	// 	var found *types.Player
+	// 	for i := range league {
+	// 		if league[i].Name == "Bob" {
+	// 			found = &league[i]
+	// 			break
+	// 		}
+	// 	}
+	// 	if found == nil {
+	// 		t.Fatalf("expected Bob in league, got %v", league)
+	// 	}
+	// 	if found.Wins != 1 {
+	// 		t.Errorf("got wins %d, want 1", found.Wins)
+	// 	}
+	// })
 
-	t.Run("GetLeague returns all recorded players", func(t *testing.T) {
-		store := newStore()
-		mustRecordWin(t, store, "Alice")
-		mustRecordWin(t, store, "Bob")
-		league := mustGetLeague(t, store)
-		if len(league) != 2 {
-			t.Errorf("got %d players in league, want 2", len(league))
-		}
-	})
+	// t.Run("GetLeague returns all recorded players", func(t *testing.T) {
+	// 	store := newStore()
+	// 	mustRecordWin(t, store, "Alice")
+	// 	mustRecordWin(t, store, "Bob")
+	// 	league := mustGetLeague(t, store)
+	// 	if len(league) != 2 {
+	// 		t.Errorf("got %d players in league, want 2", len(league))
+	// 	}
+	// })
 }
 
 // MARK: Musts
@@ -168,14 +168,14 @@ func mustGetPlayerScore(t *testing.T, store types.PlayerStore, name string) int 
 	return score
 }
 
-func mustGetLeague(t *testing.T, store types.PlayerStore) types.League {
-	t.Helper()
-	league, err := store.GetLeague()
-	if err != nil {
-		t.Fatalf("GetLeague() returned error: %v", err)
-	}
-	return league
-}
+// func mustGetLeague(t *testing.T, store types.PlayerStore) types.League {
+// 	t.Helper()
+// 	league, err := store.GetLeague()
+// 	if err != nil {
+// 		t.Fatalf("GetLeague() returned error: %v", err)
+// 	}
+// 	return league
+// }
 
 func mustRecordInteraction(t *testing.T, store types.HistoryStore, player1, player2 uuid.UUID, move1, move2 prisoner.Move) {
 	t.Helper()

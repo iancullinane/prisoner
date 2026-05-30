@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
 
 	"github.com/iancullinane/prisoner/internal/types"
 )
@@ -33,13 +32,6 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
 		league:   league,
 	}, nil
 
-}
-
-func (f *FileSystemPlayerStore) GetLeague() (types.League, error) {
-	sort.Slice(f.league, func(i, j int) bool {
-		return f.league[i].Wins > f.league[j].Wins
-	})
-	return f.league, nil
 }
 
 func (f *FileSystemPlayerStore) GetPlayerScore(name string) (int, error) {
