@@ -28,7 +28,6 @@ func NewPlayerServer(playerStore types.PlayerStore, historyStore types.HistorySt
 	p.historyStore = historyStore
 
 	router := http.NewServeMux()
-	router.Handle("GET /league", http.HandlerFunc(p.leagueHandler))
 	// TODO: Update the player route to work with newer versions of player
 	//   Revamp player to search by name or ID, to post with the ID and Move. This would be usual `GET /players` which then gets a history of all interactions from that user.
 	// labels: feature
@@ -58,16 +57,6 @@ func NewPlayerServer(playerStore types.PlayerStore, historyStore types.HistorySt
 
 // MARK: Handlers
 // ==========================================
-
-func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
-	leagueTable, err := p.playerStore.GetLeague()
-	if err != nil {
-		http.Error(w, "could not load league", http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("content-type", jsonContentType)
-	json.NewEncoder(w).Encode(leagueTable)
-}
 
 func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Implement play against a CPU opponent on the server

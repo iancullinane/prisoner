@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/iancullinane/prisoner/internal/store/testhelpers"
 	"github.com/iancullinane/prisoner/internal/types"
 	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
@@ -175,33 +174,6 @@ func TestHistory_Get(t *testing.T) {
 // MARK: League Test
 // ========================================
 
-func TestLeague(t *testing.T) {
-	t.Run("it returns 200 on /league", func(t *testing.T) {
-		wantedLeague := []Player{
-			{Name: "Cleo", Wins: 32},
-			{Name: "Chris", Wins: 20},
-			{Name: "Tiest", Wins: 14},
-		}
-
-		store := StubPlayerStore{nil, nil, nil, wantedLeague}
-		historyStore := StubHistoryStore{
-			history:                types.History{types.Interaction{}},
-			recordInteractionCalls: []types.Interaction{},
-		}
-		server := NewPlayerServer(&store, &historyStore)
-
-		request := newLeagueRequest()
-		response := httptest.NewRecorder()
-
-		server.ServeHTTP(response, request)
-
-		got := getLeagueFromResponse(t, response.Body)
-		assertResponseStatus(t, response.Code, http.StatusOK)
-		testhelpers.AssertLeague(t, got, wantedLeague)
-		assertContentType(t, response, jsonContentType)
-	})
-}
-
 // MARK: Request Builders
 // ====================================
 
@@ -217,16 +189,6 @@ func newPlayRequest(id uuid.UUID) *http.Request {
 
 func newGetScoreRequest(route, name string) *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/%s/%s", route, name), nil)
-	return req
-}
-
-func newPostRequest(route, name string) *http.Request {
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/%s/%s", route, name), nil)
-	return req
-}
-
-func newLeagueRequest() *http.Request {
-	req, _ := http.NewRequest(http.MethodGet, "/league", nil)
 	return req
 }
 
