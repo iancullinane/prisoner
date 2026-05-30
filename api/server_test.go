@@ -218,17 +218,6 @@ func assertContentType(t testing.TB, response *httptest.ResponseRecorder, want s
 
 // MARK: League helper
 
-func getLeagueFromResponse(t testing.TB, body io.Reader) (league []Player) {
-	t.Helper()
-	league, err := types.NewLeague(body)
-
-	if err != nil {
-		t.Fatalf("unable to parse response into []Player: %v", err)
-	}
-
-	return
-}
-
 func getHistoryFromResponse(t testing.TB, body io.Reader) types.History {
 	t.Helper()
 	h, err := types.NewHistory(body)
