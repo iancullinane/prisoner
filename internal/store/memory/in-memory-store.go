@@ -45,15 +45,6 @@ func (i *InMemoryPlayerStore) GetPlayerScore(name string) (int, error) {
 	return i.store[name], nil
 }
 
-// in_memory_player_store.go
-func (i *InMemoryPlayerStore) GetLeague() (types.League, error) {
-	var league []types.Player
-	for name, wins := range i.store {
-		league = append(league, types.Player{Name: name, Wins: wins})
-	}
-	return league, nil
-}
-
 // MARK: Postgres
 // -------------------------------
 

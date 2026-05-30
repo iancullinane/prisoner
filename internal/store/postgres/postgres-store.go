@@ -85,16 +85,3 @@ func (s *PlayerStore) RecordWin(name string) error {
 	}
 	return nil
 }
-
-func (s *PlayerStore) GetLeague() (types.League, error) {
-	ctx := context.Background()
-	rows, err := s.q.ListPlayers(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("list players: %w", err)
-	}
-	out := make([]types.Player, 0, len(rows))
-	for _, r := range rows {
-		out = append(out, types.Player{Name: r.Name, Wins: int(r.Wins)})
-	}
-	return out, nil
-}
