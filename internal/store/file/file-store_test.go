@@ -9,28 +9,39 @@ import (
 	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
 
-const goldenTest = `[
-		{"Name": "Chris", "Wins": 33},
-		{"Name": "Cleo", "Wins": 10}
+// testID1, _ = uuid.Parse("00000000-0000-aaaa-2222-222222222222")
+// testID2, _ = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
+var (
+	player1, _          = uuid.Parse("00000000-0000-aaaa-2222-222222222222")
+	player2, _          = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
+	interactionIDOne, _ = uuid.Parse("22222222-2222-cccc-4444-444444444444")
+)
+
+// =========================
+
+const goldenPlayerStoreData = `[
+		{"ID": "00000000-0000-aaaa-2222-222222222222", "Name": "Chris"},
+		{"ID": "11111111-1111-bbbb-3333-333333333333", "Name": "Cleo"}
 	]`
 
 func TestFileSystemPlayerStore(t *testing.T) {
-	newTempStore, closer := createTempFile(t, goldenTest)
+	newTempStore, closer := createTempFile(t, goldenPlayerStoreData)
 	defer closer()
-	t.Run("get score for a placer", func(t *testing.T) {
+
+	t.Run("get a placer", func(t *testing.T) {
 		store, err := NewFileSystemPlayerStore(newTempStore)
 		testhelpers.AssertNoError(t, err)
 
-		got, err := store.GetPlayerScore("Chris")
+		got, err := store.GetPlayerByID(player1)
 		testhelpers.AssertNoError(t, err)
-		want := 33
+		want := types.Player{ID: player1, Name: "Chris", Wins: 0}
 
-		assertScoreEquals(t, got, want)
+		testhelpers.AssertPlayer(t, got, want)
 
 	})
 
 	t.Run("record player win", func(t *testing.T) {
-		newTempStore, closer := createTempFile(t, goldenTest)
+		newTempStore, closer := createTempFile(t, goldenPlayerStoreData)
 		defer closer()
 
 		store, err := NewFileSystemPlayerStore(newTempStore)
@@ -46,7 +57,7 @@ func TestFileSystemPlayerStore(t *testing.T) {
 	})
 
 	t.Run("record new player win", func(t *testing.T) {
-		newTempStore, closer := createTempFile(t, goldenTest)
+		newTempStore, closer := createTempFile(t, goldenPlayerStoreData)
 		defer closer()
 
 		store, err := NewFileSystemPlayerStore(newTempStore)
@@ -86,15 +97,8 @@ func TestFileSystemPlayerStore_Contract(t *testing.T) {
 }
 
 // MARK: History Store Tests
-// testID1, _ = uuid.Parse("00000000-0000-aaaa-2222-222222222222")
-// testID2, _ = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
-var (
-	player1, _          = uuid.Parse("00000000-0000-aaaa-2222-222222222222")
-	player2, _          = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
-	interactionIDOne, _ = uuid.Parse("22222222-2222-cccc-4444-444444444444")
-)
 
-const initialData = `[
+const goldenHistoryData = `[
 	{
 		"ID": "22222222-2222-cccc-4444-444444444444",
 		"Protagonist": "00000000-0000-aaaa-2222-222222222222",
@@ -105,7 +109,7 @@ const initialData = `[
 ]`
 
 func TestFileSystemHistoryStore(t *testing.T) {
-	newTempStore, closer := createTempFile(t, initialData)
+	newTempStore, closer := createTempFile(t, goldenHistoryData)
 	defer closer()
 	t.Run("single interaction", func(t *testing.T) {
 		store, err := NewFileSystemHistoryStore(newTempStore)

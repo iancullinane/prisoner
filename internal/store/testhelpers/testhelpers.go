@@ -18,6 +18,13 @@ var ()
 
 // MARK: Assertations
 
+func AssertPlayer(t testing.TB, got, want types.Player) {
+	t.Helper()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %+v, want %+v", got, want)
+	}
+}
+
 func AssertInteraction(t testing.TB, got, want types.Interaction) {
 	t.Helper()
 	if !reflect.DeepEqual(got, want) {

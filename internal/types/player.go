@@ -1,7 +1,9 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/Pallinder/go-randomdata"
 	"github.com/google/uuid"
@@ -47,4 +49,25 @@ func NewPlayerFromID(id string) (*Player, error) {
 type PlayerStore interface {
 	GetPlayerScore(name string) (int, error)
 	RecordWin(name string) error
+}
+
+type Players []Player
+
+func NewPlayers(rdr io.Reader) (Players, error) {
+	var players Players
+	err := json.NewDecoder(rdr).Decode(&players)
+	if err != nil {
+		err = fmt.Errorf("problem parsing league, %v", err)
+	}
+
+	return players, err
+}
+
+func (l Players) Find(id uuid.UUID) *Player {
+	for i, p := range l {
+		if p.ID == id {
+			return &l[i]
+		}
+	}
+	return nil
 }

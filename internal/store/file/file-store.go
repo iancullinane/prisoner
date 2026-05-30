@@ -12,7 +12,10 @@ import (
 )
 
 var ErrInteractionNotFound = errors.New("interaction not found")
+var ErrPlayerNotFound = errors.New("player not found")
 
+// MARK: History Store
+// ===================
 const HistoryFile = "history.db.json"
 
 type FileSystemHistoryStore struct {
@@ -64,12 +67,13 @@ func (f *FileSystemHistoryStore) RecordInteraction(interaction types.Interaction
 // MARK: Player Store
 // ==================
 
-type FileSystemPlayerStore struct {
+type FileSystemStore struct {
 	database *json.Encoder
 	league   types.League
+	players  types.Players
 }
 
-func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
+func NewFileSystemPlayerStore(file *os.File) (*FileSystemStore, error) {
 	file.Seek(0, io.SeekStart)
 
 	err := initialisePlayerDBFile(file)
@@ -77,19 +81,28 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemPlayerStore, error) {
 		return nil, fmt.Errorf("problem initialising player db file, %v", err)
 	}
 
-	league, err := types.NewLeague(file)
+	players, err := types.NewPlayers(file)
 	if err != nil {
 		return nil, err
 	}
 
-	return &FileSystemPlayerStore{
+	return &FileSystemStore{
 		database: json.NewEncoder(&tape{file}),
-		league:   league,
+		players:  players,
 	}, nil
 
 }
 
-func (f *FileSystemPlayerStore) GetPlayerScore(name string) (int, error) {
+func (f *FileSystemStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
+	player := f.players.Find(id)
+	if player == nil {
+		return types.Player{}, ErrPlayerNotFound
+	}
+
+	return *player, nil
+}
+
+func (f *FileSystemStore) GetPlayerScore(name string) (int, error) {
 
 	player := f.league.Find(name)
 
@@ -100,7 +113,7 @@ func (f *FileSystemPlayerStore) GetPlayerScore(name string) (int, error) {
 	return 0, nil
 }
 
-func (f *FileSystemPlayerStore) RecordWin(name string) error {
+func (f *FileSystemStore) RecordWin(name string) error {
 	player := f.league.Find(name)
 
 	if player != nil {
@@ -114,6 +127,9 @@ func (f *FileSystemPlayerStore) RecordWin(name string) error {
 	}
 	return nil
 }
+
+// MARK: Initialize Player DB
+// ===========================
 
 // file_system_store.go
 func initialisePlayerDBFile(file *os.File) error {
