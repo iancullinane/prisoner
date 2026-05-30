@@ -58,9 +58,13 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Find home directory.
+		// Find home directory
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
+
+		if os.Getenv("DEBUG") != "" {
+			home = "/Users/iancullinane/dev/iancullinane/prisoner"
+		}
 
 		// Search config in home directory with name ".prisoner" (without extension).
 		viper.AddConfigPath(home)
@@ -70,6 +74,8 @@ func initConfig() {
 
 	viper.SetEnvPrefix("prisoner")
 	viper.SetDefault("store", StoreMemory)
+	viper.SetDefault("scoring", "classic")
+
 	viper.AutomaticEnv()
 
 	// If a config file is found, read it in.
