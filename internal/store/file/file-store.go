@@ -2,12 +2,52 @@ package file
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/internal/types"
 )
+
+var ErrInteractionNotFound = errors.New("interaction not found")
+
+const HistoryFile = "history.db.json"
+
+type FileSystemHistoryStore struct {
+	database *json.Encoder
+	history  types.History
+}
+
+func NewFileSystemHistoryStore(file *os.File) (*FileSystemHistoryStore, error) {
+	file.Seek(0, io.SeekStart)
+
+	err := initialisePlayerDBFile(file)
+	if err != nil {
+		return nil, fmt.Errorf("problem initialising history db file, %v", err)
+	}
+
+	history, err := types.NewHistory(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileSystemHistoryStore{
+		database: json.NewEncoder(&tape{file}),
+		history:  history,
+	}, nil
+}
+
+func (fh *FileSystemHistoryStore) GetInteraction(interactionID uuid.UUID) (types.Interaction, error) {
+	interaction := fh.history.Find(interactionID)
+	if interaction == nil {
+		return types.Interaction{}, ErrInteractionNotFound
+	}
+	return *interaction, nil
+}
+
+// MARK: Player Store
 
 type FileSystemPlayerStore struct {
 	database *json.Encoder
@@ -62,6 +102,23 @@ func (f *FileSystemPlayerStore) RecordWin(name string) error {
 
 // file_system_store.go
 func initialisePlayerDBFile(file *os.File) error {
+	file.Seek(0, io.SeekStart)
+
+	info, err := file.Stat()
+
+	if err != nil {
+		return fmt.Errorf("problem getting file info from file %s, %v", file.Name(), err)
+	}
+
+	if info.Size() == 0 {
+		file.Write([]byte("[]"))
+		file.Seek(0, io.SeekStart)
+	}
+
+	return nil
+}
+
+func initialiseHistoryDBFile(file *os.File) error {
 	file.Seek(0, io.SeekStart)
 
 	info, err := file.Stat()

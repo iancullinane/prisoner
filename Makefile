@@ -22,7 +22,7 @@ TEST_TARGETS := $(if $(TEST_PKGS),$(addsuffix /...,$(addprefix ./,$(TEST_PKGS)))
 test:
 	go test $(TEST_TARGETS)
 
-ifneq (,$(filter test,$(MAKECMDGOALS)))
+ifneq (,$(filter test -v,$(MAKECMDGOALS)))
 %:
 	@:
 endif
