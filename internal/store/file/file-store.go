@@ -23,7 +23,7 @@ type FileSystemHistoryStore struct {
 func NewFileSystemHistoryStore(file *os.File) (*FileSystemHistoryStore, error) {
 	file.Seek(0, io.SeekStart)
 
-	err := initialisePlayerDBFile(file)
+	err := initialiseHistoryDBFile(file)
 	if err != nil {
 		return nil, fmt.Errorf("problem initialising history db file, %v", err)
 	}
@@ -39,6 +39,10 @@ func NewFileSystemHistoryStore(file *os.File) (*FileSystemHistoryStore, error) {
 	}, nil
 }
 
+func (fh *FileSystemHistoryStore) GetHistory() (types.History, error) {
+	return fh.history, nil
+}
+
 func (fh *FileSystemHistoryStore) GetInteraction(interactionID uuid.UUID) (types.Interaction, error) {
 	interaction := fh.history.Find(interactionID)
 	if interaction == nil {
@@ -47,7 +51,18 @@ func (fh *FileSystemHistoryStore) GetInteraction(interactionID uuid.UUID) (types
 	return *interaction, nil
 }
 
+func (f *FileSystemHistoryStore) RecordInteraction(interaction types.Interaction) error {
+	f.history = append(f.history, interaction)
+
+	if err := f.database.Encode(f.history); err != nil {
+		return fmt.Errorf("encoding history to file: %w", err)
+	}
+
+	return nil
+}
+
 // MARK: Player Store
+// ==================
 
 type FileSystemPlayerStore struct {
 	database *json.Encoder
@@ -117,6 +132,9 @@ func initialisePlayerDBFile(file *os.File) error {
 
 	return nil
 }
+
+// MARK: Initialize History DB
+// ===========================
 
 func initialiseHistoryDBFile(file *os.File) error {
 	file.Seek(0, io.SeekStart)
