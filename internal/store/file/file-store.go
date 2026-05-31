@@ -69,7 +69,6 @@ func (f *FileSystemHistoryStore) RecordInteraction(interaction types.Interaction
 
 type FileSystemStore struct {
 	database *json.Encoder
-	league   types.League
 	players  types.Players
 }
 
@@ -93,8 +92,28 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemStore, error) {
 
 }
 
+func (f *FileSystemStore) CreatePlayer(name string) (types.Player, error) {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return types.Player{}, fmt.Errorf("generate UUID: %w", err)
+	}
+
+	player := types.Player{
+		ID:   id,
+		Name: name,
+	}
+
+	f.players = append(f.players, player)
+
+	if err := f.database.Encode(f.players); err != nil {
+		return types.Player{}, fmt.Errorf("encoding players to file: %w", err)
+	}
+
+	return player, nil
+}
+
 func (f *FileSystemStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
-	player := f.players.Find(id)
+	player := f.players.FindByID(id)
 	if player == nil {
 		return types.Player{}, ErrPlayerNotFound
 	}
@@ -102,31 +121,31 @@ func (f *FileSystemStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 	return *player, nil
 }
 
-func (f *FileSystemStore) GetPlayerScore(name string) (int, error) {
+// func (f *FileSystemStore) GetPlayerScore(name string) (int, error) {
 
-	player := f.league.Find(name)
+// 	player := f.league.Find(name)
 
-	if player != nil {
-		return player.Wins, nil
-	}
+// 	if player != nil {
+// 		return player.Wins, nil
+// 	}
 
-	return 0, nil
-}
+// 	return 0, nil
+// }
 
-func (f *FileSystemStore) RecordWin(name string) error {
-	player := f.league.Find(name)
+// func (f *FileSystemStore) RecordWin(name string) error {
+// 	player := f.league.Find(name)
 
-	if player != nil {
-		player.Wins++
-	} else {
-		f.league = append(f.league, types.Player{Name: name, Wins: 1})
-	}
+// 	if player != nil {
+// 		player.Wins++
+// 	} else {
+// 		f.league = append(f.league, types.Player{Name: name, Wins: 1})
+// 	}
 
-	if err := f.database.Encode(f.league); err != nil {
-		return fmt.Errorf("encoding league to file: %w", err)
-	}
-	return nil
-}
+// 	if err := f.database.Encode(f.league); err != nil {
+// 		return fmt.Errorf("encoding league to file: %w", err)
+// 	}
+// 	return nil
+// }
 
 // MARK: Initialize Player DB
 // ===========================

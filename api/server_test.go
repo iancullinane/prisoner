@@ -15,16 +15,23 @@ import (
 )
 
 var (
-	testID1, _ = uuid.Parse("00000000-0000-aaaa-2222-222222222222")
-	testID2, _ = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
+	testID1, _   = uuid.Parse("00000000-0000-aaaa-2222-222222222222")
+	testID2, _   = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
+	playerID1, _ = uuid.Parse("22222222-2222-bbbb-3333-333333333333")
+	playerID2, _ = uuid.Parse("22222222-2222-bbbb-3333-333333333333")
 )
 
-// MARK: POST test
+// MARK: GET test
 
-// This actually records wins, which we are removing
-func TestPOSTPlayers(t *testing.T) {
+func TestPlayers_Get(t *testing.T) {
+
 	playerStore := StubPlayerStore{
-		scores:   map[string]int{},
+		players: []types.Player{
+			{
+				ID:   playerID1,
+				Name: "Chris",
+			},
+		},
 		winCalls: nil,
 	}
 	historyStore := StubHistoryStore{
@@ -33,57 +40,6 @@ func TestPOSTPlayers(t *testing.T) {
 	}
 
 	server := NewPlayerServer(&playerStore, &historyStore)
-
-	tests := []struct {
-		name string
-		code int
-	}{
-		{
-			"test_post",
-			http.StatusAccepted,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-
-			buf := bytes.NewBufferString("body")
-			request, _ := http.NewRequest(http.MethodPost, "/players/Pepper", buf)
-			response := httptest.NewRecorder()
-
-			server.ServeHTTP(response, request)
-
-			assertResponseStatus(t, response.Code, tc.code)
-
-			if len(playerStore.winCalls) != 1 {
-				t.Errorf("got %d calls to RecordWin want %d", len(playerStore.winCalls), 1)
-			}
-
-			if playerStore.winCalls[0] != "Pepper" {
-				t.Errorf("did not store correct winner got %q want %q", playerStore.winCalls[0], "Pepper")
-			}
-
-		})
-	}
-}
-
-// MARK: GET test
-
-func TestPlayers_Get(t *testing.T) {
-
-	store := StubPlayerStore{
-		scores: map[string]int{
-			"Pepper": 20,
-			"Chris":  10,
-		},
-		winCalls: nil,
-	}
-	historyStore := StubHistoryStore{
-		history:                types.History{types.Interaction{}},
-		recordInteractionCalls: []types.Interaction{},
-	}
-
-	server := NewPlayerServer(&store, &historyStore)
 
 	tests := []struct {
 		name       string
@@ -95,23 +51,9 @@ func TestPlayers_Get(t *testing.T) {
 		{
 			"test_pepper",
 			"players",
-			"Pepper",
-			"20",
-			http.StatusOK,
-		},
-		{
-			"test_chris",
-			"players",
 			"Chris",
-			"10",
+			"Chris",
 			http.StatusOK,
-		},
-		{
-			"test_missing_player",
-			"players",
-			"Apollo",
-			"0",
-			http.StatusNotFound,
 		},
 	}
 
@@ -127,6 +69,52 @@ func TestPlayers_Get(t *testing.T) {
 
 			assertResponseStatus(t, response.Code, tc.code)
 			assertResponseBody(t, got, want)
+		})
+	}
+}
+
+// ==================
+// MARK: POST test
+// ==================
+
+// This actually records wins, which we are removing
+func TestPOSTPlayers(t *testing.T) {
+	playerStore := StubPlayerStore{
+		players: []types.Player{
+			{
+				ID:   playerID1,
+				Name: "Chris",
+			},
+		},
+	}
+
+	historyStore := StubHistoryStore{
+		history:                types.History{types.Interaction{}},
+		recordInteractionCalls: []types.Interaction{},
+	}
+
+	server := NewPlayerServer(&playerStore, &historyStore)
+
+	tests := []struct {
+		name string
+		code int
+	}{
+		{
+			"test post",
+			http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+
+			buf := bytes.NewBufferString("body")
+			request, _ := http.NewRequest(http.MethodPost, "/players/Pepper", buf)
+			response := httptest.NewRecorder()
+
+			server.ServeHTTP(response, request)
+
+			assertResponseStatus(t, response.Code, tc.code)
 		})
 	}
 }

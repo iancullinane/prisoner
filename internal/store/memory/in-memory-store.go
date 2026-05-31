@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/internal/types"
 )
 
@@ -29,20 +30,35 @@ func (i *InMemoryHistoryStore) RecordInteraction(interaction types.Interaction) 
 
 // in_memory_player_store.go
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
-	return &InMemoryPlayerStore{map[string]int{}}
+	return &InMemoryPlayerStore{
+		players: types.Players{},
+	}
 }
 
 type InMemoryPlayerStore struct {
-	store map[string]int
+	players types.Players
 }
 
 func (i *InMemoryPlayerStore) RecordWin(name string) error {
-	i.store[name]++
 	return nil
 }
 
 func (i *InMemoryPlayerStore) GetPlayerScore(name string) (int, error) {
-	return i.store[name], nil
+	return 1, nil
+}
+
+func (i *InMemoryPlayerStore) CreatePlayer(name string) (types.Player, error) {
+	player := types.NewPlayer(name)
+	i.players = append(i.players, *player)
+	return *player, nil
+}
+
+func (i *InMemoryPlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
+	player := i.players.FindByID(id)
+	if player == nil {
+		return types.Player{}, types.ErrPlayerNotFound
+	}
+	return *player, nil
 }
 
 // MARK: Postgres

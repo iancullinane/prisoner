@@ -74,7 +74,6 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 	protagonist := types.Player{
 		ID:   proUUID,
 		Name: "Ian",
-		Wins: 0,
 	}
 
 	protagonistMove, opponentMove := prisoner.Cooperate, prisoner.Cooperate
@@ -97,32 +96,9 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 	player := r.PathValue("name")
 
 	switch r.Method {
-	case http.MethodPost:
-		p.processWin(w, player)
 	case http.MethodGet:
-		p.showScore(w, player)
+		fmt.Fprint(w, player)
 	}
-}
-
-func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
-	score, err := p.playerStore.GetPlayerScore(player)
-	if err != nil {
-		http.Error(w, "could not load score", http.StatusInternalServerError)
-		return
-	}
-	if score == 0 {
-		w.WriteHeader(http.StatusNotFound)
-	}
-
-	fmt.Fprint(w, score)
-}
-
-func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
-	if err := p.playerStore.RecordWin(player); err != nil {
-		http.Error(w, "could not record win", http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusAccepted)
 }
 
 func (p *PlayerServer) historyHandler(w http.ResponseWriter, r *http.Request) {

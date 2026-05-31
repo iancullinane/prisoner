@@ -11,6 +11,18 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const createPlayer = `-- name: CreatePlayer :one
+INSERT INTO players (name) VALUES ($1)
+RETURNING id, name
+`
+
+func (q *Queries) CreatePlayer(ctx context.Context, name string) (Player, error) {
+	row := q.db.QueryRow(ctx, createPlayer, name)
+	var i Player
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const getHistory = `-- name: GetHistory :many
 SELECT id, protagonist_id, opponent_id, protagonist_move, opponent_move, played_at
 FROM interactions
@@ -44,19 +56,30 @@ func (q *Queries) GetHistory(ctx context.Context) ([]Interaction, error) {
 	return items, nil
 }
 
+const getPlayerByID = `-- name: GetPlayerByID :one
+SELECT id, name FROM players WHERE id = $1
+`
+
+func (q *Queries) GetPlayerByID(ctx context.Context, id pgtype.UUID) (Player, error) {
+	row := q.db.QueryRow(ctx, getPlayerByID, id)
+	var i Player
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const getPlayerByName = `-- name: GetPlayerByName :one
-SELECT id, name, wins FROM players WHERE name = $1
+SELECT id, name FROM players WHERE name = $1
 `
 
 func (q *Queries) GetPlayerByName(ctx context.Context, name string) (Player, error) {
 	row := q.db.QueryRow(ctx, getPlayerByName, name)
 	var i Player
-	err := row.Scan(&i.ID, &i.Name, &i.Wins)
+	err := row.Scan(&i.ID, &i.Name)
 	return i, err
 }
 
 const listPlayers = `-- name: ListPlayers :many
-SELECT id, name, wins FROM players
+SELECT id, name FROM players
 ORDER BY name
 `
 
@@ -69,7 +92,7 @@ func (q *Queries) ListPlayers(ctx context.Context) ([]Player, error) {
 	var items []Player
 	for rows.Next() {
 		var i Player
-		if err := rows.Scan(&i.ID, &i.Name, &i.Wins); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -99,15 +122,5 @@ func (q *Queries) RecordInteraction(ctx context.Context, arg RecordInteractionPa
 		arg.ProtagonistMove,
 		arg.OpponentMove,
 	)
-	return err
-}
-
-const upsertPlayerWin = `-- name: UpsertPlayerWin :exec
-INSERT INTO players (name, wins) VALUES ($1, 1)
-ON CONFLICT (name) DO UPDATE SET wins = players.wins + 1
-`
-
-func (q *Queries) UpsertPlayerWin(ctx context.Context, name string) error {
-	_, err := q.db.Exec(ctx, upsertPlayerWin, name)
 	return err
 }

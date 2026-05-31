@@ -20,5 +20,4 @@ type Interaction struct {
 type Player struct {
 	ID   pgtype.UUID
 	Name string
-	Wins int32
 }

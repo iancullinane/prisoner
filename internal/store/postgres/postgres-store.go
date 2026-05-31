@@ -2,11 +2,9 @@ package postgres
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -66,22 +64,28 @@ func NewPlayerStore(pool *pgxpool.Pool) *PlayerStore {
 	return &PlayerStore{pool: pool, q: sqlcdb.New(pool)}
 }
 
-func (s *PlayerStore) GetPlayerScore(name string) (int, error) {
+func (s *PlayerStore) CreatePlayer(name string) (types.Player, error) {
 	ctx := context.Background()
-	row, err := s.q.GetPlayerByName(ctx, name)
+	player, err := s.q.CreatePlayer(ctx, name)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, nil
-		}
-		return 0, fmt.Errorf("get player %q: %w", name, err)
+		return types.Player{}, fmt.Errorf("get player %q: %w", name, err)
 	}
-	return int(row.Wins), nil
+
+	return types.Player{
+		ID:   uuid.UUID(player.ID.Bytes),
+		Name: player.Name,
+	}, nil
 }
 
-func (s *PlayerStore) RecordWin(name string) error {
+func (s *PlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 	ctx := context.Background()
-	if err := s.q.UpsertPlayerWin(ctx, name); err != nil {
-		return fmt.Errorf("record win for %q: %w", name, err)
+	player, err := s.q.GetPlayerByID(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	if err != nil {
+		return types.Player{}, fmt.Errorf("get player by id %q: %w", id, err)
 	}
-	return nil
+
+	return types.Player{
+		ID:   uuid.UUID(player.ID.Bytes),
+		Name: player.Name,
+	}, nil
 }

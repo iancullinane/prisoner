@@ -34,42 +34,10 @@ func TestFileSystemPlayerStore(t *testing.T) {
 
 		got, err := store.GetPlayerByID(player1)
 		testhelpers.AssertNoError(t, err)
-		want := types.Player{ID: player1, Name: "Chris", Wins: 0}
+		want := types.Player{ID: player1, Name: "Chris"}
 
 		testhelpers.AssertPlayer(t, got, want)
 
-	})
-
-	t.Run("record player win", func(t *testing.T) {
-		newTempStore, closer := createTempFile(t, goldenPlayerStoreData)
-		defer closer()
-
-		store, err := NewFileSystemPlayerStore(newTempStore)
-		testhelpers.AssertNoError(t, err)
-
-		err = store.RecordWin("Chris")
-		testhelpers.AssertNoError(t, err)
-
-		got, err := store.GetPlayerScore("Chris")
-		testhelpers.AssertNoError(t, err)
-		want := 34
-		assertScoreEquals(t, got, want)
-	})
-
-	t.Run("record new player win", func(t *testing.T) {
-		newTempStore, closer := createTempFile(t, goldenPlayerStoreData)
-		defer closer()
-
-		store, err := NewFileSystemPlayerStore(newTempStore)
-		testhelpers.AssertNoError(t, err)
-
-		err = store.RecordWin("Ian")
-		testhelpers.AssertNoError(t, err)
-
-		got, err := store.GetPlayerScore("Ian")
-		testhelpers.AssertNoError(t, err)
-		want := 1
-		assertScoreEquals(t, got, want)
 	})
 
 	// file_system_store_test.go

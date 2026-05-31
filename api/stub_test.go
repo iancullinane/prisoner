@@ -23,21 +23,32 @@ func (h *StubHistoryStore) RecordInteraction(interaction types.Interaction) erro
 
 type StubPlayerStore struct {
 	scores   map[string]int
-	players  map[uuid.UUID]types.Player
+	players  []types.Player
 	winCalls []string
-	league   types.League
 }
 
-func (s *StubPlayerStore) GetPlayerScore(name string) (int, error) {
-	score := s.scores[name]
-	return score, nil
+func (s *StubPlayerStore) CreatePlayer(name string) (types.Player, error) {
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return types.Player{}, err
+	}
+
+	player := types.Player{
+		ID:   id,
+		Name: name,
+	}
+
+	if s.players == nil {
+		s.players = append(s.players, player)
+	}
+
+	return player, nil
 }
 
-func (s *StubPlayerStore) RecordWin(name string) error {
-	s.winCalls = append(s.winCalls, name)
-	return nil
-}
-
-func (s *StubPlayerStore) GetLeague() (types.League, error) {
-	return s.league, nil
+func (s *StubPlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
+	player := types.Players(s.players).FindByID(id)
+	if player == nil {
+		return types.Player{}, types.ErrPlayerNotFound
+	}
+	return *player, nil
 }

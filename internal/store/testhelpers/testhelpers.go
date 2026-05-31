@@ -14,12 +14,20 @@ const (
 	TestPlayerTwo = "11111111-1111-bbbb-3333-333333333333"
 )
 
-var ()
+var (
+	player1, _ = uuid.Parse(TestPlayerOne)
+	player2, _ = uuid.Parse(TestPlayerTwo)
+)
 
 // MARK: Assertations
 
 func AssertPlayer(t testing.TB, got, want types.Player) {
 	t.Helper()
+
+	if got.ID == uuid.Nil {
+		t.Errorf("got nil ID, want valid UUID")
+	}
+
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %+v, want %+v", got, want)
 	}
@@ -90,23 +98,21 @@ func RunHistoryStoreContract(t *testing.T, newStore func() types.HistoryStore) {
 func RunPlayerStoreContract(t *testing.T, newStore func() types.PlayerStore) {
 	t.Helper()
 
-	t.Run("RecordWin increments score", func(t *testing.T) {
+	t.Run("CreatePlayer creates a player", func(t *testing.T) {
 		store := newStore()
-		mustRecordWin(t, store, "Alice")
-		mustRecordWin(t, store, "Alice")
-		got := mustGetPlayerScore(t, store, "Alice")
-		if got != 2 {
-			t.Errorf("got score %d, want 2", got)
-		}
+
+		player := mustCreatePlayer(t, store, "Alice")
+		want := types.Player{ID: player.ID, Name: "Alice"}
+		AssertPlayer(t, player, want)
 	})
 
-	t.Run("GetPlayerScore returns 0 for unknown player", func(t *testing.T) {
-		store := newStore()
-		got := mustGetPlayerScore(t, store, "Nobody")
-		if got != 0 {
-			t.Errorf("got score %d, want 0", got)
-		}
-	})
+	// t.Run("GetPlayerScore returns 0 for unknown player", func(t *testing.T) {
+	// 	store := newStore()
+	// 	got := mustGetPlayerScore(t, store, "Nobody")
+	// 	if got != 0 {
+	// 		t.Errorf("got score %d, want 0", got)
+	// 	}
+	// })
 
 	// t.Run("RecordWin adds new player to league", func(t *testing.T) {
 	// 	store := newStore()
@@ -140,20 +146,22 @@ func RunPlayerStoreContract(t *testing.T, newStore func() types.PlayerStore) {
 
 // MARK: Musts
 
-func mustRecordWin(t *testing.T, store types.PlayerStore, name string) {
+func mustCreatePlayer(t *testing.T, store types.PlayerStore, name string) types.Player {
 	t.Helper()
-	if err := store.RecordWin(name); err != nil {
-		t.Fatalf("RecordWin(%q) returned error: %v", name, err)
+	player, err := store.CreatePlayer(name)
+	if err != nil {
+		t.Fatalf("CreatePlayer(%v) returned error: %v", name, err)
 	}
+	return player
 }
 
-func mustGetPlayerScore(t *testing.T, store types.PlayerStore, name string) int {
+func mustGetPlayer(t *testing.T, store types.PlayerStore, id uuid.UUID) types.Player {
 	t.Helper()
-	score, err := store.GetPlayerScore(name)
+	player, err := store.GetPlayerByID(id)
 	if err != nil {
-		t.Fatalf("GetPlayerScore(%q) returned error: %v", name, err)
+		t.Fatalf("GetPlayerByID(%v) returned error: %v", id, err)
 	}
-	return score
+	return player
 }
 
 // func mustGetLeague(t *testing.T, store types.PlayerStore) types.League {
