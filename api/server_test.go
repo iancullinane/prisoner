@@ -78,7 +78,7 @@ func TestPlayers_Get(t *testing.T) {
 // ==================
 
 // This actually records wins, which we are removing
-func TestPOSTPlayers(t *testing.T) {
+func TestCreatePlayers(t *testing.T) {
 	playerStore := StubPlayerStore{
 		players: []types.Player{
 			{
@@ -88,12 +88,7 @@ func TestPOSTPlayers(t *testing.T) {
 		},
 	}
 
-	historyStore := StubHistoryStore{
-		history:                types.History{types.Interaction{}},
-		recordInteractionCalls: []types.Interaction{},
-	}
-
-	server := NewPlayerServer(&playerStore, &historyStore)
+	server := NewPlayerServer(&playerStore, nil)
 
 	tests := []struct {
 		name string
@@ -113,6 +108,14 @@ func TestPOSTPlayers(t *testing.T) {
 			response := httptest.NewRecorder()
 
 			server.ServeHTTP(response, request)
+
+			if len(playerStore.createPlayerCalls) != 1 {
+				t.Errorf("got %d calls to CreatePlayer want %d", len(playerStore.createPlayerCalls), 2)
+			}
+
+			if playerStore.createPlayerCalls[0] != "Pepper" {
+				t.Errorf("did not store correct winner got %q want %q", playerStore.createPlayerCalls[0], "Pepper")
+			}
 
 			assertResponseStatus(t, response.Code, tc.code)
 		})

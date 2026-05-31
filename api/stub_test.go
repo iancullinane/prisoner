@@ -22,12 +22,15 @@ func (h *StubHistoryStore) RecordInteraction(interaction types.Interaction) erro
 // MARK: PlayerStore
 
 type StubPlayerStore struct {
-	scores   map[string]int
-	players  []types.Player
-	winCalls []string
+	scores            map[string]int
+	players           []types.Player
+	winCalls          []string
+	createPlayerCalls []string
 }
 
 func (s *StubPlayerStore) CreatePlayer(name string) (types.Player, error) {
+	s.createPlayerCalls = append(s.createPlayerCalls, name)
+
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return types.Player{}, err
