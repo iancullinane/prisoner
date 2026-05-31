@@ -16,8 +16,16 @@ compose-down:
 compose-reset:
 	docker compose down -v
 
+TEST_PKGS    := $(filter-out test,$(MAKECMDGOALS))
+TEST_TARGETS := $(if $(TEST_PKGS),$(addsuffix /...,$(addprefix ./,$(TEST_PKGS))),./...)
+
 test:
-	go test ./...
+	go test $(TEST_TARGETS)
+
+ifneq (,$(filter test -v,$(MAKECMDGOALS)))
+%:
+	@:
+endif
 
 test-integration:
 	go test -v -tags=integration -count=1 -timeout=10m ./internal/store/...

@@ -16,10 +16,11 @@ import (
 )
 
 const (
-	StoreMemory   = "memory"
-	StorePostgres = "postgres"
-	StoreFile     = "file"
-	dbFileName    = "game.db.json"
+	StoreMemory     = "memory"
+	StorePostgres   = "postgres"
+	StoreFile       = "file"
+	playerFileName  = "player.db.json"
+	historyFileName = "history.db.json"
 )
 
 // openHistoryStore lets us optionally set an in-memory, file-based, or database backed
@@ -35,8 +36,7 @@ func openHistoryStore(ctx context.Context, kind string) (types.HistoryStore, fun
 		}
 		return storepostgres.NewHistoryStore(pool), func() { pool.Close() }, nil
 	case StoreFile:
-		fmt.Println("file history store not implemented")
-		return nil, nil, nil
+		return openHistoryFileStore()
 	default:
 		fmt.Printf("unknown history store %q: want %q, %q, or %q", kind, StoreMemory, StoreFile, StorePostgres)
 		return nil, nil, nil
@@ -68,9 +68,9 @@ func openPlayerStore(ctx context.Context, kind string) (types.PlayerStore, func(
 // openPlayerFileStore will open or create a new json file to use as storage
 // behind the application
 func openPlayerFileStore() (types.PlayerStore, func(), error) {
-	f, err := os.OpenFile(dbFileName, os.O_RDWR|os.O_CREATE, 0666)
+	f, err := os.OpenFile(playerFileName, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
-		return nil, nil, fmt.Errorf("open %s: %w", dbFileName, err)
+		return nil, nil, fmt.Errorf("open %s: %w", playerFileName, err)
 	}
 
 	store, err := storefile.NewFileSystemPlayerStore(f)
@@ -80,6 +80,22 @@ func openPlayerFileStore() (types.PlayerStore, func(), error) {
 	}
 	return store, func() { f.Close() }, nil
 }
+
+func openHistoryFileStore() (types.HistoryStore, func(), error) {
+	f, err := os.OpenFile(historyFileName, os.O_RDWR|os.O_CREATE, 0666)
+	if err != nil {
+		return nil, nil, fmt.Errorf("open %s: %w", historyFileName, err)
+	}
+
+	store, err := storefile.NewFileSystemHistoryStore(f)
+	if err != nil {
+		f.Close()
+		return nil, nil, fmt.Errorf("new file system player store: %w", err)
+	}
+	return store, func() { f.Close() }, nil
+}
+
+// ===========================
 
 func openPostgresPool(ctx context.Context) (*pgxpool.Pool, error) {
 	dsn := os.Getenv("DATABASE_URL")

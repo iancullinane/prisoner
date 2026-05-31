@@ -1,13 +1,18 @@
+
+-- name: GetOrCreatePlayer :one
+INSERT INTO players (name) VALUES ($1)
+ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+RETURNING id, name;
+
 -- name: GetPlayerByName :one
-SELECT id, name, wins FROM players WHERE name = $1;
+SELECT id, name FROM players WHERE name = $1;
+
+-- name: GetPlayerByID :one
+SELECT id, name FROM players WHERE id = $1;
 
 -- name: ListPlayers :many
-SELECT id, name, wins FROM players
+SELECT id, name FROM players
 ORDER BY name;
-
--- name: UpsertPlayerWin :exec
-INSERT INTO players (name, wins) VALUES ($1, 1)
-ON CONFLICT (name) DO UPDATE SET wins = players.wins + 1;
 
 -- name: RecordInteraction :exec
 INSERT INTO interactions (protagonist_id, opponent_id, protagonist_move, opponent_move)
@@ -17,3 +22,4 @@ VALUES ($1, $2, $3, $4);
 SELECT id, protagonist_id, opponent_id, protagonist_move, opponent_move, played_at
 FROM interactions
 ORDER BY played_at DESC;
+

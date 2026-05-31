@@ -27,13 +27,13 @@ var simulateCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		storeKind := viper.GetString("store")
-		store, cleanup, err := openPlayerStore(context.Background(), storeKind)
-		if err != nil {
-			return err
-		}
-		if cleanup != nil {
-			defer cleanup()
-		}
+		// store, cleanup, err := openPlayerStore(context.Background(), storeKind)
+		// if err != nil {
+		// 	return err
+		// }
+		// if cleanup != nil {
+		// 	defer cleanup()
+		// }
 
 		scoring := viper.GetString("scoring")
 
@@ -46,12 +46,6 @@ var simulateCmd = &cobra.Command{
 		default:
 			return fmt.Errorf("unknown scoring %q: use classic or positive", scoring)
 		}
-
-		league, err := store.GetLeague()
-		if err != nil {
-			return fmt.Errorf("loading league from %s store: %w", storeKind, err)
-		}
-		fmt.Printf("Using %s store (%d players in league)\n", storeKind, len(league))
 
 		roundCount, err := strconv.Atoi(args[0])
 		if err != nil {

@@ -14,6 +14,7 @@ type History []Interaction
 type HistoryStore interface {
 	GetHistory() (History, error)
 	RecordInteraction(interaction Interaction) error
+	// GetInteraction(id uuid.UUID) *Interaction
 }
 
 func NewHistory(rdr io.Reader) (History, error) {
@@ -44,6 +45,15 @@ func NewInteraction(protagonist, opponent uuid.UUID, protagonistMove, opponentMo
 		OpponentMove:    opponentMove,
 		// CreatedAt:       time.Now(),
 	}
+}
+
+func (h History) Find(name uuid.UUID) *Interaction {
+	for i, p := range h {
+		if p.ID == name {
+			return &h[i]
+		}
+	}
+	return nil
 }
 
 func (r Interaction) PrintScore(scoring prisoner.Payoff[int]) string {

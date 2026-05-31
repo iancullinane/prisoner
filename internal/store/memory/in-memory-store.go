@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/internal/types"
 )
 
@@ -29,29 +30,40 @@ func (i *InMemoryHistoryStore) RecordInteraction(interaction types.Interaction) 
 
 // in_memory_player_store.go
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
-	return &InMemoryPlayerStore{map[string]int{}}
+	return &InMemoryPlayerStore{
+		players: types.Players{},
+	}
 }
 
 type InMemoryPlayerStore struct {
-	store map[string]int
+	players types.Players
 }
 
-func (i *InMemoryPlayerStore) RecordWin(name string) error {
-	i.store[name]++
-	return nil
-}
-
-func (i *InMemoryPlayerStore) GetPlayerScore(name string) (int, error) {
-	return i.store[name], nil
-}
-
-// in_memory_player_store.go
-func (i *InMemoryPlayerStore) GetLeague() (types.League, error) {
-	var league []types.Player
-	for name, wins := range i.store {
-		league = append(league, types.Player{Name: name, Wins: wins})
+func (i *InMemoryPlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
+	player := i.players.FindByName(name)
+	if player != nil {
+		return *player, nil
 	}
-	return league, nil
+
+	newPlayer := types.NewPlayer(name)
+	i.players = append(i.players, *newPlayer)
+	return *newPlayer, nil
+}
+
+func (i *InMemoryPlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
+	player := i.players.FindByID(id)
+	if player == nil {
+		return types.Player{}, types.ErrPlayerNotFound
+	}
+	return *player, nil
+}
+
+func (i *InMemoryPlayerStore) GetPlayerByName(name string) (types.Player, error) {
+	player := i.players.FindByName(name)
+	if player == nil {
+		return types.Player{}, types.ErrPlayerNotFound
+	}
+	return *player, nil
 }
 
 // MARK: Postgres
