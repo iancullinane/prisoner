@@ -24,7 +24,6 @@ func (h *StubHistoryStore) RecordInteraction(interaction types.Interaction) erro
 type StubPlayerStore struct {
 	scores            map[string]int
 	players           []types.Player
-	winCalls          []string
 	createPlayerCalls []string
 }
 

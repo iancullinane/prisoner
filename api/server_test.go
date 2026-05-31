@@ -32,7 +32,6 @@ func TestPlayers_Get(t *testing.T) {
 				Name: "Chris",
 			},
 		},
-		winCalls: nil,
 	}
 	historyStore := StubHistoryStore{
 		history:                types.History{types.Interaction{}},
@@ -91,12 +90,14 @@ func TestCreatePlayers(t *testing.T) {
 	server := NewPlayerServer(&playerStore, nil)
 
 	tests := []struct {
-		name string
-		code int
+		name     string
+		response string
+		code     int
 	}{
 		{
 			"test post",
-			http.StatusOK,
+			"Pepper",
+			http.StatusCreated,
 		},
 	}
 

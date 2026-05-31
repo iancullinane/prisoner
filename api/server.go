@@ -99,11 +99,14 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		fmt.Fprint(w, player)
 	case http.MethodPost:
-		_, err := p.playerStore.CreatePlayer(player)
+		createdPlayer, err := p.playerStore.CreatePlayer(player)
 		if err != nil {
 			http.Error(w, "could not create player", http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("content-type", jsonContentType)
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(createdPlayer)
 	}
 }
 
