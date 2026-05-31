@@ -50,11 +50,18 @@ func TestPlayers_Get(t *testing.T) {
 			`{"ID":"22222222-2222-bbbb-3333-333333333333","Name":"Chris"}` + "\n",
 			http.StatusOK,
 		},
+		{
+			"test player not found",
+			"players",
+			"NonExistent",
+			"could not get player: player not found\n",
+			http.StatusInternalServerError,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request := newGetScoreRequest(tc.url, tc.playerName)
+			request, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/players/%s", tc.playerName), nil)
 			response := httptest.NewRecorder()
 
 			server.ServeHTTP(response, request)
@@ -167,16 +174,6 @@ func TestHistory_Get(t *testing.T) {
 
 func newHistoryRequest(id uuid.UUID) *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/history/%s", id.String()), nil)
-	return req
-}
-
-func newPlayRequest(id uuid.UUID) *http.Request {
-	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/play/%s", id.String()), nil)
-	return req
-}
-
-func newGetScoreRequest(route, name string) *http.Request {
-	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/%s/%s", route, name), nil)
 	return req
 }
 

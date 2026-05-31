@@ -93,28 +93,29 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
-	player := r.PathValue("name")
+	playerName := r.PathValue("name")
+
+	var player types.Player
+	var statusCode int
+	var err error
 
 	switch r.Method {
 	case http.MethodGet:
-		retrievedPlayer, err := p.playerStore.GetPlayerByName(player)
-		if err != nil {
-			http.Error(w, "could not retrieve player", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("content-type", jsonContentType)
-		w.WriteHeader(http.StatusOK)
-		json.NewEncoder(w).Encode(retrievedPlayer)
+		player, err = p.playerStore.GetPlayerByName(playerName)
+		statusCode = http.StatusOK
 	case http.MethodPost:
-		createdPlayer, err := p.playerStore.CreatePlayer(player)
-		if err != nil {
-			http.Error(w, "could not create player", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("content-type", jsonContentType)
-		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(createdPlayer)
+		player, err = p.playerStore.CreatePlayer(playerName)
+		statusCode = http.StatusCreated
 	}
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("could not get player: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("content-type", jsonContentType)
+	w.WriteHeader(statusCode)
+	json.NewEncoder(w).Encode(player)
 }
 
 func (p *PlayerServer) historyHandler(w http.ResponseWriter, r *http.Request) {
