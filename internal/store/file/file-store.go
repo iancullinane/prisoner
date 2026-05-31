@@ -121,31 +121,13 @@ func (f *FileSystemStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 	return *player, nil
 }
 
-// func (f *FileSystemStore) GetPlayerScore(name string) (int, error) {
-
-// 	player := f.league.Find(name)
-
-// 	if player != nil {
-// 		return player.Wins, nil
-// 	}
-
-// 	return 0, nil
-// }
-
-// func (f *FileSystemStore) RecordWin(name string) error {
-// 	player := f.league.Find(name)
-
-// 	if player != nil {
-// 		player.Wins++
-// 	} else {
-// 		f.league = append(f.league, types.Player{Name: name, Wins: 1})
-// 	}
-
-// 	if err := f.database.Encode(f.league); err != nil {
-// 		return fmt.Errorf("encoding league to file: %w", err)
-// 	}
-// 	return nil
-// }
+func (f *FileSystemStore) GetPlayerByName(name string) (types.Player, error) {
+	player := f.players.FindByName(name)
+	if player == nil {
+		return types.Player{}, ErrPlayerNotFound
+	}
+	return *player, nil
+}
 
 // MARK: Initialize Player DB
 // ===========================

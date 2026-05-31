@@ -54,8 +54,7 @@ func NewPlayerFromID(id string) (*Player, error) {
 type PlayerStore interface {
 	CreatePlayer(name string) (Player, error)
 	GetPlayerByID(id uuid.UUID) (Player, error)
-	// GetPlayerScore(name string) (int, error)
-	// RecordWin(name string) error
+	GetPlayerByName(name string) (Player, error)
 }
 
 type Players []Player

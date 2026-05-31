@@ -97,7 +97,14 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		fmt.Fprint(w, player)
+		retrievedPlayer, err := p.playerStore.GetPlayerByName(player)
+		if err != nil {
+			http.Error(w, "could not retrieve player", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("content-type", jsonContentType)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(retrievedPlayer)
 	case http.MethodPost:
 		createdPlayer, err := p.playerStore.CreatePlayer(player)
 		if err != nil {

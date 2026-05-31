@@ -39,14 +39,6 @@ type InMemoryPlayerStore struct {
 	players types.Players
 }
 
-func (i *InMemoryPlayerStore) RecordWin(name string) error {
-	return nil
-}
-
-func (i *InMemoryPlayerStore) GetPlayerScore(name string) (int, error) {
-	return 1, nil
-}
-
 func (i *InMemoryPlayerStore) CreatePlayer(name string) (types.Player, error) {
 	player := types.NewPlayer(name)
 	i.players = append(i.players, *player)
@@ -55,6 +47,14 @@ func (i *InMemoryPlayerStore) CreatePlayer(name string) (types.Player, error) {
 
 func (i *InMemoryPlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 	player := i.players.FindByID(id)
+	if player == nil {
+		return types.Player{}, types.ErrPlayerNotFound
+	}
+	return *player, nil
+}
+
+func (i *InMemoryPlayerStore) GetPlayerByName(name string) (types.Player, error) {
+	player := i.players.FindByName(name)
 	if player == nil {
 		return types.Player{}, types.ErrPlayerNotFound
 	}

@@ -33,12 +33,8 @@ func TestPlayers_Get(t *testing.T) {
 			},
 		},
 	}
-	historyStore := StubHistoryStore{
-		history:                types.History{types.Interaction{}},
-		recordInteractionCalls: []types.Interaction{},
-	}
 
-	server := NewPlayerServer(&playerStore, &historyStore)
+	server := NewPlayerServer(&playerStore, nil)
 
 	tests := []struct {
 		name       string
@@ -48,10 +44,10 @@ func TestPlayers_Get(t *testing.T) {
 		code       int
 	}{
 		{
-			"test_pepper",
+			"test base",
 			"players",
 			"Chris",
-			"Chris",
+			`{"ID":"22222222-2222-bbbb-3333-333333333333","Name":"Chris"}` + "\n",
 			http.StatusOK,
 		},
 	}

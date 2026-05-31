@@ -5,6 +5,9 @@ import (
 	"github.com/iancullinane/prisoner/internal/types"
 )
 
+// MARK: HistoryStore
+// =========================================
+
 type StubHistoryStore struct {
 	history                types.History
 	recordInteractionCalls []types.Interaction
@@ -20,6 +23,7 @@ func (h *StubHistoryStore) RecordInteraction(interaction types.Interaction) erro
 }
 
 // MARK: PlayerStore
+// =========================================
 
 type StubPlayerStore struct {
 	scores            map[string]int
@@ -49,6 +53,14 @@ func (s *StubPlayerStore) CreatePlayer(name string) (types.Player, error) {
 
 func (s *StubPlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 	player := types.Players(s.players).FindByID(id)
+	if player == nil {
+		return types.Player{}, types.ErrPlayerNotFound
+	}
+	return *player, nil
+}
+
+func (s *StubPlayerStore) GetPlayerByName(name string) (types.Player, error) {
+	player := types.Players(s.players).FindByName(name)
 	if player == nil {
 		return types.Player{}, types.ErrPlayerNotFound
 	}

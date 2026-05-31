@@ -89,3 +89,16 @@ func (s *PlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 		Name: player.Name,
 	}, nil
 }
+
+func (s *PlayerStore) GetPlayerByName(name string) (types.Player, error) {
+	ctx := context.Background()
+	player, err := s.q.GetPlayerByName(ctx, name)
+	if err != nil {
+		return types.Player{}, fmt.Errorf("get player by name %q: %w", name, err)
+	}
+
+	return types.Player{
+		ID:   uuid.UUID(player.ID.Bytes),
+		Name: player.Name,
+	}, nil
+}
