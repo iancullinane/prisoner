@@ -14,6 +14,7 @@ const jsonContentType = "application/json"
 
 var (
 	ianID, _ = uuid.Parse("9999999999-2222-bbbb-3333-333333333333")
+	luigi, _ = uuid.Parse("00000000-0000-0000-0000-000000000000")
 )
 
 type Player = types.Player
@@ -66,10 +67,9 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 	// TODO: Implement play against a CPU opponent on the server
 	//  until real user backing exists (specifically UUID support) have the play response return a random move, but always set the opponent as uuid:uuid.Parse("00000000-0000-aaaa-2222-222222222222") for testing and development purposes.
 	// labels:story
-	devOpponent, err := types.NewPlayerFromID("00000000-0000-aaaa-2222-222222222222")
+	opponent, err := p.playerStore.GetPlayerByID(luigi)
 	if err != nil {
-		fmt.Println("could not create opponent: %w", err)
-		http.Error(w, "could not create opponent", http.StatusInternalServerError)
+		http.Error(w, "could not get opponent", http.StatusInternalServerError)
 		return
 	}
 
@@ -86,13 +86,11 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("protagonist", protagonist)
-
 	protagonistMove, opponentMove := prisoner.Cooperate, prisoner.Cooperate
 
-	interaction := types.NewInteraction(protagonist.ID, devOpponent.ID, protagonistMove, opponentMove)
+	interaction := types.NewInteraction(protagonist.ID, opponent.ID, protagonistMove, opponentMove)
 	if err := p.historyStore.RecordInteraction(interaction); err != nil {
-		fmt.Println("record interaction: %w", err)
+		fmt.Printf("record interaction: %v", err)
 		http.Error(w, "could not record interaction", http.StatusInternalServerError)
 		return
 	}
