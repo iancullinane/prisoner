@@ -12,6 +12,10 @@ import (
 
 const jsonContentType = "application/json"
 
+var (
+	ianID, _ = uuid.Parse("9999999999-2222-bbbb-3333-333333333333")
+)
+
 type Player = types.Player
 
 type PlayerServer struct {
@@ -69,15 +73,12 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	proUUID, _ := uuid.NewRandom()
-
 	protagonist := types.Player{
-		ID:   proUUID,
+		ID:   ianID,
 		Name: "Ian",
 	}
 
 	protagonistMove, opponentMove := prisoner.Cooperate, prisoner.Cooperate
-	protagonistResult, _ := prisoner.Play(protagonistMove, opponentMove)
 
 	interaction := types.NewInteraction(protagonist.ID, devOpponent.ID, protagonistMove, opponentMove)
 	if err := p.historyStore.RecordInteraction(interaction); err != nil {
@@ -89,7 +90,8 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprint(w, protagonistResult)
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprint(w, interaction)
 }
 
 func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {

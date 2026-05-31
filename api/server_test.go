@@ -75,9 +75,9 @@ func TestPlayers_Get(t *testing.T) {
 	}
 }
 
-// ==================
+// ===================================
 // MARK: POST test
-// ==================
+// ===================================
 
 // This actually records wins, which we are removing
 func TestCreatePlayers(t *testing.T) {
@@ -89,7 +89,6 @@ func TestCreatePlayers(t *testing.T) {
 			},
 		},
 	}
-
 	server := NewPlayerServer(&playerStore, nil)
 
 	tests := []struct {
@@ -126,7 +125,57 @@ func TestCreatePlayers(t *testing.T) {
 	}
 }
 
-// MARK: Play Test
+// ========================================
+// MARK: POST test
+// ========================================
+
+func TestPlayer(t *testing.T) {
+	playerStore := StubPlayerStore{
+		players: []types.Player{
+			{
+				ID:   playerID1,
+				Name: "Chris",
+			},
+		},
+	}
+	historyStore := StubHistoryStore{}
+	server := NewPlayerServer(&playerStore, &historyStore)
+
+	tests := []struct {
+		name     string
+		id       string
+		response string
+		code     int
+	}{
+		{
+			"test play",
+			playerID1.String(),
+			"3",
+			http.StatusCreated,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			buf := bytes.NewBufferString("body")
+			req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/play/%s", tc.id), buf)
+			response := httptest.NewRecorder()
+
+			server.ServeHTTP(response, req)
+
+			got := response.Body.String()
+			want := "00000000-0000-0000-0000-000000000000 vs 00000000-0000-aaaa-2222-222222222222: C, C"
+
+			assertResponseStatus(t, response.Code, tc.code)
+			assertResponseBody(t, got, want)
+		})
+
+	}
+}
+
+// ========================================
+// MARK: History Test
+// ========================================
 
 func TestHistory_Get(t *testing.T) {
 	tests := []struct {
@@ -166,9 +215,6 @@ func TestHistory_Get(t *testing.T) {
 	}
 }
 
-// MARK: League Test
-// ========================================
-
 // MARK: Request Builders
 // ====================================
 
@@ -201,7 +247,7 @@ func assertContentType(t testing.TB, response *httptest.ResponseRecorder, want s
 	}
 }
 
-// MARK: League helper
+// MARK: History helper
 
 func getHistoryFromResponse(t testing.TB, body io.Reader) types.History {
 	t.Helper()
