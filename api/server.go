@@ -153,7 +153,7 @@ func (p *PlayerServer) historyHandler(w http.ResponseWriter, r *http.Request) {
 func filterHistoryByPlayer(history types.History, playerID uuid.UUID) types.History {
 	filtered := make(types.History, 0, len(history))
 	for _, interaction := range history {
-		if interaction.Protagonist == playerID || interaction.Opponent == playerID {
+		if interaction.PlayerA == playerID || interaction.PlayerB == playerID {
 			filtered = append(filtered, interaction)
 		}
 	}

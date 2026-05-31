@@ -69,10 +69,10 @@ func TestFileSystemPlayerStore_Contract(t *testing.T) {
 const goldenHistoryData = `[
 	{
 		"ID": "22222222-2222-cccc-4444-444444444444",
-		"Protagonist": "00000000-0000-aaaa-2222-222222222222",
-		"Opponent": "11111111-1111-bbbb-3333-333333333333",
-		"ProtagonistMove": "C",
-		"OpponentMove": "B"
+		"PlayerA": "00000000-0000-aaaa-2222-222222222222",
+		"PlayerB": "11111111-1111-bbbb-3333-333333333333",
+		"PlayerAMove": "C",
+		"PlayerBMove": "B"
 	}
 ]`
 
@@ -88,10 +88,10 @@ func TestFileSystemHistoryStore(t *testing.T) {
 
 		want := types.Interaction{
 			ID:              interactionIDOne,
-			Protagonist:     player1,
-			Opponent:        player2,
-			ProtagonistMove: prisoner.Cooperate,
-			OpponentMove:    prisoner.Betray,
+			PlayerA:     player1,
+			PlayerB:     player2,
+			PlayerAMove: prisoner.Cooperate,
+			PlayerBMove: prisoner.Betray,
 		}
 
 		testhelpers.AssertInteraction(t, got, want)

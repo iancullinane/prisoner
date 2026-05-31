@@ -28,21 +28,21 @@ func NewHistory(rdr io.Reader) (History, error) {
 }
 
 type Interaction struct {
-	ID              uuid.UUID
-	Protagonist     uuid.UUID
-	Opponent        uuid.UUID
-	ProtagonistMove prisoner.Move
-	OpponentMove    prisoner.Move
+	ID          uuid.UUID
+	PlayerA     uuid.UUID
+	PlayerB     uuid.UUID
+	PlayerAMove prisoner.Move
+	PlayerBMove prisoner.Move
 	// CreatedAt       time.Time
 }
 
-func NewInteraction(protagonist, opponent uuid.UUID, protagonistMove, opponentMove prisoner.Move) Interaction {
+func NewInteraction(playerA, playerB uuid.UUID, playerAMove, playerBMove prisoner.Move) Interaction {
 	return Interaction{
-		ID:              uuid.New(),
-		Protagonist:     protagonist,
-		Opponent:        opponent,
-		ProtagonistMove: protagonistMove,
-		OpponentMove:    opponentMove,
+		ID:          uuid.New(),
+		PlayerA:     playerA,
+		PlayerB:     playerB,
+		PlayerAMove: playerAMove,
+		PlayerBMove: playerBMove,
 		// CreatedAt:       time.Now(),
 	}
 }
@@ -57,10 +57,10 @@ func (h History) Find(name uuid.UUID) *Interaction {
 }
 
 func (r Interaction) PrintScore(scoring prisoner.Payoff[int]) string {
-	result1, result2 := prisoner.Play(r.ProtagonistMove, r.OpponentMove)
+	result1, result2 := prisoner.Play(r.PlayerAMove, r.PlayerBMove)
 	return fmt.Sprintf("%v : %v", scoring.Compute(result1), scoring.Compute(result2))
 }
 
 func (r Interaction) String() string {
-	return fmt.Sprintf("%s vs %s: %s, %s", r.Protagonist, r.Opponent, r.ProtagonistMove, r.OpponentMove)
+	return fmt.Sprintf("%s vs %s: %s, %s", r.PlayerA, r.PlayerB, r.PlayerAMove, r.PlayerBMove)
 }

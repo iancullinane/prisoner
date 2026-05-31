@@ -15,6 +15,8 @@ import (
 )
 
 var (
+	// luigi        = types.Player{Name: "Luigi", ID: luigiID}
+	luigiID, _   = uuid.Parse("00000000-0000-0000-0000-000000000000")
 	testID1, _   = uuid.Parse("00000000-0000-aaaa-2222-222222222222")
 	testID2, _   = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
 	playerID1, _ = uuid.Parse("22222222-2222-bbbb-3333-333333333333")
@@ -84,6 +86,10 @@ func TestCreatePlayers(t *testing.T) {
 	playerStore := StubPlayerStore{
 		players: []types.Player{
 			{
+				ID:   luigiID,
+				Name: "Luigi",
+			},
+			{
 				ID:   playerID1,
 				Name: "Chris",
 			},
@@ -132,10 +138,8 @@ func TestCreatePlayers(t *testing.T) {
 func TestPlay(t *testing.T) {
 	playerStore := StubPlayerStore{
 		players: []types.Player{
-			{
-				ID:   playerID1,
-				Name: "Chris",
-			},
+			{ID: playerID1, Name: "Chris"},
+			{ID: luigiID, Name: "Luigi"},
 		},
 	}
 	historyStore := StubHistoryStore{}
@@ -188,10 +192,10 @@ func TestHistory_Get(t *testing.T) {
 			pID:  testID1,
 			history: types.History{
 				types.Interaction{
-					Protagonist:     testID1,
-					Opponent:        testID2,
-					ProtagonistMove: prisoner.Cooperate,
-					OpponentMove:    prisoner.Cooperate,
+					PlayerA:     testID1,
+					PlayerB:     testID2,
+					PlayerAMove: prisoner.Cooperate,
+					PlayerBMove: prisoner.Cooperate,
 				},
 			},
 			code: http.StatusOK,

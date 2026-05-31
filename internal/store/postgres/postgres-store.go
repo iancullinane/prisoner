@@ -31,11 +31,11 @@ func (s *HistoryStore) GetHistory() (types.History, error) {
 	out := make(types.History, 0, len(rows))
 	for _, r := range rows {
 		out = append(out, types.Interaction{
-			ID:              uuid.UUID(r.ID.Bytes),
-			Protagonist:     uuid.UUID(r.ProtagonistID.Bytes),
-			Opponent:        uuid.UUID(r.OpponentID.Bytes),
-			ProtagonistMove: prisoner.Move([]rune(r.ProtagonistMove)[0]),
-			OpponentMove:    prisoner.Move([]rune(r.OpponentMove)[0]),
+			ID:          uuid.UUID(r.ID.Bytes),
+			PlayerA:     uuid.UUID(r.PlayerAID.Bytes),
+			PlayerB:     uuid.UUID(r.PlayerBID.Bytes),
+			PlayerAMove: prisoner.Move([]rune(r.PlayerAMove)[0]),
+			PlayerBMove: prisoner.Move([]rune(r.PlayerBMove)[0]),
 		})
 	}
 	return out, nil
@@ -44,10 +44,10 @@ func (s *HistoryStore) GetHistory() (types.History, error) {
 func (s *HistoryStore) RecordInteraction(interaction types.Interaction) error {
 	ctx := context.Background()
 	params := sqlcdb.RecordInteractionParams{
-		ProtagonistID:   pgtype.UUID{Bytes: interaction.Protagonist, Valid: true},
-		OpponentID:      pgtype.UUID{Bytes: interaction.Opponent, Valid: true},
-		ProtagonistMove: string(interaction.ProtagonistMove),
-		OpponentMove:    string(interaction.OpponentMove),
+		PlayerAID:   pgtype.UUID{Bytes: interaction.PlayerA, Valid: true},
+		PlayerBID:   pgtype.UUID{Bytes: interaction.PlayerB, Valid: true},
+		PlayerAMove: string(interaction.PlayerAMove),
+		PlayerBMove: string(interaction.PlayerBMove),
 	}
 	if err := s.q.RecordInteraction(ctx, params); err != nil {
 		return err

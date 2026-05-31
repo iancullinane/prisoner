@@ -70,17 +70,17 @@ func RunHistoryStoreContract(t *testing.T, newStore func() types.HistoryStore) {
 		if len(history) != 1 {
 			t.Errorf("got %d interactions, want 1", len(history))
 		}
-		if history[0].Protagonist != player1 {
-			t.Errorf("got protagonist %v, want %v", history[0].Protagonist, player1)
+		if history[0].PlayerA != player1 {
+			t.Errorf("got player a %v, want %v", history[0].PlayerA, player1)
 		}
-		if history[0].Opponent != player2 {
-			t.Errorf("got opponent %v, want %v", history[0].Opponent, player2)
+		if history[0].PlayerB != player2 {
+			t.Errorf("got player b %v, want %v", history[0].PlayerB, player2)
 		}
-		if history[0].ProtagonistMove != move1 {
-			t.Errorf("got protagonist move %v, want %v", history[0].ProtagonistMove, move1)
+		if history[0].PlayerAMove != move1 {
+			t.Errorf("got player a move %v, want %v", history[0].PlayerAMove, move1)
 		}
-		if history[0].OpponentMove != move2 {
-			t.Errorf("got opponent move %v, want %v", history[0].OpponentMove, move2)
+		if history[0].PlayerBMove != move2 {
+			t.Errorf("got player b move %v, want %v", history[0].PlayerBMove, move2)
 		}
 
 		// got := mustGetPlayerScore(t, store, "Alice")
