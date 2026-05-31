@@ -73,10 +73,20 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	protagonist := types.Player{
-		ID:   ianID,
-		Name: "Ian",
+	player := r.PathValue("id")
+	playerID, err := uuid.Parse(player)
+	if err != nil {
+		http.Error(w, "error parsing player id: %w", http.StatusBadRequest)
+		return
 	}
+
+	protagonist, err := p.playerStore.GetPlayerByID(playerID)
+	if err != nil {
+		http.Error(w, "could not get protagonist", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Println("protagonist", protagonist)
 
 	protagonistMove, opponentMove := prisoner.Cooperate, prisoner.Cooperate
 
@@ -106,8 +116,8 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 		player, err = p.playerStore.GetPlayerByName(playerName)
 		statusCode = http.StatusOK
 	case http.MethodPost:
-		player, err = p.playerStore.CreatePlayer(playerName)
-		statusCode = http.StatusCreated
+		player, err = p.playerStore.GetOrCreatePlayer(playerName)
+		statusCode = http.StatusOK
 	}
 
 	if err != nil {
@@ -143,7 +153,7 @@ func (p *PlayerServer) historyHandler(w http.ResponseWriter, r *http.Request) {
 	if rawID := r.PathValue("id"); rawID != "" {
 		playerID, err := uuid.Parse(rawID)
 		if err != nil {
-			http.Error(w, "invalid player id", http.StatusBadRequest)
+			http.Error(w, fmt.Sprintf("could not parse player id: %v", err), http.StatusBadRequest)
 			return
 		}
 		history = filterHistoryByPlayer(history, playerID)

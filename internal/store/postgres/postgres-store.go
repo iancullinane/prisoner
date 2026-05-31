@@ -64,11 +64,11 @@ func NewPlayerStore(pool *pgxpool.Pool) *PlayerStore {
 	return &PlayerStore{pool: pool, q: sqlcdb.New(pool)}
 }
 
-func (s *PlayerStore) CreatePlayer(name string) (types.Player, error) {
+func (s *PlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
 	ctx := context.Background()
-	player, err := s.q.CreatePlayer(ctx, name)
+	player, err := s.q.GetOrCreatePlayer(ctx, name)
 	if err != nil {
-		return types.Player{}, fmt.Errorf("get player %q: %w", name, err)
+		return types.Player{}, fmt.Errorf("get or create player %q: %w", name, err)
 	}
 
 	return types.Player{

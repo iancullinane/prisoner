@@ -11,18 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createPlayer = `-- name: CreatePlayer :one
-INSERT INTO players (name) VALUES ($1)
-RETURNING id, name
-`
-
-func (q *Queries) CreatePlayer(ctx context.Context, name string) (Player, error) {
-	row := q.db.QueryRow(ctx, createPlayer, name)
-	var i Player
-	err := row.Scan(&i.ID, &i.Name)
-	return i, err
-}
-
 const getHistory = `-- name: GetHistory :many
 SELECT id, protagonist_id, opponent_id, protagonist_move, opponent_move, played_at
 FROM interactions
@@ -54,6 +42,19 @@ func (q *Queries) GetHistory(ctx context.Context) ([]Interaction, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getOrCreatePlayer = `-- name: GetOrCreatePlayer :one
+INSERT INTO players (name) VALUES ($1)
+ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+RETURNING id, name
+`
+
+func (q *Queries) GetOrCreatePlayer(ctx context.Context, name string) (Player, error) {
+	row := q.db.QueryRow(ctx, getOrCreatePlayer, name)
+	var i Player
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
 }
 
 const getPlayerByID = `-- name: GetPlayerByID :one

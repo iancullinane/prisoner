@@ -39,10 +39,15 @@ type InMemoryPlayerStore struct {
 	players types.Players
 }
 
-func (i *InMemoryPlayerStore) CreatePlayer(name string) (types.Player, error) {
-	player := types.NewPlayer(name)
-	i.players = append(i.players, *player)
-	return *player, nil
+func (i *InMemoryPlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
+	player := i.players.FindByName(name)
+	if player != nil {
+		return *player, nil
+	}
+
+	newPlayer := types.NewPlayer(name)
+	i.players = append(i.players, *newPlayer)
+	return *newPlayer, nil
 }
 
 func (i *InMemoryPlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {

@@ -26,29 +26,34 @@ func (h *StubHistoryStore) RecordInteraction(interaction types.Interaction) erro
 // =========================================
 
 type StubPlayerStore struct {
-	scores            map[string]int
-	players           []types.Player
-	createPlayerCalls []string
+	scores                 map[string]int
+	players                []types.Player
+	getOrCreatePlayerCalls []string
 }
 
-func (s *StubPlayerStore) CreatePlayer(name string) (types.Player, error) {
-	s.createPlayerCalls = append(s.createPlayerCalls, name)
+func (s *StubPlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
+	s.getOrCreatePlayerCalls = append(s.getOrCreatePlayerCalls, name)
+
+	player := types.Players(s.players).FindByName(name)
+	if player != nil {
+		return *player, nil
+	}
 
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return types.Player{}, err
 	}
 
-	player := types.Player{
+	player = &types.Player{
 		ID:   id,
 		Name: name,
 	}
 
 	if s.players == nil {
-		s.players = append(s.players, player)
+		s.players = append(s.players, *player)
 	}
 
-	return player, nil
+	return *player, nil
 }
 
 func (s *StubPlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {

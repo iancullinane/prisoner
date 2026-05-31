@@ -98,12 +98,24 @@ func RunHistoryStoreContract(t *testing.T, newStore func() types.HistoryStore) {
 func RunPlayerStoreContract(t *testing.T, newStore func() types.PlayerStore) {
 	t.Helper()
 
-	t.Run("CreatePlayer creates a player", func(t *testing.T) {
+	t.Run("GetOrCreatePlayer creates a player", func(t *testing.T) {
 		store := newStore()
 
-		player := mustCreatePlayer(t, store, "Alice")
+		player := mustGetOrCreatePlayer(t, store, "Alice")
 		want := types.Player{ID: player.ID, Name: "Alice"}
 		AssertPlayer(t, player, want)
+	})
+
+	t.Run("GetOrCreatePlayer returns existing player", func(t *testing.T) {
+		store := newStore()
+
+		player1 := mustGetOrCreatePlayer(t, store, "Alice")
+		player2 := mustGetOrCreatePlayer(t, store, "Alice")
+		
+		if player1.ID != player2.ID {
+			t.Errorf("got different IDs %v and %v, want same ID", player1.ID, player2.ID)
+		}
+		AssertPlayer(t, player1, player2)
 	})
 
 	// t.Run("GetPlayerScore returns 0 for unknown player", func(t *testing.T) {
@@ -146,11 +158,11 @@ func RunPlayerStoreContract(t *testing.T, newStore func() types.PlayerStore) {
 
 // MARK: Musts
 
-func mustCreatePlayer(t *testing.T, store types.PlayerStore, name string) types.Player {
+func mustGetOrCreatePlayer(t *testing.T, store types.PlayerStore, name string) types.Player {
 	t.Helper()
-	player, err := store.CreatePlayer(name)
+	player, err := store.GetOrCreatePlayer(name)
 	if err != nil {
-		t.Fatalf("CreatePlayer(%v) returned error: %v", name, err)
+		t.Fatalf("GetOrCreatePlayer(%v) returned error: %v", name, err)
 	}
 	return player
 }

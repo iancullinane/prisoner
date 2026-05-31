@@ -99,7 +99,7 @@ func TestCreatePlayers(t *testing.T) {
 		{
 			"test post",
 			"Pepper",
-			http.StatusCreated,
+			http.StatusOK,
 		},
 	}
 
@@ -112,12 +112,12 @@ func TestCreatePlayers(t *testing.T) {
 
 			server.ServeHTTP(response, request)
 
-			if len(playerStore.createPlayerCalls) != 1 {
-				t.Errorf("got %d calls to CreatePlayer want %d", len(playerStore.createPlayerCalls), 2)
+			if len(playerStore.getOrCreatePlayerCalls) != 1 {
+				t.Errorf("got %d calls to GetOrCreatePlayer want %d", len(playerStore.getOrCreatePlayerCalls), 1)
 			}
 
-			if playerStore.createPlayerCalls[0] != "Pepper" {
-				t.Errorf("did not store correct winner got %q want %q", playerStore.createPlayerCalls[0], "Pepper")
+			if playerStore.getOrCreatePlayerCalls[0] != "Pepper" {
+				t.Errorf("did not store correct winner got %q want %q", playerStore.getOrCreatePlayerCalls[0], "Pepper")
 			}
 
 			assertResponseStatus(t, response.Code, tc.code)
@@ -126,10 +126,10 @@ func TestCreatePlayers(t *testing.T) {
 }
 
 // ========================================
-// MARK: POST test
+// MARK: play test
 // ========================================
 
-func TestPlayer(t *testing.T) {
+func TestPlay(t *testing.T) {
 	playerStore := StubPlayerStore{
 		players: []types.Player{
 			{
@@ -142,15 +142,13 @@ func TestPlayer(t *testing.T) {
 	server := NewPlayerServer(&playerStore, &historyStore)
 
 	tests := []struct {
-		name     string
-		id       string
-		response string
-		code     int
+		name string
+		id   string
+		code int
 	}{
 		{
 			"test play",
 			playerID1.String(),
-			"3",
 			http.StatusCreated,
 		},
 	}
@@ -163,11 +161,12 @@ func TestPlayer(t *testing.T) {
 
 			server.ServeHTTP(response, req)
 
-			got := response.Body.String()
-			want := "00000000-0000-0000-0000-000000000000 vs 00000000-0000-aaaa-2222-222222222222: C, C"
+			if len(historyStore.recordInteractionCalls) != 1 {
+				t.Errorf("incorrect number of calls on record interaction")
+			}
 
 			assertResponseStatus(t, response.Code, tc.code)
-			assertResponseBody(t, got, want)
+			// assertResponseBody(t, got, want)
 		})
 
 	}

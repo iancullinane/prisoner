@@ -92,24 +92,29 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemStore, error) {
 
 }
 
-func (f *FileSystemStore) CreatePlayer(name string) (types.Player, error) {
+func (f *FileSystemStore) GetOrCreatePlayer(name string) (types.Player, error) {
+	player := f.players.FindByName(name)
+	if player != nil {
+		return *player, nil
+	}
+
 	id, err := uuid.NewRandom()
 	if err != nil {
 		return types.Player{}, fmt.Errorf("generate UUID: %w", err)
 	}
 
-	player := types.Player{
+	newPlayer := types.Player{
 		ID:   id,
 		Name: name,
 	}
 
-	f.players = append(f.players, player)
+	f.players = append(f.players, newPlayer)
 
 	if err := f.database.Encode(f.players); err != nil {
 		return types.Player{}, fmt.Errorf("encoding players to file: %w", err)
 	}
 
-	return player, nil
+	return newPlayer, nil
 }
 
 func (f *FileSystemStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
