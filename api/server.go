@@ -76,7 +76,7 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 	player := r.PathValue("id")
 	playerID, err := uuid.Parse(player)
 	if err != nil {
-		http.Error(w, "error parsing player id: %w", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("error parsing player id: %w", err), http.StatusBadRequest)
 		return
 	}
 
