@@ -23,42 +23,49 @@ const (
 	historyFileName = "history.db.json"
 )
 
-// openHistoryStore lets us optionally set an in-memory, file-based, or database backed
-// storage system.
-func openHistoryStore(ctx context.Context, kind string) (types.HistoryStore, func(), error) {
-	switch kind {
-	case StoreMemory, "":
-		return memory.NewInMemoryHistoryStore(), nil, nil
-	case StorePostgres:
-		pool, err := openPostgresPool(ctx)
-		if err != nil {
-			return nil, nil, err
-		}
-		return storepostgres.NewHistoryStore(pool), func() { pool.Close() }, nil
-	case StoreFile:
-		return openHistoryFileStore()
-	default:
-		fmt.Printf("unknown history store %q: want %q, %q, or %q", kind, StoreMemory, StoreFile, StorePostgres)
-		return nil, nil, nil
-	}
+// stores bundles the backends a command needs so they can share one
+// underlying connection (e.g. a single postgres pool).
+type stores struct {
+	players types.PlayerStore
+	history types.HistoryStore
 }
 
-// openPlayerStore lets us optionally set an in-memory, file-based, or database backed
-// storage system.
-func openPlayerStore(ctx context.Context, kind string) (types.PlayerStore, func(), error) {
+// openStores selects an in-memory, file-based, or database backed storage
+// system and constructs both the player and history stores from a single
+// connection. The returned cleanup is always safe to call.
+func openStores(ctx context.Context, kind string) (stores, func(), error) {
 	switch kind {
 	case StoreMemory, "":
-		return memory.NewInMemoryPlayerStore(), nil, nil
+		return stores{
+			players: memory.NewInMemoryPlayerStore(),
+			history: memory.NewInMemoryHistoryStore(),
+		}, func() {}, nil
+
+	case StoreFile:
+		players, closePlayers, err := openPlayerFileStore()
+		if err != nil {
+			return stores{}, nil, err
+		}
+		history, closeHistory, err := openHistoryFileStore()
+		if err != nil {
+			closePlayers()
+			return stores{}, nil, err
+		}
+		return stores{players: players, history: history},
+			func() { closeHistory(); closePlayers() }, nil
+
 	case StorePostgres:
 		pool, err := openPostgresPool(ctx)
 		if err != nil {
-			return nil, nil, err
+			return stores{}, nil, err
 		}
-		return storepostgres.NewPlayerStore(pool), func() { pool.Close() }, nil
-	case StoreFile:
-		return openPlayerFileStore()
+		return stores{
+			players: storepostgres.NewPlayerStore(pool),
+			history: storepostgres.NewHistoryStore(pool),
+		}, func() { pool.Close() }, nil
+
 	default:
-		return nil, nil, fmt.Errorf(
+		return stores{}, nil, fmt.Errorf(
 			"unknown store %q: want %q, %q, or %q",
 			kind, StoreMemory, StoreFile, StorePostgres,
 		)
@@ -124,6 +131,6 @@ func openPostgresPool(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("run migrations: %w", err)
 	}
 
-	fmt.Print("postgres: connected, migrations applied")
+	fmt.Println("postgres: connected, migrations applied")
 	return pool, nil
 }

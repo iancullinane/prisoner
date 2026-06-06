@@ -3,6 +3,7 @@ package prisoner
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 )
 
 type Move rune
@@ -10,6 +11,10 @@ type Move rune
 const (
 	Cooperate Move = 'C'
 	Betray    Move = 'B'
+)
+
+var (
+	moves = []Move{Cooperate, Betray}
 )
 
 func (m Move) String() string {
@@ -101,4 +106,9 @@ func Play(m1, m2 Move) (r1, r2 Result) {
 		// Should never be reached
 		panic("prisoner.Compute: invalid Move")
 	}
+}
+
+func RandomMove() Move {
+	oneOrZero := rand.Intn(2)
+	return moves[oneOrZero]
 }

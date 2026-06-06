@@ -22,6 +22,16 @@ func (h *StubHistoryStore) RecordInteraction(interaction types.Interaction) erro
 	return nil
 }
 
+func (h *StubHistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.History, error) {
+	historyByPlayer := make(types.History, 0)
+	for _, interaction := range h.history {
+		if interaction.PlayerA == playerID || interaction.PlayerB == playerID {
+			historyByPlayer = append(historyByPlayer, interaction)
+		}
+	}
+	return historyByPlayer, nil
+}
+
 // MARK: PlayerStore
 // =========================================
 
@@ -70,4 +80,8 @@ func (s *StubPlayerStore) GetPlayerByName(name string) (types.Player, error) {
 		return types.Player{}, types.ErrPlayerNotFound
 	}
 	return *player, nil
+}
+
+func (s *StubPlayerStore) GetAllPlayers() (types.Players, error) {
+	return types.Players(s.players), nil
 }

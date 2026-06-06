@@ -6,10 +6,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/iancullinane/prisoner/api"
+	"github.com/iancullinane/prisoner/internal/logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -18,32 +19,25 @@ import (
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Start an http server for the prisoner's dilemma",
-	Long:  `Server will start a long running process serving HTTP requests`,
+	Long:  `Server will start a long running process serving HTTP requests. Takes the same store flags as using the CLI app. Supports memory, file, and postgres stores.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		storeKind := viper.GetString("store")
-		store, cleanup, err := openPlayerStore(context.Background(), storeKind)
+		st, cleanup, err := openStores(context.Background(), storeKind)
 		if err != nil {
 			return err
 		}
-		if cleanup != nil {
-			defer cleanup()
-		}
-
-		historyStore, cleanup, err := openHistoryStore(context.Background(), storeKind)
-		if err != nil {
-			return err
-		}
-		if cleanup != nil {
-			defer cleanup()
-		}
+		defer cleanup()
 
 		fmt.Printf("starting server (%s store)...\n", storeKind)
+		logger := logging.NewLogger()
+		logger.With(
+			slog.String("service", "prisoner"),
+		)
+		logger.Info("starting server")
 
-		server := api.NewPlayerServer(store, historyStore)
-		log.Println("listening on :5001")
-		log.Fatal(http.ListenAndServe(":5001", server))
-
-		return nil
+		server := api.NewPlayerServer(logger, st.players, st.history)
+		logger.Info("listening on :5001")
+		return http.ListenAndServe(":5001", server)
 	},
 }
 

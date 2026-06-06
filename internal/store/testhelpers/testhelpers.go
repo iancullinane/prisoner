@@ -10,13 +10,17 @@ import (
 )
 
 const (
-	TestPlayerOne = "00000000-0000-aaaa-2222-222222222222"
-	TestPlayerTwo = "11111111-1111-bbbb-3333-333333333333"
+	TestPlayerOne     = "00000000-0000-0000-0000-000000000000"
+	TestPlayerTwo     = "00000000-0000-0000-0000-111111111111"
+	TestPlayerThree   = "00000000-0000-0000-0000-222222222222"
+	TestPlayerOneName = "Alice"
+	TestPlayerTwoName = "Bob"
 )
 
 var (
-	player1, _ = uuid.Parse(TestPlayerOne)
-	player2, _ = uuid.Parse(TestPlayerTwo)
+	TestPlayerOneID   = uuid.MustParse(TestPlayerOne)
+	TestPlayerTwoID   = uuid.MustParse(TestPlayerTwo)
+	TestPlayerThreeID = uuid.MustParse(TestPlayerThree)
 )
 
 // MARK: Assertations
@@ -54,39 +58,56 @@ func AssertLeague(t testing.TB, got, want []types.Player) {
 	}
 }
 
+func AssertPlayersContain(t testing.TB, got types.Players, want ...types.Player) {
+	t.Helper()
+	for _, player := range want {
+		if got.FindByID(player.ID) == nil {
+			t.Errorf("got %v, missing player %+v", got, player)
+		}
+	}
+}
+
 // MARK: Contracts
 
-func RunHistoryStoreContract(t *testing.T, newStore func() types.HistoryStore) {
+func RunHistoryStoreContract(t *testing.T, newStore func(t *testing.T) types.HistoryStore) {
 	t.Helper()
 
-	// a, b := mustTwoUUIDs()
-
 	t.Run("record interaction", func(t *testing.T) {
-		store := newStore()
-		player1, player2 := mustTwoUUIDs()
+		store := newStore(t)
 		move1, move2 := prisoner.Cooperate, prisoner.Cooperate
-		mustRecordInteraction(t, store, player1, player2, move1, move2)
+		mustRecordInteraction(t, store, TestPlayerOneID, TestPlayerTwoID, move1, move2)
 		history := mustGetHistory(t, store)
 		if len(history) != 1 {
 			t.Errorf("got %d interactions, want 1", len(history))
 		}
-		if history[0].Protagonist != player1 {
-			t.Errorf("got protagonist %v, want %v", history[0].Protagonist, player1)
+		if history[0].PlayerA != TestPlayerOneID {
+			t.Errorf("got player a %v, want %v", history[0].PlayerA, TestPlayerOneID)
 		}
-		if history[0].Opponent != player2 {
-			t.Errorf("got opponent %v, want %v", history[0].Opponent, player2)
+		if history[0].PlayerB != TestPlayerTwoID {
+			t.Errorf("got player b %v, want %v", history[0].PlayerB, TestPlayerTwoID)
 		}
-		if history[0].ProtagonistMove != move1 {
-			t.Errorf("got protagonist move %v, want %v", history[0].ProtagonistMove, move1)
+		if history[0].PlayerAMove != move1 {
+			t.Errorf("got player a move %v, want %v", history[0].PlayerAMove, move1)
 		}
-		if history[0].OpponentMove != move2 {
-			t.Errorf("got opponent move %v, want %v", history[0].OpponentMove, move2)
+		if history[0].PlayerBMove != move2 {
+			t.Errorf("got player b move %v, want %v", history[0].PlayerBMove, move2)
 		}
 
-		// got := mustGetPlayerScore(t, store, "Alice")
-		// if got != 2 {
-		// 	t.Errorf("got score %d, want 2", got)
-		// }
+	})
+
+	t.Run("history of unknown player is empty list", func(t *testing.T) {
+		store := newStore(t)
+		mustRecordInteraction(t, store, TestPlayerOneID, TestPlayerTwoID, prisoner.Cooperate, prisoner.Cooperate)
+
+		history := mustGetHistoryByPlayerID(t, store, TestPlayerThreeID)
+		if len(history) != 0 {
+			t.Errorf("got %d interactions, want 0", len(history))
+		}
+
+		history = mustGetHistoryByPlayerID(t, store, TestPlayerOneID)
+		if len(history) != 1 {
+			t.Errorf("got %d interactions, want 1", len(history))
+		}
 	})
 }
 
@@ -95,11 +116,11 @@ func RunHistoryStoreContract(t *testing.T, newStore func() types.HistoryStore) {
 // RunPlayerStoreContract runs a behavioural contract test suite against any
 // PlayerStore implementation. newStore is called before each subtest so each
 // case starts with a clean, empty store.
-func RunPlayerStoreContract(t *testing.T, newStore func() types.PlayerStore) {
+func RunPlayerStoreContract(t *testing.T, newStore func(t *testing.T) types.PlayerStore) {
 	t.Helper()
 
 	t.Run("GetOrCreatePlayer creates a player", func(t *testing.T) {
-		store := newStore()
+		store := newStore(t)
 
 		player := mustGetOrCreatePlayer(t, store, "Alice")
 		want := types.Player{ID: player.ID, Name: "Alice"}
@@ -107,53 +128,56 @@ func RunPlayerStoreContract(t *testing.T, newStore func() types.PlayerStore) {
 	})
 
 	t.Run("GetOrCreatePlayer returns existing player", func(t *testing.T) {
-		store := newStore()
+		store := newStore(t)
 
 		player1 := mustGetOrCreatePlayer(t, store, "Alice")
 		player2 := mustGetOrCreatePlayer(t, store, "Alice")
-		
+
 		if player1.ID != player2.ID {
 			t.Errorf("got different IDs %v and %v, want same ID", player1.ID, player2.ID)
 		}
 		AssertPlayer(t, player1, player2)
 	})
 
-	// t.Run("GetPlayerScore returns 0 for unknown player", func(t *testing.T) {
-	// 	store := newStore()
-	// 	got := mustGetPlayerScore(t, store, "Nobody")
-	// 	if got != 0 {
-	// 		t.Errorf("got score %d, want 0", got)
-	// 	}
-	// })
+	t.Run("GetPlayerByID returns existing player", func(t *testing.T) {
+		store := newStore(t)
 
-	// t.Run("RecordWin adds new player to league", func(t *testing.T) {
-	// 	store := newStore()
-	// 	mustRecordWin(t, store, "Bob")
-	// 	league := mustGetLeague(t, store)
-	// 	var found *types.Player
-	// 	for i := range league {
-	// 		if league[i].Name == "Bob" {
-	// 			found = &league[i]
-	// 			break
-	// 		}
-	// 	}
-	// 	if found == nil {
-	// 		t.Fatalf("expected Bob in league, got %v", league)
-	// 	}
-	// 	if found.Wins != 1 {
-	// 		t.Errorf("got wins %d, want 1", found.Wins)
-	// 	}
-	// })
+		created := mustGetOrCreatePlayer(t, store, TestPlayerOneName)
+		got := mustGetPlayer(t, store, created.ID)
+		AssertPlayer(t, got, created)
+	})
 
-	// t.Run("GetLeague returns all recorded players", func(t *testing.T) {
-	// 	store := newStore()
-	// 	mustRecordWin(t, store, "Alice")
-	// 	mustRecordWin(t, store, "Bob")
-	// 	league := mustGetLeague(t, store)
-	// 	if len(league) != 2 {
-	// 		t.Errorf("got %d players in league, want 2", len(league))
-	// 	}
-	// })
+	t.Run("GetPlayerByID returns error for unknown player", func(t *testing.T) {
+		store := newStore(t)
+
+		_, err := store.GetPlayerByID(TestPlayerThreeID)
+		assertPlayerNotFound(t, err)
+	})
+
+	t.Run("GetPlayerByName returns existing player", func(t *testing.T) {
+		store := newStore(t)
+
+		created := mustGetOrCreatePlayer(t, store, TestPlayerOneName)
+		got := mustGetPlayerByName(t, store, TestPlayerOneName)
+		AssertPlayer(t, got, created)
+	})
+
+	t.Run("GetPlayerByName returns error for unknown player", func(t *testing.T) {
+		store := newStore(t)
+
+		_, err := store.GetPlayerByName("Nobody")
+		assertPlayerNotFound(t, err)
+	})
+
+	t.Run("GetAllPlayers returns created players", func(t *testing.T) {
+		store := newStore(t)
+
+		alice := mustGetOrCreatePlayer(t, store, TestPlayerOneName)
+		bob := mustGetOrCreatePlayer(t, store, TestPlayerTwoName)
+		players, err := store.GetAllPlayers()
+		AssertNoError(t, err)
+		AssertPlayersContain(t, players, alice, bob)
+	})
 }
 
 // MARK: Musts
@@ -176,14 +200,21 @@ func mustGetPlayer(t *testing.T, store types.PlayerStore, id uuid.UUID) types.Pl
 	return player
 }
 
-// func mustGetLeague(t *testing.T, store types.PlayerStore) types.League {
-// 	t.Helper()
-// 	league, err := store.GetLeague()
-// 	if err != nil {
-// 		t.Fatalf("GetLeague() returned error: %v", err)
-// 	}
-// 	return league
-// }
+func mustGetPlayerByName(t *testing.T, store types.PlayerStore, name string) types.Player {
+	t.Helper()
+	player, err := store.GetPlayerByName(name)
+	if err != nil {
+		t.Fatalf("GetPlayerByName(%v) returned error: %v", name, err)
+	}
+	return player
+}
+
+func assertPlayerNotFound(t testing.TB, err error) {
+	t.Helper()
+	if err == nil {
+		t.Fatal("expected player not found error, got nil")
+	}
+}
 
 func mustRecordInteraction(t *testing.T, store types.HistoryStore, player1, player2 uuid.UUID, move1, move2 prisoner.Move) {
 	t.Helper()
@@ -202,8 +233,11 @@ func mustGetHistory(t *testing.T, store types.HistoryStore) types.History {
 	return history
 }
 
-func mustTwoUUIDs() (a, b uuid.UUID) {
-	a, _ = uuid.Parse(TestPlayerOne)
-	b, _ = uuid.Parse(TestPlayerTwo)
-	return
+func mustGetHistoryByPlayerID(t *testing.T, store types.HistoryStore, playerID uuid.UUID) types.History {
+	t.Helper()
+	history, err := store.GetHistoryByPlayerID(playerID)
+	if err != nil {
+		t.Fatalf("GetHistoryByPlayerID(%v) returned error: %v", playerID, err)
+	}
+	return history
 }

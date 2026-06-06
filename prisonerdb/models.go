@@ -9,12 +9,12 @@ import (
 )
 
 type Interaction struct {
-	ID              pgtype.UUID
-	ProtagonistID   pgtype.UUID
-	OpponentID      pgtype.UUID
-	ProtagonistMove string
-	OpponentMove    string
-	PlayedAt        pgtype.Timestamptz
+	ID          pgtype.UUID
+	PlayerAID   pgtype.UUID
+	PlayerBID   pgtype.UUID
+	PlayerAMove string
+	PlayerBMove string
+	PlayedAt    pgtype.Timestamptz
 }
 
 type Player struct {

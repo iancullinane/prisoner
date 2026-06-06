@@ -28,7 +28,7 @@ func TestFileSystemPlayerStore(t *testing.T) {
 	newTempStore, closer := createTempFile(t, goldenPlayerStoreData)
 	defer closer()
 
-	t.Run("get a placer", func(t *testing.T) {
+	t.Run("get a player", func(t *testing.T) {
 		store, err := NewFileSystemPlayerStore(newTempStore)
 		testhelpers.AssertNoError(t, err)
 
@@ -50,18 +50,24 @@ func TestFileSystemPlayerStore(t *testing.T) {
 		testhelpers.AssertNoError(t, err)
 	})
 
-}
+	t.Run("persists a created player across store instances", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, "[]")
+		defer cleanDatabase()
 
-func TestFileSystemPlayerStore_Contract(t *testing.T) {
-	testhelpers.RunPlayerStoreContract(t, func() types.PlayerStore {
-		f, cleanup := createTempFile(t, "[]")
-		t.Cleanup(cleanup)
-		store, err := NewFileSystemPlayerStore(f)
-		if err != nil {
-			t.Fatalf("could not create store: %v", err)
-		}
-		return store
+		store, err := NewFileSystemPlayerStore(database)
+		testhelpers.AssertNoError(t, err)
+
+		created, err := store.GetOrCreatePlayer("Alice")
+		testhelpers.AssertNoError(t, err)
+
+		reopened, err := NewFileSystemPlayerStore(database)
+		testhelpers.AssertNoError(t, err)
+
+		got, err := reopened.GetPlayerByName("Alice")
+		testhelpers.AssertNoError(t, err)
+		testhelpers.AssertPlayer(t, got, created)
 	})
+
 }
 
 // MARK: History Store Tests
@@ -69,10 +75,10 @@ func TestFileSystemPlayerStore_Contract(t *testing.T) {
 const goldenHistoryData = `[
 	{
 		"ID": "22222222-2222-cccc-4444-444444444444",
-		"Protagonist": "00000000-0000-aaaa-2222-222222222222",
-		"Opponent": "11111111-1111-bbbb-3333-333333333333",
-		"ProtagonistMove": "C",
-		"OpponentMove": "B"
+		"PlayerA": "00000000-0000-aaaa-2222-222222222222",
+		"PlayerB": "11111111-1111-bbbb-3333-333333333333",
+		"PlayerAMove": "C",
+		"PlayerBMove": "B"
 	}
 ]`
 
@@ -87,11 +93,11 @@ func TestFileSystemHistoryStore(t *testing.T) {
 		// testhelpers.AssertNoError(t, err)
 
 		want := types.Interaction{
-			ID:              interactionIDOne,
-			Protagonist:     player1,
-			Opponent:        player2,
-			ProtagonistMove: prisoner.Cooperate,
-			OpponentMove:    prisoner.Betray,
+			ID:          interactionIDOne,
+			PlayerA:     player1,
+			PlayerB:     player2,
+			PlayerAMove: prisoner.Cooperate,
+			PlayerBMove: prisoner.Betray,
 		}
 
 		testhelpers.AssertInteraction(t, got, want)

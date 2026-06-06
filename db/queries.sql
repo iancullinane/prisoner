@@ -15,11 +15,17 @@ SELECT id, name FROM players
 ORDER BY name;
 
 -- name: RecordInteraction :exec
-INSERT INTO interactions (protagonist_id, opponent_id, protagonist_move, opponent_move)
+INSERT INTO interactions (player_a_id, player_b_id, player_a_move, player_b_move)
 VALUES ($1, $2, $3, $4);
 
 -- name: GetHistory :many
-SELECT id, protagonist_id, opponent_id, protagonist_move, opponent_move, played_at
+SELECT id, player_a_id, player_b_id, player_a_move, player_b_move, played_at
 FROM interactions
+ORDER BY played_at DESC;
+
+-- name: GetHistoryByPlayerID :many
+SELECT id, player_a_id, player_b_id, player_a_move, player_b_move, played_at
+FROM interactions
+WHERE player_a_id = $1 OR player_b_id = $1
 ORDER BY played_at DESC;
 

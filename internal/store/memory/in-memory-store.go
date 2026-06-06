@@ -25,6 +25,16 @@ func (i *InMemoryHistoryStore) RecordInteraction(interaction types.Interaction) 
 	return nil
 }
 
+func (i *InMemoryHistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.History, error) {
+	historyByPlayer := make(types.History, 0)
+	for _, interaction := range i.store {
+		if interaction.PlayerA == playerID || interaction.PlayerB == playerID {
+			historyByPlayer = append(historyByPlayer, interaction)
+		}
+	}
+	return historyByPlayer, nil
+}
+
 // MARK: PlayerStore
 // ------------------------------------------------------------
 
@@ -66,21 +76,6 @@ func (i *InMemoryPlayerStore) GetPlayerByName(name string) (types.Player, error)
 	return *player, nil
 }
 
-// MARK: Postgres
-// -------------------------------
-
-// func NewPostgresMemoryStore() *PostgresMemoryStore {
-// 	return &PostgresMemoryStore{map[string]int{}}
-// }
-
-// type PostgresMemoryStore struct {
-// 	store map[string]int
-// }
-
-// func (p *PostgresMemoryStore) RecordWin(name string) {
-// 	p.store[name]++
-// }
-
-// func (p *PostgresMemoryStore) GetPlayerScore(name string) int {
-// 	return p.store[name]
-// }
+func (i *InMemoryPlayerStore) GetAllPlayers() (types.Players, error) {
+	return i.players, nil
+}
