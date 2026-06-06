@@ -20,7 +20,7 @@ TEST_PKGS    := $(filter-out test,$(MAKECMDGOALS))
 TEST_TARGETS := $(if $(TEST_PKGS),$(addsuffix /...,$(addprefix ./,$(TEST_PKGS))),./...)
 
 test:
-	go test $(TEST_TARGETS)
+	go test -count=1 -cover $(TEST_TARGETS)
 
 ifneq (,$(filter test -v,$(MAKECMDGOALS)))
 %:
@@ -29,6 +29,15 @@ endif
 
 test-integration:
 	go test -v -tags=integration -count=1 -timeout=10m ./internal/store/...
+
+test-integration-memory:
+	go test -v ./internal/store/memory/...
+
+test-integration-file:
+	go test -v ./internal/store/file/...
+
+test-integration-postgres:
+	go test -v -tags=integration -count=1 -timeout=10m ./internal/store/postgres/...
 
 run-server-postgres: build compose-up
 	@until docker compose exec -T db pg_isready -U prisoner -d prisoner >/dev/null 2>&1; do sleep 0.3; done

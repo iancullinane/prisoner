@@ -69,7 +69,7 @@ func runMigrations(stdDB *sql.DB) error {
 }
 
 func TestPostgresPlayerStore_Contract(t *testing.T) {
-	testhelpers.RunPlayerStoreContract(t, func() types.PlayerStore {
+	testhelpers.RunPlayerStoreContract(t, func(t *testing.T) types.PlayerStore {
 		// CASCADE is required because interactions has a FK referencing players.
 		if _, err := integrationPool.Exec(context.Background(), "TRUNCATE players CASCADE"); err != nil {
 			t.Fatalf("could not truncate players table: %v", err)
@@ -79,11 +79,27 @@ func TestPostgresPlayerStore_Contract(t *testing.T) {
 }
 
 func TestPostgresHistoryStore_Contract(t *testing.T) {
-	testhelpers.RunHistoryStoreContract(t, func() types.HistoryStore {
-		// CASCADE is required because interactions has a FK referencing players.
-		if _, err := integrationPool.Exec(context.Background(), "TRUNCATE interactions CASCADE"); err != nil {
-			t.Fatalf("could not truncate history table: %v", err)
+	testhelpers.RunHistoryStoreContract(t, func(t *testing.T) types.HistoryStore {
+		ctx := context.Background()
+		// Player store contract leaves "Alice" in the table; reset everything first.
+		if _, err := integrationPool.Exec(ctx, "TRUNCATE players, interactions CASCADE"); err != nil {
+			t.Fatalf("could not reset tables: %v", err)
+		}
+		if err := seedTestPlayers(ctx, integrationPool); err != nil {
+			t.Fatalf("seed test players: %v", err)
 		}
 		return NewHistoryStore(integrationPool)
 	})
+}
+
+func seedTestPlayers(ctx context.Context, pool *pgxpool.Pool) error {
+	_, err := pool.Exec(ctx, `
+		INSERT INTO players (id, name) VALUES
+			($1, $2),
+			($3, $4)
+		ON CONFLICT (id) DO NOTHING`,
+		testhelpers.TestPlayerOneID, testhelpers.TestPlayerOneName,
+		testhelpers.TestPlayerTwoID, testhelpers.TestPlayerTwoName,
+	)
+	return err
 }

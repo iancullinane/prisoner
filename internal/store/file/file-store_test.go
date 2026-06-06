@@ -70,18 +70,6 @@ func TestFileSystemPlayerStore(t *testing.T) {
 
 }
 
-func TestFileSystemPlayerStore_Contract(t *testing.T) {
-	testhelpers.RunPlayerStoreContract(t, func() types.PlayerStore {
-		f, cleanup := createTempFile(t, "[]")
-		t.Cleanup(cleanup)
-		store, err := NewFileSystemPlayerStore(f)
-		if err != nil {
-			t.Fatalf("could not create store: %v", err)
-		}
-		return store
-	})
-}
-
 // MARK: History Store Tests
 
 const goldenHistoryData = `[

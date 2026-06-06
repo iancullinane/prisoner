@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -19,14 +20,16 @@ var (
 type Player = types.Player
 
 type PlayerServer struct {
+	logger       *slog.Logger
 	playerStore  types.PlayerStore
 	historyStore types.HistoryStore
 	http.Handler
 }
 
-func NewPlayerServer(playerStore types.PlayerStore, historyStore types.HistoryStore) *PlayerServer {
+func NewPlayerServer(logger *slog.Logger, playerStore types.PlayerStore, historyStore types.HistoryStore) *PlayerServer {
 
 	p := new(PlayerServer)
+	p.logger = logger
 
 	p.playerStore = playerStore
 	p.historyStore = historyStore
@@ -71,7 +74,7 @@ func NewPlayerServer(playerStore types.PlayerStore, historyStore types.HistorySt
 func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 	player_b, err := p.playerStore.GetPlayerByID(luigi)
 	if err != nil {
-		http.Error(w, "could not get player_a", http.StatusInternalServerError)
+		http.Error(w, "error getting available player", http.StatusInternalServerError)
 		return
 	}
 
@@ -84,11 +87,14 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 
 	player_a, err := p.playerStore.GetPlayerByID(playerID)
 	if err != nil {
-		http.Error(w, "could not get protagonist", http.StatusInternalServerError)
+
+		http.Error(w, "could not find player a", http.StatusInternalServerError)
 		return
 	}
 
-	player_a_move, player_b_move := prisoner.Cooperate, prisoner.Cooperate
+	player_a_move, player_b_move := prisoner.Cooperate, prisoner.RandomMove()
+
+	p.logger.Info("play")
 
 	interaction := types.NewInteraction(player_a.ID, player_b.ID, player_a_move, player_b_move)
 	if err := p.historyStore.RecordInteraction(interaction); err != nil {
@@ -102,17 +108,6 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) listPlayersHandler(w http.ResponseWriter, r *http.Request) {
-
-	// var statusCode int
-	// var err error
-
-	// switch r.Method {
-	// case http.MethodGet:
-	// 	player, err = p.playerStore.GetPlayerByName(playerName)
-	// 	statusCode = http.StatusOK
-	// case http.MethodPost:
-	// 	player, err = p.playerStore.GetOrCreatePlayer(playerName)
-	// }
 
 	players, err := p.playerStore.GetAllPlayers()
 	if err != nil {

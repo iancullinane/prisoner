@@ -6,10 +6,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/iancullinane/prisoner/api"
+	"github.com/iancullinane/prisoner/internal/logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,9 +29,14 @@ var serverCmd = &cobra.Command{
 		defer cleanup()
 
 		fmt.Printf("starting server (%s store)...\n", storeKind)
+		logger := logging.NewLogger()
+		logger.With(
+			slog.String("service", "prisoner"),
+		)
+		logger.Info("starting server")
 
-		server := api.NewPlayerServer(st.players, st.history)
-		log.Println("listening on :5001")
+		server := api.NewPlayerServer(logger, st.players, st.history)
+		logger.Info("listening on :5001")
 		return http.ListenAndServe(":5001", server)
 	},
 }

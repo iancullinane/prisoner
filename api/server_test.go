@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/iancullinane/prisoner/internal/logging"
 	"github.com/iancullinane/prisoner/internal/types"
 	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
@@ -36,7 +37,7 @@ func TestPlayers_Get(t *testing.T) {
 		},
 	}
 
-	server := NewPlayerServer(&playerStore, nil)
+	server := NewPlayerServer(logging.NewLogger(), &playerStore, nil)
 
 	tests := []struct {
 		name string
@@ -86,7 +87,7 @@ func TestCreatePlayers(t *testing.T) {
 			{ID: playerID2, Name: "Luigi"},
 		},
 	}
-	server := NewPlayerServer(&playerStore, nil)
+	server := NewPlayerServer(logging.NewLogger(), &playerStore, nil)
 
 	tests := []struct {
 		name     string
@@ -134,7 +135,7 @@ func TestPlay(t *testing.T) {
 		},
 	}
 	historyStore := StubHistoryStore{}
-	server := NewPlayerServer(&playerStore, &historyStore)
+	server := NewPlayerServer(logging.NewLogger(), &playerStore, &historyStore)
 
 	tests := []struct {
 		name string
@@ -196,7 +197,7 @@ func TestHistory_Get(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			historyStore := StubHistoryStore{history: tc.history}
-			server := NewPlayerServer(&StubPlayerStore{}, &historyStore)
+			server := NewPlayerServer(logging.NewLogger(), &StubPlayerStore{}, &historyStore)
 
 			request := newHistoryRequest(tc.pID)
 			response := httptest.NewRecorder()
