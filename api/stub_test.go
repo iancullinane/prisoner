@@ -22,6 +22,16 @@ func (h *StubHistoryStore) RecordInteraction(interaction types.Interaction) erro
 	return nil
 }
 
+func (h *StubHistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.History, error) {
+	historyByPlayer := make(types.History, 0)
+	for _, interaction := range h.history {
+		if interaction.PlayerA == playerID || interaction.PlayerB == playerID {
+			historyByPlayer = append(historyByPlayer, interaction)
+		}
+	}
+	return historyByPlayer, nil
+}
+
 // MARK: PlayerStore
 // =========================================
 

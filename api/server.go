@@ -39,7 +39,9 @@ func NewPlayerServer(playerStore types.PlayerStore, historyStore types.HistorySt
 
 	router := http.NewServeMux()
 	router.Handle("GET /players", http.HandlerFunc(p.listPlayersHandler))
+	// Get a player by id
 	router.Handle("GET /players/{name}", http.HandlerFunc(p.playersHandler))
+	// Create a player by name
 	router.Handle("POST /players/{name}", http.HandlerFunc(p.playersHandler))
 	// router.Handle("POST /players/{id}", http.HandlerFunc(p.playersHandler))
 	router.Handle("GET /history", http.HandlerFunc(p.historyHandler))

@@ -25,6 +25,16 @@ func (i *InMemoryHistoryStore) RecordInteraction(interaction types.Interaction) 
 	return nil
 }
 
+func (i *InMemoryHistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.History, error) {
+	historyByPlayer := make(types.History, 0)
+	for _, interaction := range i.store {
+		if interaction.PlayerA == playerID || interaction.PlayerB == playerID {
+			historyByPlayer = append(historyByPlayer, interaction)
+		}
+	}
+	return historyByPlayer, nil
+}
+
 // MARK: PlayerStore
 // ------------------------------------------------------------
 

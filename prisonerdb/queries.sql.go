@@ -44,6 +44,40 @@ func (q *Queries) GetHistory(ctx context.Context) ([]Interaction, error) {
 	return items, nil
 }
 
+const getHistoryByPlayerID = `-- name: GetHistoryByPlayerID :many
+SELECT id, player_a_id, player_b_id, player_a_move, player_b_move, played_at
+FROM interactions
+WHERE player_a_id = $1 OR player_b_id = $1
+ORDER BY played_at DESC
+`
+
+func (q *Queries) GetHistoryByPlayerID(ctx context.Context, playerAID pgtype.UUID) ([]Interaction, error) {
+	rows, err := q.db.Query(ctx, getHistoryByPlayerID, playerAID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Interaction
+	for rows.Next() {
+		var i Interaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.PlayerAID,
+			&i.PlayerBID,
+			&i.PlayerAMove,
+			&i.PlayerBMove,
+			&i.PlayedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getOrCreatePlayer = `-- name: GetOrCreatePlayer :one
 INSERT INTO players (name) VALUES ($1)
 ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name

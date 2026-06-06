@@ -23,3 +23,9 @@ SELECT id, player_a_id, player_b_id, player_a_move, player_b_move, played_at
 FROM interactions
 ORDER BY played_at DESC;
 
+-- name: GetHistoryByPlayerID :many
+SELECT id, player_a_id, player_b_id, player_a_move, player_b_move, played_at
+FROM interactions
+WHERE player_a_id = $1 OR player_b_id = $1
+ORDER BY played_at DESC;
+

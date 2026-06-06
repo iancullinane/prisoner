@@ -22,6 +22,17 @@ func NewHistoryStore(pool *pgxpool.Pool) *HistoryStore {
 	return &HistoryStore{pool: pool, q: sqlcdb.New(pool)}
 }
 
+// interaction from row
+func interactionFromRow(i sqlcdb.Interaction) types.Interaction {
+	return types.Interaction{
+		ID:          i.ID.Bytes,
+		PlayerA:     i.PlayerAID.Bytes,
+		PlayerB:     i.PlayerBID.Bytes,
+		PlayerAMove: prisoner.Move([]rune(i.PlayerAMove)[0]),
+		PlayerBMove: prisoner.Move([]rune(i.PlayerBMove)[0]),
+	}
+}
+
 func (s *HistoryStore) GetHistory() (types.History, error) {
 	ctx := context.Background()
 	rows, err := s.q.GetHistory(ctx)
@@ -30,13 +41,7 @@ func (s *HistoryStore) GetHistory() (types.History, error) {
 	}
 	out := make(types.History, 0, len(rows))
 	for _, r := range rows {
-		out = append(out, types.Interaction{
-			ID:          uuid.UUID(r.ID.Bytes),
-			PlayerA:     uuid.UUID(r.PlayerAID.Bytes),
-			PlayerB:     uuid.UUID(r.PlayerBID.Bytes),
-			PlayerAMove: prisoner.Move([]rune(r.PlayerAMove)[0]),
-			PlayerBMove: prisoner.Move([]rune(r.PlayerBMove)[0]),
-		})
+		out = append(out, interactionFromRow(r))
 	}
 	return out, nil
 }
@@ -53,6 +58,20 @@ func (s *HistoryStore) RecordInteraction(interaction types.Interaction) error {
 		return err
 	}
 	return nil
+}
+
+func (s *HistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.History, error) {
+	ctx := context.Background()
+	playerHistory, err := s.q.GetHistoryByPlayerID(ctx, pgtype.UUID{Bytes: playerID, Valid: true})
+	if err != nil {
+		return types.History{}, err
+	}
+
+	out := make(types.History, 0, len(playerHistory))
+	for _, r := range playerHistory {
+		out = append(out, interactionFromRow(r))
+	}
+	return out, nil
 }
 
 type PlayerStore struct {
