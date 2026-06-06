@@ -64,6 +64,13 @@ func NewPlayerStore(pool *pgxpool.Pool) *PlayerStore {
 	return &PlayerStore{pool: pool, q: sqlcdb.New(pool)}
 }
 
+func playerFromRow(p sqlcdb.Player) types.Player {
+	return types.Player{
+		ID:   uuid.UUID(p.ID.Bytes),
+		Name: p.Name,
+	}
+}
+
 func (s *PlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
 	ctx := context.Background()
 	player, err := s.q.GetOrCreatePlayer(ctx, name)
@@ -71,10 +78,7 @@ func (s *PlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
 		return types.Player{}, fmt.Errorf("get or create player %q: %w", name, err)
 	}
 
-	return types.Player{
-		ID:   uuid.UUID(player.ID.Bytes),
-		Name: player.Name,
-	}, nil
+	return playerFromRow(player), nil
 }
 
 func (s *PlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
@@ -84,10 +88,7 @@ func (s *PlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 		return types.Player{}, fmt.Errorf("get player by id %q: %w", id, err)
 	}
 
-	return types.Player{
-		ID:   uuid.UUID(player.ID.Bytes),
-		Name: player.Name,
-	}, nil
+	return playerFromRow(player), nil
 }
 
 func (s *PlayerStore) GetPlayerByName(name string) (types.Player, error) {
@@ -97,8 +98,19 @@ func (s *PlayerStore) GetPlayerByName(name string) (types.Player, error) {
 		return types.Player{}, fmt.Errorf("get player by name %q: %w", name, err)
 	}
 
-	return types.Player{
-		ID:   uuid.UUID(player.ID.Bytes),
-		Name: player.Name,
-	}, nil
+	return playerFromRow(player), nil
+}
+
+func (s *PlayerStore) GetAllPlayers() (types.Players, error) {
+	ctx := context.Background()
+	players, err := s.q.ListPlayers(ctx)
+	if err != nil {
+		return types.Players{}, fmt.Errorf("could not list players %w", err)
+	}
+
+	out := make(types.Players, 0, len(players))
+	for _, p := range players {
+		out = append(out, playerFromRow(p))
+	}
+	return out, nil
 }

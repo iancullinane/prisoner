@@ -39,23 +39,21 @@ func TestPlayers_Get(t *testing.T) {
 	server := NewPlayerServer(&playerStore, nil)
 
 	tests := []struct {
-		name       string
-		url        string
-		playerName string
-		response   string
-		code       int
+		name string
+		url  string
+		// playerName string
+		response string
+		code     int
 	}{
 		{
 			"test base",
-			"players",
-			"Chris",
+			"/players/Chris",
 			`{"ID":"22222222-2222-bbbb-3333-333333333333","Name":"Chris"}` + "\n",
 			http.StatusOK,
 		},
 		{
 			"test player not found",
-			"players",
-			"NonExistent",
+			"/players/NotChris",
 			"could not get player: player not found\n",
 			http.StatusInternalServerError,
 		},
@@ -63,7 +61,7 @@ func TestPlayers_Get(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			request, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/players/%s", tc.playerName), nil)
+			request, _ := http.NewRequest(http.MethodGet, tc.url, nil)
 			response := httptest.NewRecorder()
 
 			server.ServeHTTP(response, request)
@@ -81,18 +79,11 @@ func TestPlayers_Get(t *testing.T) {
 // MARK: POST test
 // ===================================
 
-// This actually records wins, which we are removing
 func TestCreatePlayers(t *testing.T) {
 	playerStore := StubPlayerStore{
 		players: []types.Player{
-			{
-				ID:   luigiID,
-				Name: "Luigi",
-			},
-			{
-				ID:   playerID1,
-				Name: "Chris",
-			},
+			{ID: playerID1, Name: "Chris"},
+			{ID: playerID2, Name: "Luigi"},
 		},
 	}
 	server := NewPlayerServer(&playerStore, nil)
@@ -104,7 +95,7 @@ func TestCreatePlayers(t *testing.T) {
 	}{
 		{
 			"test post",
-			"Pepper",
+			playerID2.String(),
 			http.StatusOK,
 		},
 	}
@@ -112,7 +103,7 @@ func TestCreatePlayers(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 
-			buf := bytes.NewBufferString("body")
+			buf := bytes.NewBufferString("body") // if there were a body on post...
 			request, _ := http.NewRequest(http.MethodPost, "/players/Pepper", buf)
 			response := httptest.NewRecorder()
 

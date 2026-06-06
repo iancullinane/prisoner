@@ -56,6 +56,7 @@ type PlayerStore interface {
 	GetOrCreatePlayer(name string) (Player, error)
 	GetPlayerByID(id uuid.UUID) (Player, error)
 	GetPlayerByName(name string) (Player, error)
+	GetAllPlayers() (Players, error)
 }
 
 type Players []Player
@@ -86,4 +87,8 @@ func (l Players) FindByName(name string) *Player {
 		}
 	}
 	return nil
+}
+
+func (l Players) GetAllPlayers() Players {
+	return l
 }

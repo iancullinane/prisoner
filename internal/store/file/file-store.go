@@ -14,6 +14,10 @@ import (
 var ErrInteractionNotFound = errors.New("interaction not found")
 var ErrPlayerNotFound = errors.New("player not found")
 
+const seedPlayerName = "Luigi"
+
+var seedPlayerID = uuid.MustParse("00000000-0000-0000-0000-000000000000")
+
 // MARK: History Store
 // ===================
 const HistoryFile = "history.db.json"
@@ -85,10 +89,19 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemStore, error) {
 		return nil, err
 	}
 
-	return &FileSystemStore{
+	store := &FileSystemStore{
 		database: json.NewEncoder(&tape{file}),
 		players:  players,
-	}, nil
+	}
+
+	if store.players.FindByName(seedPlayerName) == nil {
+		store.players = append(store.players, types.Player{ID: seedPlayerID, Name: seedPlayerName})
+		if err := store.database.Encode(store.players); err != nil {
+			return nil, fmt.Errorf("seeding %s player to file: %w", seedPlayerName, err)
+		}
+	}
+
+	return store, nil
 
 }
 
@@ -115,6 +128,11 @@ func (f *FileSystemStore) GetOrCreatePlayer(name string) (types.Player, error) {
 	}
 
 	return newPlayer, nil
+}
+
+func (f *FileSystemStore) GetAllPlayers() (types.Players, error) {
+	players := f.players.GetAllPlayers()
+	return players, nil
 }
 
 func (f *FileSystemStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {

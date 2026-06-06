@@ -71,3 +71,7 @@ func (s *StubPlayerStore) GetPlayerByName(name string) (types.Player, error) {
 	}
 	return *player, nil
 }
+
+func (s *StubPlayerStore) GetAllPlayers() (types.Players, error) {
+	return types.Players(s.players), nil
+}

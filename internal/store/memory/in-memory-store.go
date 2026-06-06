@@ -66,21 +66,6 @@ func (i *InMemoryPlayerStore) GetPlayerByName(name string) (types.Player, error)
 	return *player, nil
 }
 
-// MARK: Postgres
-// -------------------------------
-
-// func NewPostgresMemoryStore() *PostgresMemoryStore {
-// 	return &PostgresMemoryStore{map[string]int{}}
-// }
-
-// type PostgresMemoryStore struct {
-// 	store map[string]int
-// }
-
-// func (p *PostgresMemoryStore) RecordWin(name string) {
-// 	p.store[name]++
-// }
-
-// func (p *PostgresMemoryStore) GetPlayerScore(name string) int {
-// 	return p.store[name]
-// }
+func (i *InMemoryPlayerStore) GetAllPlayers() (types.Players, error) {
+	return i.players, nil
+}

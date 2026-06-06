@@ -13,7 +13,6 @@ import (
 const jsonContentType = "application/json"
 
 var (
-	ianID, _ = uuid.Parse("9999999999-2222-bbbb-3333-333333333333")
 	luigi, _ = uuid.Parse("00000000-0000-0000-0000-000000000000")
 )
 
@@ -32,10 +31,14 @@ func NewPlayerServer(playerStore types.PlayerStore, historyStore types.HistorySt
 	p.playerStore = playerStore
 	p.historyStore = historyStore
 
+	/*
+		2026-06-05
+		As of the player needs to exist, and be passed as a parameter into the url
+		and it will always select `Luigi` as the opponent.
+	*/
+
 	router := http.NewServeMux()
-	// TODO: Update the player route to work with newer versions of player
-	//   Revamp player to search by name or ID, to post with the ID and Move. This would be usual `GET /players` which then gets a history of all interactions from that user.
-	// labels: feature
+	router.Handle("GET /players", http.HandlerFunc(p.listPlayersHandler))
 	router.Handle("GET /players/{name}", http.HandlerFunc(p.playersHandler))
 	router.Handle("POST /players/{name}", http.HandlerFunc(p.playersHandler))
 	// router.Handle("POST /players/{id}", http.HandlerFunc(p.playersHandler))
@@ -64,12 +67,9 @@ func NewPlayerServer(playerStore types.PlayerStore, historyStore types.HistorySt
 // ==========================================
 
 func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement play against a CPU opponent on the server
-	//  until real user backing exists (specifically UUID support) have the play response return a random move, but always set the opponent as uuid:uuid.Parse("00000000-0000-aaaa-2222-222222222222") for testing and development purposes.
-	// labels:story
-	opponent, err := p.playerStore.GetPlayerByID(luigi)
+	player_b, err := p.playerStore.GetPlayerByID(luigi)
 	if err != nil {
-		http.Error(w, "could not get opponent", http.StatusInternalServerError)
+		http.Error(w, "could not get player_a", http.StatusInternalServerError)
 		return
 	}
 
@@ -80,15 +80,15 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	protagonist, err := p.playerStore.GetPlayerByID(playerID)
+	player_a, err := p.playerStore.GetPlayerByID(playerID)
 	if err != nil {
 		http.Error(w, "could not get protagonist", http.StatusInternalServerError)
 		return
 	}
 
-	protagonistMove, opponentMove := prisoner.Cooperate, prisoner.Cooperate
+	player_a_move, player_b_move := prisoner.Cooperate, prisoner.Cooperate
 
-	interaction := types.NewInteraction(protagonist.ID, opponent.ID, protagonistMove, opponentMove)
+	interaction := types.NewInteraction(player_a.ID, player_b.ID, player_a_move, player_b_move)
 	if err := p.historyStore.RecordInteraction(interaction); err != nil {
 		fmt.Printf("record interaction: %v", err)
 		http.Error(w, "could not record interaction", http.StatusInternalServerError)
@@ -97,6 +97,30 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprint(w, interaction)
+}
+
+func (p *PlayerServer) listPlayersHandler(w http.ResponseWriter, r *http.Request) {
+
+	// var statusCode int
+	// var err error
+
+	// switch r.Method {
+	// case http.MethodGet:
+	// 	player, err = p.playerStore.GetPlayerByName(playerName)
+	// 	statusCode = http.StatusOK
+	// case http.MethodPost:
+	// 	player, err = p.playerStore.GetOrCreatePlayer(playerName)
+	// }
+
+	players, err := p.playerStore.GetAllPlayers()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("content-type", jsonContentType)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(players)
 }
 
 func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {

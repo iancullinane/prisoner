@@ -28,7 +28,7 @@ func TestFileSystemPlayerStore(t *testing.T) {
 	newTempStore, closer := createTempFile(t, goldenPlayerStoreData)
 	defer closer()
 
-	t.Run("get a placer", func(t *testing.T) {
+	t.Run("get a player", func(t *testing.T) {
 		store, err := NewFileSystemPlayerStore(newTempStore)
 		testhelpers.AssertNoError(t, err)
 
@@ -48,6 +48,24 @@ func TestFileSystemPlayerStore(t *testing.T) {
 		_, err := NewFileSystemPlayerStore(database)
 
 		testhelpers.AssertNoError(t, err)
+	})
+
+	t.Run("persists a created player across store instances", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, "[]")
+		defer cleanDatabase()
+
+		store, err := NewFileSystemPlayerStore(database)
+		testhelpers.AssertNoError(t, err)
+
+		created, err := store.GetOrCreatePlayer("Alice")
+		testhelpers.AssertNoError(t, err)
+
+		reopened, err := NewFileSystemPlayerStore(database)
+		testhelpers.AssertNoError(t, err)
+
+		got, err := reopened.GetPlayerByName("Alice")
+		testhelpers.AssertNoError(t, err)
+		testhelpers.AssertPlayer(t, got, created)
 	})
 
 }
@@ -87,7 +105,7 @@ func TestFileSystemHistoryStore(t *testing.T) {
 		// testhelpers.AssertNoError(t, err)
 
 		want := types.Interaction{
-			ID:              interactionIDOne,
+			ID:          interactionIDOne,
 			PlayerA:     player1,
 			PlayerB:     player2,
 			PlayerAMove: prisoner.Cooperate,

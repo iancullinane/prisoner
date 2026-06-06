@@ -18,32 +18,20 @@ import (
 var serverCmd = &cobra.Command{
 	Use:   "server",
 	Short: "Start an http server for the prisoner's dilemma",
-	Long:  `Server will start a long running process serving HTTP requests`,
+	Long:  `Server will start a long running process serving HTTP requests. Takes the same store flags as using the CLI app. Supports memory, file, and postgres stores.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		storeKind := viper.GetString("store")
-		store, cleanup, err := openPlayerStore(context.Background(), storeKind)
+		st, cleanup, err := openStores(context.Background(), storeKind)
 		if err != nil {
 			return err
 		}
-		if cleanup != nil {
-			defer cleanup()
-		}
-
-		historyStore, cleanup, err := openHistoryStore(context.Background(), storeKind)
-		if err != nil {
-			return err
-		}
-		if cleanup != nil {
-			defer cleanup()
-		}
+		defer cleanup()
 
 		fmt.Printf("starting server (%s store)...\n", storeKind)
 
-		server := api.NewPlayerServer(store, historyStore)
+		server := api.NewPlayerServer(st.players, st.history)
 		log.Println("listening on :5001")
-		log.Fatal(http.ListenAndServe(":5001", server))
-
-		return nil
+		return http.ListenAndServe(":5001", server)
 	},
 }
 

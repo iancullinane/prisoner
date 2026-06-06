@@ -27,14 +27,6 @@ var simulateCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		storeKind := viper.GetString("store")
-		// store, cleanup, err := openPlayerStore(context.Background(), storeKind)
-		// if err != nil {
-		// 	return err
-		// }
-		// if cleanup != nil {
-		// 	defer cleanup()
-		// }
-
 		scoring := viper.GetString("scoring")
 
 		var payoff prisoner.Payoff[int]
@@ -47,24 +39,15 @@ var simulateCmd = &cobra.Command{
 			return fmt.Errorf("unknown scoring %q: use classic or positive", scoring)
 		}
 
-		roundCount, err := strconv.Atoi(args[0])
+		// set stores, one for players and one for history
+		st, cleanup, err := openStores(context.Background(), storeKind)
 		if err != nil {
 			return err
 		}
+		defer cleanup()
+		historyStore := st.history
 
-		player1 := types.NewPlayer("")
-		player2 := types.NewPlayer("")
-
-		//------------------------/------------------------/------------------------
-
-		historyStore, cleanup, err := openHistoryStore(context.Background(), storeKind)
-		if err != nil {
-			return err
-		}
-		if cleanup != nil {
-			defer cleanup()
-		}
-
+		//get history to see how many already exist
 		history, err := historyStore.GetHistory()
 		if err != nil {
 			return fmt.Errorf("loading history from %s store: %w", storeKind, err)
@@ -72,15 +55,24 @@ var simulateCmd = &cobra.Command{
 		fmt.Printf("Using %s store (%d interactions in history)\n", storeKind, len(history))
 
 		//------------------------/------------------------/------------------------
+		roundCount, err := strconv.Atoi(args[0])
+		if err != nil {
+			return err
+		}
 		fmt.Printf("Playing %d rounds\n", roundCount)
 
-		// rounds := make([]types.Interaction, 0, roundCount)
+		// empty strings generate random names
+		player1 := types.NewPlayer("")
+		player2 := types.NewPlayer("")
+
 		for range roundCount {
+			player1Move := prisoner.RandomMove()
+			player2Move := prisoner.RandomMove()
 			interaction := types.NewInteraction(
 				player1.ID,
 				player2.ID,
-				prisoner.Cooperate,
-				prisoner.Cooperate)
+				player1Move,
+				player2Move)
 			err = historyStore.RecordInteraction(interaction)
 			if err != nil {
 				return fmt.Errorf("recording interaction in %s store: %w", storeKind, err)
