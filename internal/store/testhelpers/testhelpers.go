@@ -1,6 +1,7 @@
 package testhelpers
 
 import (
+	"log/slog"
 	"reflect"
 	"testing"
 
@@ -8,6 +9,12 @@ import (
 	"github.com/iancullinane/prisoner/internal/types"
 	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
+
+// NoopLogger returns a logger that discards all output, for store constructors
+// under test where log output is not the thing being asserted.
+func NoopLogger() *slog.Logger {
+	return slog.New(slog.DiscardHandler)
+}
 
 const (
 	TestPlayerOne     = "00000000-0000-0000-0000-000000000000"

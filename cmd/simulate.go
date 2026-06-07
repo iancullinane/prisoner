@@ -40,7 +40,7 @@ var simulateCmd = &cobra.Command{
 		}
 
 		// set stores, one for players and one for history
-		st, cleanup, err := openStores(context.Background(), storeKind)
+		st, cleanup, err := openStores(context.Background(), storeKind, logger)
 		if err != nil {
 			return err
 		}
@@ -54,7 +54,6 @@ var simulateCmd = &cobra.Command{
 		}
 		fmt.Printf("Using %s store (%d interactions in history)\n", storeKind, len(history))
 
-		//------------------------/------------------------/------------------------
 		roundCount, err := strconv.Atoi(args[0])
 		if err != nil {
 			return err

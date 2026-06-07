@@ -5,13 +5,20 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
+	"github.com/iancullinane/prisoner/internal/logging"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
+
+// logger is the process-wide root logger, built from the resolved config in
+// PersistentPreRunE before any subcommand runs. Commands derive component
+// loggers from it when constructing stores and servers.
+var logger *slog.Logger
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -33,6 +40,18 @@ Scoring mechanisms convert these symbols based on the payoff matrix used.
 
 Use this CLI to play rounds from the terminal and to experiment with
 strategies and simulations as the tool grows.`,
+	// PersistentPreRunE runs for every subcommand after config is loaded, so the
+	// logger reflects the resolved --log-level / --log-format (flag, env, config,
+	// then default). Subcommands read the package-level logger var.
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		level := logging.ParseLevel(viper.GetString("log-level"))
+		logger = logging.New(os.Stdout, level, viper.GetString("log-format"))
+		logger.Debug("logger initialised",
+			slog.String("log_level", level.String()),
+			slog.String("log_format", viper.GetString("log-format")),
+		)
+		return nil
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -50,6 +69,11 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.prisoner)")
 	rootCmd.PersistentFlags().String("store", StoreMemory, "player store backend: memory, file, or postgres")
 	_ = viper.BindPFlag("store", rootCmd.PersistentFlags().Lookup("store"))
+
+	rootCmd.PersistentFlags().String("log-level", "debug", "log level: debug, info, warn, or error")
+	rootCmd.PersistentFlags().String("log-format", "text", "log output format: text or json")
+	_ = viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
+	_ = viper.BindPFlag("log-format", rootCmd.PersistentFlags().Lookup("log-format"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -75,6 +99,8 @@ func initConfig() {
 	viper.SetEnvPrefix("prisoner")
 	viper.SetDefault("store", StoreMemory)
 	viper.SetDefault("scoring", "classic")
+	viper.SetDefault("log-level", "debug")
+	viper.SetDefault("log-format", "text")
 
 	viper.AutomaticEnv()
 

@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -14,12 +15,17 @@ import (
 )
 
 type HistoryStore struct {
-	pool *pgxpool.Pool
-	q    *sqlcdb.Queries
+	logger *slog.Logger
+	pool   *pgxpool.Pool
+	q      *sqlcdb.Queries
 }
 
-func NewHistoryStore(pool *pgxpool.Pool) *HistoryStore {
-	return &HistoryStore{pool: pool, q: sqlcdb.New(pool)}
+func NewHistoryStore(logger *slog.Logger, pool *pgxpool.Pool) *HistoryStore {
+	return &HistoryStore{
+		logger: logger.With(slog.String("component", "postgres-history-store")),
+		pool:   pool,
+		q:      sqlcdb.New(pool),
+	}
 }
 
 // interaction from row
@@ -57,6 +63,9 @@ func (s *HistoryStore) RecordInteraction(interaction types.Interaction) error {
 	if err := s.q.RecordInteraction(ctx, params); err != nil {
 		return err
 	}
+	s.logger.Debug("recorded interaction",
+		slog.String("id", interaction.ID.String()),
+	)
 	return nil
 }
 
@@ -75,12 +84,17 @@ func (s *HistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.History, 
 }
 
 type PlayerStore struct {
-	pool *pgxpool.Pool
-	q    *sqlcdb.Queries
+	logger *slog.Logger
+	pool   *pgxpool.Pool
+	q      *sqlcdb.Queries
 }
 
-func NewPlayerStore(pool *pgxpool.Pool) *PlayerStore {
-	return &PlayerStore{pool: pool, q: sqlcdb.New(pool)}
+func NewPlayerStore(logger *slog.Logger, pool *pgxpool.Pool) *PlayerStore {
+	return &PlayerStore{
+		logger: logger.With(slog.String("component", "postgres-player-store")),
+		pool:   pool,
+		q:      sqlcdb.New(pool),
+	}
 }
 
 func playerFromRow(p sqlcdb.Player) types.Player {
@@ -97,7 +111,12 @@ func (s *PlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
 		return types.Player{}, fmt.Errorf("get or create player %q: %w", name, err)
 	}
 
-	return playerFromRow(player), nil
+	out := playerFromRow(player)
+	s.logger.Debug("get or create player",
+		slog.String("name", out.Name),
+		slog.String("id", out.ID.String()),
+	)
+	return out, nil
 }
 
 func (s *PlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 
 	"github.com/google/uuid"
@@ -23,11 +24,12 @@ var seedPlayerID = uuid.MustParse("00000000-0000-0000-0000-000000000000")
 const HistoryFile = "history.db.json"
 
 type FileSystemHistoryStore struct {
+	logger   *slog.Logger
 	database *json.Encoder
 	history  types.History
 }
 
-func NewFileSystemHistoryStore(file *os.File) (*FileSystemHistoryStore, error) {
+func NewFileSystemHistoryStore(logger *slog.Logger, file *os.File) (*FileSystemHistoryStore, error) {
 	file.Seek(0, io.SeekStart)
 
 	err := initialiseHistoryDBFile(file)
@@ -40,7 +42,14 @@ func NewFileSystemHistoryStore(file *os.File) (*FileSystemHistoryStore, error) {
 		return nil, err
 	}
 
+	logger = logger.With(slog.String("component", "file-history-store"))
+	logger.Debug("opened history store",
+		slog.String("file", file.Name()),
+		slog.Int("history_len", len(history)),
+	)
+
 	return &FileSystemHistoryStore{
+		logger:   logger,
 		database: json.NewEncoder(&tape{file}),
 		history:  history,
 	}, nil
@@ -65,6 +74,10 @@ func (f *FileSystemHistoryStore) RecordInteraction(interaction types.Interaction
 		return fmt.Errorf("encoding history to file: %w", err)
 	}
 
+	f.logger.Debug("recorded interaction",
+		slog.String("id", interaction.ID.String()),
+		slog.Int("history_len", len(f.history)),
+	)
 	return nil
 }
 
@@ -82,11 +95,12 @@ func (f *FileSystemHistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types
 // ==================
 
 type FileSystemStore struct {
+	logger   *slog.Logger
 	database *json.Encoder
 	players  types.Players
 }
 
-func NewFileSystemPlayerStore(file *os.File) (*FileSystemStore, error) {
+func NewFileSystemPlayerStore(logger *slog.Logger, file *os.File) (*FileSystemStore, error) {
 	file.Seek(0, io.SeekStart)
 
 	err := initialisePlayerDBFile(file)
@@ -99,7 +113,14 @@ func NewFileSystemPlayerStore(file *os.File) (*FileSystemStore, error) {
 		return nil, err
 	}
 
+	logger = logger.With(slog.String("component", "file-player-store"))
+	logger.Debug("opened player store",
+		slog.String("file", file.Name()),
+		slog.Int("player_count", len(players)),
+	)
+
 	store := &FileSystemStore{
+		logger:   logger,
 		database: json.NewEncoder(&tape{file}),
 		players:  players,
 	}
@@ -137,6 +158,10 @@ func (f *FileSystemStore) GetOrCreatePlayer(name string) (types.Player, error) {
 		return types.Player{}, fmt.Errorf("encoding players to file: %w", err)
 	}
 
+	f.logger.Debug("created player",
+		slog.String("name", newPlayer.Name),
+		slog.String("id", newPlayer.ID.String()),
+	)
 	return newPlayer, nil
 }
 

@@ -4,16 +4,19 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/iancullinane/prisoner/internal/logging"
 	"github.com/iancullinane/prisoner/internal/types"
 	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
+
+// testLogger discards output; these tests assert on HTTP behaviour, not logs.
+func testLogger() *slog.Logger { return slog.New(slog.DiscardHandler) }
 
 var (
 	// luigi        = types.Player{Name: "Luigi", ID: luigiID}
@@ -37,7 +40,7 @@ func TestPlayers_Get(t *testing.T) {
 		},
 	}
 
-	server := NewPlayerServer(logging.NewLogger(), &playerStore, nil)
+	server := NewPlayerServer(testLogger(), &playerStore, nil)
 
 	tests := []struct {
 		name string
@@ -87,7 +90,7 @@ func TestCreatePlayers(t *testing.T) {
 			{ID: playerID2, Name: "Luigi"},
 		},
 	}
-	server := NewPlayerServer(logging.NewLogger(), &playerStore, nil)
+	server := NewPlayerServer(testLogger(), &playerStore, nil)
 
 	tests := []struct {
 		name     string
@@ -135,7 +138,7 @@ func TestPlay(t *testing.T) {
 		},
 	}
 	historyStore := StubHistoryStore{}
-	server := NewPlayerServer(logging.NewLogger(), &playerStore, &historyStore)
+	server := NewPlayerServer(testLogger(), &playerStore, &historyStore)
 
 	tests := []struct {
 		name string
@@ -197,7 +200,7 @@ func TestHistory_Get(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			historyStore := StubHistoryStore{history: tc.history}
-			server := NewPlayerServer(logging.NewLogger(), &StubPlayerStore{}, &historyStore)
+			server := NewPlayerServer(testLogger(), &StubPlayerStore{}, &historyStore)
 
 			request := newHistoryRequest(tc.pID)
 			response := httptest.NewRecorder()

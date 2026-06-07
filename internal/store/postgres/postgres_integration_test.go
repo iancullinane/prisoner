@@ -74,7 +74,7 @@ func TestPostgresPlayerStore_Contract(t *testing.T) {
 		if _, err := integrationPool.Exec(context.Background(), "TRUNCATE players CASCADE"); err != nil {
 			t.Fatalf("could not truncate players table: %v", err)
 		}
-		return NewPlayerStore(integrationPool)
+		return NewPlayerStore(testhelpers.NoopLogger(), integrationPool)
 	})
 }
 
@@ -88,7 +88,7 @@ func TestPostgresHistoryStore_Contract(t *testing.T) {
 		if err := seedTestPlayers(ctx, integrationPool); err != nil {
 			t.Fatalf("seed test players: %v", err)
 		}
-		return NewHistoryStore(integrationPool)
+		return NewHistoryStore(testhelpers.NoopLogger(), integrationPool)
 	})
 }
 
