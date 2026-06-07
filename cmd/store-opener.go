@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/iancullinane/prisoner/db"
@@ -33,20 +34,20 @@ type stores struct {
 // openStores selects an in-memory, file-based, or database backed storage
 // system and constructs both the player and history stores from a single
 // connection. The returned cleanup is always safe to call.
-func openStores(ctx context.Context, kind string) (stores, func(), error) {
+func openStores(ctx context.Context, kind string, logger *slog.Logger) (stores, func(), error) {
 	switch kind {
 	case StoreMemory, "":
 		return stores{
-			players: memory.NewInMemoryPlayerStore(),
-			history: memory.NewInMemoryHistoryStore(),
+			players: memory.NewInMemoryPlayerStore(logger),
+			history: memory.NewInMemoryHistoryStore(logger),
 		}, func() {}, nil
 
 	case StoreFile:
-		players, closePlayers, err := openPlayerFileStore()
+		players, closePlayers, err := openPlayerFileStore(logger)
 		if err != nil {
 			return stores{}, nil, err
 		}
-		history, closeHistory, err := openHistoryFileStore()
+		history, closeHistory, err := openHistoryFileStore(logger)
 		if err != nil {
 			closePlayers()
 			return stores{}, nil, err
@@ -55,13 +56,13 @@ func openStores(ctx context.Context, kind string) (stores, func(), error) {
 			func() { closeHistory(); closePlayers() }, nil
 
 	case StorePostgres:
-		pool, err := openPostgresPool(ctx)
+		pool, err := openPostgresPool(ctx, logger)
 		if err != nil {
 			return stores{}, nil, err
 		}
 		return stores{
-			players: storepostgres.NewPlayerStore(pool),
-			history: storepostgres.NewHistoryStore(pool),
+			players: storepostgres.NewPlayerStore(logger, pool),
+			history: storepostgres.NewHistoryStore(logger, pool),
 		}, func() { pool.Close() }, nil
 
 	default:
@@ -74,13 +75,13 @@ func openStores(ctx context.Context, kind string) (stores, func(), error) {
 
 // openPlayerFileStore will open or create a new json file to use as storage
 // behind the application
-func openPlayerFileStore() (types.PlayerStore, func(), error) {
+func openPlayerFileStore(logger *slog.Logger) (types.PlayerStore, func(), error) {
 	f, err := os.OpenFile(playerFileName, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, nil, fmt.Errorf("open %s: %w", playerFileName, err)
 	}
 
-	store, err := storefile.NewFileSystemPlayerStore(f)
+	store, err := storefile.NewFileSystemPlayerStore(logger, f)
 	if err != nil {
 		f.Close()
 		return nil, nil, fmt.Errorf("new file system player store: %w", err)
@@ -88,13 +89,13 @@ func openPlayerFileStore() (types.PlayerStore, func(), error) {
 	return store, func() { f.Close() }, nil
 }
 
-func openHistoryFileStore() (types.HistoryStore, func(), error) {
+func openHistoryFileStore(logger *slog.Logger) (types.HistoryStore, func(), error) {
 	f, err := os.OpenFile(historyFileName, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, nil, fmt.Errorf("open %s: %w", historyFileName, err)
 	}
 
-	store, err := storefile.NewFileSystemHistoryStore(f)
+	store, err := storefile.NewFileSystemHistoryStore(logger, f)
 	if err != nil {
 		f.Close()
 		return nil, nil, fmt.Errorf("new file system player store: %w", err)
@@ -104,7 +105,7 @@ func openHistoryFileStore() (types.HistoryStore, func(), error) {
 
 // ===========================
 
-func openPostgresPool(ctx context.Context) (*pgxpool.Pool, error) {
+func openPostgresPool(ctx context.Context, logger *slog.Logger) (*pgxpool.Pool, error) {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		return nil, fmt.Errorf("DATABASE_URL is required for postgres store")
@@ -131,6 +132,6 @@ func openPostgresPool(ctx context.Context) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("run migrations: %w", err)
 	}
 
-	fmt.Println("postgres: connected, migrations applied")
+	logger.Info("postgres connected, migrations applied")
 	return pool, nil
 }

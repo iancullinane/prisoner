@@ -29,7 +29,7 @@ func TestFileSystemPlayerStore(t *testing.T) {
 	defer closer()
 
 	t.Run("get a player", func(t *testing.T) {
-		store, err := NewFileSystemPlayerStore(newTempStore)
+		store, err := NewFileSystemPlayerStore(testhelpers.NoopLogger(), newTempStore)
 		testhelpers.AssertNoError(t, err)
 
 		got, err := store.GetPlayerByID(player1)
@@ -45,7 +45,7 @@ func TestFileSystemPlayerStore(t *testing.T) {
 		database, cleanDatabase := createTempFile(t, "")
 		defer cleanDatabase()
 
-		_, err := NewFileSystemPlayerStore(database)
+		_, err := NewFileSystemPlayerStore(testhelpers.NoopLogger(), database)
 
 		testhelpers.AssertNoError(t, err)
 	})
@@ -54,13 +54,13 @@ func TestFileSystemPlayerStore(t *testing.T) {
 		database, cleanDatabase := createTempFile(t, "[]")
 		defer cleanDatabase()
 
-		store, err := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(testhelpers.NoopLogger(), database)
 		testhelpers.AssertNoError(t, err)
 
 		created, err := store.GetOrCreatePlayer("Alice")
 		testhelpers.AssertNoError(t, err)
 
-		reopened, err := NewFileSystemPlayerStore(database)
+		reopened, err := NewFileSystemPlayerStore(testhelpers.NoopLogger(), database)
 		testhelpers.AssertNoError(t, err)
 
 		got, err := reopened.GetPlayerByName("Alice")
@@ -86,7 +86,7 @@ func TestFileSystemHistoryStore(t *testing.T) {
 	newTempStore, closer := createTempFile(t, goldenHistoryData)
 	defer closer()
 	t.Run("single interaction", func(t *testing.T) {
-		store, err := NewFileSystemHistoryStore(newTempStore)
+		store, err := NewFileSystemHistoryStore(testhelpers.NoopLogger(), newTempStore)
 		testhelpers.AssertNoError(t, err)
 
 		got, err := store.GetInteraction(interactionIDOne)
@@ -109,7 +109,7 @@ func TestFileSystemHistoryStore(t *testing.T) {
 		database, cleanDatabase := createTempFile(t, "")
 		defer cleanDatabase()
 
-		_, err := NewFileSystemPlayerStore(database)
+		_, err := NewFileSystemPlayerStore(testhelpers.NoopLogger(), database)
 
 		testhelpers.AssertNoError(t, err)
 	})
