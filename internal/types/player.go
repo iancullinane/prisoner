@@ -21,7 +21,6 @@ var (
 type Player struct {
 	ID   uuid.UUID
 	Name string
-	// Wins int
 }
 
 func NewPlayer(name string) *Player {

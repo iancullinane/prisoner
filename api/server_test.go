@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -27,6 +26,14 @@ var (
 	testID2, _   = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
 	playerID1, _ = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
 	playerID2, _ = uuid.Parse("22222222-2222-bbbb-3333-333333333333")
+
+	playerStore = StubPlayerStore{
+		players: []types.Player{
+			{ID: playerID1, Name: "Chris"},
+			{ID: luigiID, Name: "Luigi"},
+			{ID: playerID2, Name: "Pepper"},
+		},
+	}
 )
 
 // MARK: GET test
@@ -45,9 +52,8 @@ func TestPlayers_Get(t *testing.T) {
 	server := NewPlayerServer(testLogger(), &playerStore, nil)
 
 	tests := []struct {
-		name string
-		url  string
-		// playerName string
+		name     string
+		url      string
 		response string
 		code     int
 	}{
@@ -61,7 +67,7 @@ func TestPlayers_Get(t *testing.T) {
 			"test player not found",
 			"/players/NotChris",
 			"could not get player: player not found\n",
-			http.StatusInternalServerError,
+			http.StatusNotFound,
 		},
 	}
 
@@ -86,23 +92,20 @@ func TestPlayers_Get(t *testing.T) {
 // ===================================
 
 func TestCreatePlayers(t *testing.T) {
-	playerStore := StubPlayerStore{
-		players: []types.Player{
-			{ID: playerID1, Name: "Chris"},
-			{ID: playerID2, Name: "Luigi"},
-		},
-	}
+
 	server := NewPlayerServer(testLogger(), &playerStore, nil)
 
 	tests := []struct {
-		name     string
-		response string
-		code     int
+		name          string
+		response      string
+		code          int
+		expectedError error
 	}{
 		{
-			"test post",
-			playerID2.String(),
-			http.StatusOK,
+			name:          "test post",
+			response:      playerID2.String(),
+			code:          http.StatusOK,
+			expectedError: nil,
 		},
 	}
 
@@ -133,48 +136,52 @@ func TestCreatePlayers(t *testing.T) {
 // ========================================
 
 func TestPlay(t *testing.T) {
-	playerStore := StubPlayerStore{
-		players: []types.Player{
-			{ID: playerID1, Name: "Chris"},
-			{ID: luigiID, Name: "Luigi"},
-			{ID: playerID2, Name: "Pepper"},
-		},
-	}
 	historyStore := StubHistoryStore{}
 	server := NewPlayerServer(testLogger(), &playerStore, &historyStore)
 
 	tests := []struct {
 		name          string
-		player_a      string
-		player_b      string
+		playerA       string
+		playerB       string
 		result        types.Interaction
 		code          int
 		expectedError error
 	}{
 		{
-			"test play",
-			playerID1.String(),
-			playerID2.String(),
-			types.Interaction{
+			name:    "test play",
+			playerA: playerID1.String(),
+			playerB: playerID2.String(),
+			result: types.Interaction{
 				PlayerA:     playerID1,
 				PlayerB:     playerID2,
 				PlayerAMove: prisoner.Cooperate,
 				PlayerBMove: prisoner.Cooperate,
 			},
-			http.StatusCreated,
-			nil,
+			code:          http.StatusCreated,
+			expectedError: nil,
+		},
+		{
+			name:          "player should not be able to player themselves",
+			playerA:       playerID1.String(),
+			playerB:       playerID1.String(),
+			result:        types.Interaction{},
+			code:          http.StatusBadRequest,
+			expectedError: ErrPlayerCannotPlaySelf,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			buf := bytes.NewBufferString("body")
-			req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/play/%s/%s", tc.player_a, tc.player_b), buf)
+			req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/play/%s/%s", tc.playerA, tc.playerB), buf)
 			response := httptest.NewRecorder()
 
 			server.ServeHTTP(response, req)
 
-			log.Println(response.Body.String())
+			if tc.expectedError != nil {
+				assertResponseBody(t, response.Body.String(), tc.expectedError.Error()+"\n")
+				return
+			}
 
 			if len(historyStore.recordInteractionCalls) != 1 {
 				t.Errorf("incorrect number of calls on record interaction")

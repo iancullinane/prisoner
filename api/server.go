@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -12,6 +13,10 @@ import (
 )
 
 const jsonContentType = "application/json"
+
+var (
+	ErrPlayerCannotPlaySelf = errors.New("player cannot play itself")
+)
 
 // var (
 // 	luigi, _ = uuid.Parse("00000000-0000-0000-0000-000000000000")
@@ -75,6 +80,13 @@ func NewPlayerServer(logger *slog.Logger, playerStore types.PlayerStore, history
 func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 
 	playerAParam := r.PathValue("player_a")
+	playerBParam := r.PathValue("player_b")
+
+	if playerAParam == playerBParam {
+		http.Error(w, ErrPlayerCannotPlaySelf.Error(), http.StatusBadRequest)
+		return
+	}
+
 	playerAID, err := uuid.Parse(playerAParam)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing player id: %v", err), http.StatusBadRequest)
@@ -87,7 +99,6 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	playerBParam := r.PathValue("player_b")
 	var playerB types.Player
 	if playerBParam == "" {
 		playerB, err = p.playerStore.GetRandomPlayerExcept(playerAID)
@@ -151,7 +162,7 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		http.Error(w, fmt.Sprintf("could not get player: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("could not get player: %v", err), http.StatusNotFound)
 		return
 	}
 
