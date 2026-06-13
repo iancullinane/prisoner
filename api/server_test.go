@@ -2,8 +2,10 @@ package api
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -23,7 +25,7 @@ var (
 	luigiID, _   = uuid.Parse("00000000-0000-0000-0000-000000000000")
 	testID1, _   = uuid.Parse("00000000-0000-aaaa-2222-222222222222")
 	testID2, _   = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
-	playerID1, _ = uuid.Parse("22222222-2222-bbbb-3333-333333333333")
+	playerID1, _ = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
 	playerID2, _ = uuid.Parse("22222222-2222-bbbb-3333-333333333333")
 )
 
@@ -52,7 +54,7 @@ func TestPlayers_Get(t *testing.T) {
 		{
 			"test base",
 			"/players/Chris",
-			`{"ID":"22222222-2222-bbbb-3333-333333333333","Name":"Chris"}` + "\n",
+			`{"ID":"11111111-1111-bbbb-3333-333333333333","Name":"Chris"}` + "\n",
 			http.StatusOK,
 		},
 		{
@@ -135,37 +137,51 @@ func TestPlay(t *testing.T) {
 		players: []types.Player{
 			{ID: playerID1, Name: "Chris"},
 			{ID: luigiID, Name: "Luigi"},
+			{ID: playerID2, Name: "Pepper"},
 		},
 	}
 	historyStore := StubHistoryStore{}
 	server := NewPlayerServer(testLogger(), &playerStore, &historyStore)
 
 	tests := []struct {
-		name string
-		id   string
-		code int
+		name          string
+		player_a      string
+		player_b      string
+		result        types.Interaction
+		code          int
+		expectedError error
 	}{
 		{
 			"test play",
 			playerID1.String(),
+			playerID2.String(),
+			types.Interaction{
+				PlayerA:     playerID1,
+				PlayerB:     playerID2,
+				PlayerAMove: prisoner.Cooperate,
+				PlayerBMove: prisoner.Cooperate,
+			},
 			http.StatusCreated,
+			nil,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			buf := bytes.NewBufferString("body")
-			req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/play/%s", tc.id), buf)
+			req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/play/%s/%s", tc.player_a, tc.player_b), buf)
 			response := httptest.NewRecorder()
 
 			server.ServeHTTP(response, req)
+
+			log.Println(response.Body.String())
 
 			if len(historyStore.recordInteractionCalls) != 1 {
 				t.Errorf("incorrect number of calls on record interaction")
 			}
 
 			assertResponseStatus(t, response.Code, tc.code)
-			// assertResponseBody(t, got, want)
+			assertInteraction(t, getInterationFromResponse(t, response.Body), tc.result)
 		})
 
 	}
@@ -245,8 +261,6 @@ func assertContentType(t testing.TB, response *httptest.ResponseRecorder, want s
 	}
 }
 
-// MARK: History helper
-
 func getHistoryFromResponse(t testing.TB, body io.Reader) types.History {
 	t.Helper()
 	h, err := types.NewHistory(body)
@@ -261,4 +275,33 @@ func assertHistory(t testing.TB, got, want types.History) {
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("history mismatch\n  got:  %+v\n  want: %+v", got, want)
 	}
+}
+
+func getInterationFromResponse(t testing.TB, body io.Reader) types.Interaction {
+	t.Helper()
+	i, err := types.NewInteractionFromJSON(body)
+	if err != nil {
+		t.Fatalf("%s", err)
+	}
+
+	return i
+}
+
+func assertInteraction(t testing.TB, got, want types.Interaction) {
+	t.Helper()
+	// the interaction ID is randomly generated so ignore in comparison
+	got.ID = uuid.UUID{}
+	want.ID = uuid.UUID{}
+	if reflect.DeepEqual(got, want) {
+		return
+	}
+	gotJSON, err := json.MarshalIndent(got, "", "  ")
+	if err != nil {
+		t.Fatalf("marshal got interaction: %v", err)
+	}
+	wantJSON, err := json.MarshalIndent(want, "", "  ")
+	if err != nil {
+		t.Fatalf("marshal want interaction: %v", err)
+	}
+	t.Errorf("interaction mismatch\n  got:  %s\n  want: %s", gotJSON, wantJSON)
 }

@@ -85,3 +85,11 @@ func (s *StubPlayerStore) GetPlayerByName(name string) (types.Player, error) {
 func (s *StubPlayerStore) GetAllPlayers() (types.Players, error) {
 	return types.Players(s.players), nil
 }
+
+func (s *StubPlayerStore) GetRandomPlayer() (types.Player, error) {
+	return types.Players(s.players).GetRandomPlayer()
+}
+
+func (s *StubPlayerStore) GetRandomPlayerExcept(exceptID uuid.UUID) (types.Player, error) {
+	return types.Players(s.players).GetRandomPlayerExcept(exceptID)
+}

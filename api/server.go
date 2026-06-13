@@ -13,9 +13,9 @@ import (
 
 const jsonContentType = "application/json"
 
-var (
-	luigi, _ = uuid.Parse("00000000-0000-0000-0000-000000000000")
-)
+// var (
+// 	luigi, _ = uuid.Parse("00000000-0000-0000-0000-000000000000")
+// )
 
 type Player = types.Player
 
@@ -49,7 +49,8 @@ func NewPlayerServer(logger *slog.Logger, playerStore types.PlayerStore, history
 	// router.Handle("POST /players/{id}", http.HandlerFunc(p.playersHandler))
 	router.Handle("GET /history", http.HandlerFunc(p.historyHandler))
 	router.Handle("GET /history/{id}", http.HandlerFunc(p.historyHandler))
-	router.Handle("POST /play/{id}", http.HandlerFunc(p.playHandler))
+	router.Handle("POST /play/{player_a}/{player_b}", http.HandlerFunc(p.playHandler))
+	router.Handle("POST /play/{player_a}", http.HandlerFunc(p.playHandler))
 
 	p.Handler = router
 
@@ -72,39 +73,52 @@ func NewPlayerServer(logger *slog.Logger, playerStore types.PlayerStore, history
 // ==========================================
 
 func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
-	player_b, err := p.playerStore.GetPlayerByID(luigi)
-	if err != nil {
-		http.Error(w, "error getting available player", http.StatusInternalServerError)
-		return
-	}
 
-	player := r.PathValue("id")
-	playerID, err := uuid.Parse(player)
+	playerAParam := r.PathValue("player_a")
+	playerAID, err := uuid.Parse(playerAParam)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error parsing player id: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	player_a, err := p.playerStore.GetPlayerByID(playerID)
+	playerA, err := p.playerStore.GetPlayerByID(playerAID)
 	if err != nil {
-
 		http.Error(w, "could not find player a", http.StatusInternalServerError)
 		return
 	}
 
-	player_a_move, player_b_move := prisoner.Cooperate, prisoner.RandomMove()
+	playerBParam := r.PathValue("player_b")
+	var playerB types.Player
+	if playerBParam == "" {
+		playerB, err = p.playerStore.GetRandomPlayerExcept(playerAID)
+	} else {
+		playerBID, err := uuid.Parse(playerBParam)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("error parsing player id: %v", err), http.StatusBadRequest)
+			return
+		}
+		playerB, err = p.playerStore.GetPlayerByID(playerBID)
+	}
+
+	if err != nil {
+		http.Error(w, "could not find player b", http.StatusInternalServerError)
+		return
+	}
+
+	playeAMove, playerBmove := prisoner.Cooperate, prisoner.RandomMove()
 
 	p.logger.Info("play")
 
-	interaction := types.NewInteraction(player_a.ID, player_b.ID, player_a_move, player_b_move)
+	interaction := types.NewInteraction(playerA.ID, playerB.ID, playeAMove, playerBmove)
 	if err := p.historyStore.RecordInteraction(interaction); err != nil {
 		fmt.Printf("record interaction: %v", err)
 		http.Error(w, "could not record interaction", http.StatusInternalServerError)
 		return
 	}
 
+	w.Header().Set("content-type", jsonContentType)
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprint(w, interaction)
+	json.NewEncoder(w).Encode(interaction)
 }
 
 func (p *PlayerServer) listPlayersHandler(w http.ResponseWriter, r *http.Request) {

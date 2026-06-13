@@ -48,6 +48,16 @@ func NewInteraction(playerA, playerB uuid.UUID, playerAMove, playerBMove prisone
 	}
 }
 
+func NewInteractionFromJSON(r io.Reader) (Interaction, error) {
+	var i Interaction
+	err := json.NewDecoder(r).Decode(&i)
+	if err != nil {
+		return Interaction{}, err
+	}
+
+	return i, err
+}
+
 func (h History) Find(name uuid.UUID) *Interaction {
 	for i, p := range h {
 		if p.ID == name {

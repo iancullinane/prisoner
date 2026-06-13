@@ -14,6 +14,12 @@ SELECT id, name FROM players WHERE id = $1;
 SELECT id, name FROM players
 ORDER BY name;
 
+-- name: GetRandomPlayer :one
+SELECT id, name FROM players ORDER BY RANDOM() LIMIT 1;
+
+-- name: GetRandomPlayerExcept :one
+SELECT id, name FROM players WHERE id != $1 ORDER BY RANDOM() LIMIT 1;
+
 -- name: RecordInteraction :exec
 INSERT INTO interactions (player_a_id, player_b_id, player_a_move, player_b_move)
 VALUES ($1, $2, $3, $4);

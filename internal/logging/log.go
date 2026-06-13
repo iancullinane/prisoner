@@ -10,7 +10,17 @@ import (
 // format. format is "text" (human-readable, the dev default) or "json"
 // (structured); anything else falls back to text.
 func New(w io.Writer, level slog.Level, format string) *slog.Logger {
-	opts := &slog.HandlerOptions{Level: level}
+	opts := &slog.HandlerOptions{
+		Level: level,
+		ReplaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+			//TODO: Set time key by log level
+			// add the ts back in but make it by log level
+			if a.Key == slog.TimeKey {
+				return slog.Attr{}
+			}
+			return a
+		},
+	}
 
 	var h slog.Handler
 	switch strings.ToLower(format) {

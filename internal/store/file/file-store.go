@@ -13,7 +13,6 @@ import (
 )
 
 var ErrInteractionNotFound = errors.New("interaction not found")
-var ErrPlayerNotFound = errors.New("player not found")
 
 const seedPlayerName = "Luigi"
 
@@ -173,7 +172,7 @@ func (f *FileSystemStore) GetAllPlayers() (types.Players, error) {
 func (f *FileSystemStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 	player := f.players.FindByID(id)
 	if player == nil {
-		return types.Player{}, ErrPlayerNotFound
+		return types.Player{}, types.ErrPlayerNotFound
 	}
 
 	return *player, nil
@@ -182,9 +181,17 @@ func (f *FileSystemStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 func (f *FileSystemStore) GetPlayerByName(name string) (types.Player, error) {
 	player := f.players.FindByName(name)
 	if player == nil {
-		return types.Player{}, ErrPlayerNotFound
+		return types.Player{}, types.ErrPlayerNotFound
 	}
 	return *player, nil
+}
+
+func (f *FileSystemStore) GetRandomPlayer() (types.Player, error) {
+	return f.players.GetRandomPlayer()
+}
+
+func (f *FileSystemStore) GetRandomPlayerExcept(exceptID uuid.UUID) (types.Player, error) {
+	return f.players.GetRandomPlayerExcept(exceptID)
 }
 
 // MARK: Initialize Player DB
