@@ -155,15 +155,18 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		player, err = p.playerStore.GetPlayerByName(playerName)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("could not get player: %v", err), http.StatusNotFound)
+			return
+		}
 		statusCode = http.StatusOK
 	case http.MethodPost:
 		player, err = p.playerStore.GetOrCreatePlayer(playerName)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("could not create player: %v", err), http.StatusInternalServerError)
+			return
+		}
 		statusCode = http.StatusOK
-	}
-
-	if err != nil {
-		http.Error(w, fmt.Sprintf("could not get player: %v", err), http.StatusNotFound)
-		return
 	}
 
 	w.Header().Set("content-type", jsonContentType)

@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -26,14 +27,6 @@ var (
 	testID2, _   = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
 	playerID1, _ = uuid.Parse("11111111-1111-bbbb-3333-333333333333")
 	playerID2, _ = uuid.Parse("22222222-2222-bbbb-3333-333333333333")
-
-	playerStore = StubPlayerStore{
-		players: []types.Player{
-			{ID: playerID1, Name: "Chris"},
-			{ID: luigiID, Name: "Luigi"},
-			{ID: playerID2, Name: "Pepper"},
-		},
-	}
 )
 
 // MARK: GET test
@@ -93,8 +86,6 @@ func TestPlayers_Get(t *testing.T) {
 
 func TestCreatePlayers(t *testing.T) {
 
-	server := NewPlayerServer(testLogger(), &playerStore, nil)
-
 	tests := []struct {
 		name          string
 		response      string
@@ -107,10 +98,25 @@ func TestCreatePlayers(t *testing.T) {
 			code:          http.StatusOK,
 			expectedError: nil,
 		},
+		{
+			name:          "test post error",
+			response:      "could not create player: some error\n",
+			code:          http.StatusInternalServerError,
+			expectedError: errors.New("some error"),
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			playerStore := StubPlayerStore{
+				players: []types.Player{
+					{ID: playerID1, Name: "Chris"},
+					{ID: luigiID, Name: "Luigi"},
+					{ID: playerID2, Name: "Pepper"},
+				},
+				getOrCreatePlayerError: tc.expectedError,
+			}
+			server := NewPlayerServer(testLogger(), &playerStore, nil)
 
 			buf := bytes.NewBufferString("body") // if there were a body on post...
 			request, _ := http.NewRequest(http.MethodPost, "/players/Pepper", buf)
@@ -127,6 +133,9 @@ func TestCreatePlayers(t *testing.T) {
 			}
 
 			assertResponseStatus(t, response.Code, tc.code)
+			if tc.expectedError != nil {
+				assertResponseBody(t, response.Body.String(), tc.response)
+			}
 		})
 	}
 }
@@ -136,9 +145,6 @@ func TestCreatePlayers(t *testing.T) {
 // ========================================
 
 func TestPlay(t *testing.T) {
-	historyStore := StubHistoryStore{}
-	server := NewPlayerServer(testLogger(), &playerStore, &historyStore)
-
 	tests := []struct {
 		name          string
 		playerA       string
@@ -172,6 +178,16 @@ func TestPlay(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			playerStore := StubPlayerStore{
+				players: []types.Player{
+					{ID: playerID1, Name: "Chris"},
+					{ID: luigiID, Name: "Luigi"},
+					{ID: playerID2, Name: "Pepper"},
+				},
+			}
+			historyStore := StubHistoryStore{}
+			server := NewPlayerServer(testLogger(), &playerStore, &historyStore)
+
 			buf := bytes.NewBufferString("body")
 			req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/play/%s/%s", tc.playerA, tc.playerB), buf)
 			response := httptest.NewRecorder()

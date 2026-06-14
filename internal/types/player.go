@@ -15,7 +15,8 @@ import (
 const devPlayerName = "Steve"
 
 var (
-	ErrPlayerNotFound = errors.New("player not found")
+	ErrPlayerNotFound       = errors.New("player not found")
+	ErrCouldNotCreatePlayer = errors.New("could not create player")
 )
 
 type Player struct {

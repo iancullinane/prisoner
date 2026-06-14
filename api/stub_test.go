@@ -39,10 +39,15 @@ type StubPlayerStore struct {
 	scores                 map[string]int
 	players                []types.Player
 	getOrCreatePlayerCalls []string
+	getOrCreatePlayerError error
 }
 
 func (s *StubPlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
 	s.getOrCreatePlayerCalls = append(s.getOrCreatePlayerCalls, name)
+
+	if s.getOrCreatePlayerError != nil {
+		return types.Player{}, s.getOrCreatePlayerError
+	}
 
 	player := types.Players(s.players).FindByName(name)
 	if player != nil {
