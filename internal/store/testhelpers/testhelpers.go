@@ -57,14 +57,6 @@ func AssertNoError(t testing.TB, err error) {
 		t.Fatalf("got an error but didn't want one %v", err)
 	}
 }
-
-func AssertLeague(t testing.TB, got, want []types.Player) {
-	t.Helper()
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %v want %v", got, want)
-	}
-}
-
 func AssertPlayersContain(t testing.TB, got types.Players, want ...types.Player) {
 	t.Helper()
 	for _, player := range want {

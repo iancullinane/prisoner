@@ -152,3 +152,21 @@ func (s *PlayerStore) GetAllPlayers() (types.Players, error) {
 	}
 	return out, nil
 }
+
+func (s *PlayerStore) GetRandomPlayer() (types.Player, error) {
+	ctx := context.Background()
+	player, err := s.q.GetRandomPlayer(ctx)
+	if err != nil {
+		return types.Player{}, fmt.Errorf("get random player: %w", err)
+	}
+	return playerFromRow(player), nil
+}
+
+func (s *PlayerStore) GetRandomPlayerExcept(exceptID uuid.UUID) (types.Player, error) {
+	ctx := context.Background()
+	player, err := s.q.GetRandomPlayerExcept(ctx, pgtype.UUID{Bytes: exceptID, Valid: true})
+	if err != nil {
+		return types.Player{}, fmt.Errorf("get random player except %q: %w", exceptID, err)
+	}
+	return playerFromRow(player), nil
+}

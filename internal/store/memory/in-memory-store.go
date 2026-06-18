@@ -95,3 +95,11 @@ func (i *InMemoryPlayerStore) GetPlayerByName(name string) (types.Player, error)
 func (i *InMemoryPlayerStore) GetAllPlayers() (types.Players, error) {
 	return i.players, nil
 }
+
+func (i *InMemoryPlayerStore) GetRandomPlayer() (types.Player, error) {
+	return i.players.GetRandomPlayer()
+}
+
+func (i *InMemoryPlayerStore) GetRandomPlayerExcept(exceptID uuid.UUID) (types.Player, error) {
+	return i.players.GetRandomPlayerExcept(exceptID)
+}

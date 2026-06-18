@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -14,8 +15,12 @@ import (
 const jsonContentType = "application/json"
 
 var (
-	luigi, _ = uuid.Parse("00000000-0000-0000-0000-000000000000")
+	ErrPlayerCannotPlaySelf = errors.New("player cannot play itself")
 )
+
+// var (
+// 	luigi, _ = uuid.Parse("00000000-0000-0000-0000-000000000000")
+// )
 
 type Player = types.Player
 
@@ -37,7 +42,6 @@ func NewPlayerServer(logger *slog.Logger, playerStore types.PlayerStore, history
 	/*
 		2026-06-05
 		As of the player needs to exist, and be passed as a parameter into the url
-		and it will always select `Luigi` as the opponent.
 	*/
 
 	router := http.NewServeMux()
@@ -46,65 +50,61 @@ func NewPlayerServer(logger *slog.Logger, playerStore types.PlayerStore, history
 	router.Handle("GET /players/{name}", http.HandlerFunc(p.playersHandler))
 	// Create a player by name
 	router.Handle("POST /players/{name}", http.HandlerFunc(p.playersHandler))
-	// router.Handle("POST /players/{id}", http.HandlerFunc(p.playersHandler))
 	router.Handle("GET /history", http.HandlerFunc(p.historyHandler))
+	// History of a player
 	router.Handle("GET /history/{id}", http.HandlerFunc(p.historyHandler))
-	router.Handle("POST /play/{id}", http.HandlerFunc(p.playHandler))
+	router.Handle("POST /play", http.HandlerFunc(p.playHandler))
 
 	p.Handler = router
 
 	return p
 }
 
-// MARK: Logging Setup
-// ==========================================
-
-// func newLogger() *slog.Logger {
-// 	h := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-// 		Level: slog.LevelInfo,
-// 	})
-// 	return slog.New(h).With(
-// 		slog.String("service", "prisoner"),
-// 	)
-// }
-
 // MARK: Handlers
 // ==========================================
 
 func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
-	player_b, err := p.playerStore.GetPlayerByID(luigi)
-	if err != nil {
-		http.Error(w, "error getting available player", http.StatusInternalServerError)
+
+	var req PlayRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, fmt.Sprintf("invalid request body: %v", err), http.StatusBadRequest)
 		return
 	}
 
-	player := r.PathValue("id")
-	playerID, err := uuid.Parse(player)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("error parsing player id: %v", err), http.StatusBadRequest)
+	if req.PlayerA == req.PlayerB {
+		http.Error(w, "player cannot play itself", http.StatusBadRequest)
 		return
 	}
 
-	player_a, err := p.playerStore.GetPlayerByID(playerID)
+	playerA, err := p.playerStore.GetPlayerByID(req.PlayerA)
 	if err != nil {
-
 		http.Error(w, "could not find player a", http.StatusInternalServerError)
 		return
 	}
 
-	player_a_move, player_b_move := prisoner.Cooperate, prisoner.RandomMove()
+	playerB, err := p.playerStore.GetPlayerByID(req.PlayerB)
+	if err != nil {
+		http.Error(w, "could not find player a", http.StatusInternalServerError)
+		return
+	}
 
-	p.logger.Info("play")
-
-	interaction := types.NewInteraction(player_a.ID, player_b.ID, player_a_move, player_b_move)
+	interaction := types.NewInteraction(playerA.ID, playerB.ID, req.PlayerAMove, req.PlayerBMove)
 	if err := p.historyStore.RecordInteraction(interaction); err != nil {
 		fmt.Printf("record interaction: %v", err)
 		http.Error(w, "could not record interaction", http.StatusInternalServerError)
 		return
 	}
 
+	playerAScore, playerBScore := prisoner.Play(req.PlayerAMove, req.PlayerBMove)
+	response := PlayResponse{
+		ID:           interaction.ID,
+		PlayerAScore: playerAScore,
+		PlayerBScore: playerBScore,
+	}
+
+	w.Header().Set("content-type", jsonContentType)
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprint(w, interaction)
+	json.NewEncoder(w).Encode(response)
 }
 
 func (p *PlayerServer) listPlayersHandler(w http.ResponseWriter, r *http.Request) {
@@ -130,15 +130,18 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		player, err = p.playerStore.GetPlayerByName(playerName)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("could not get player: %v", err), http.StatusNotFound)
+			return
+		}
 		statusCode = http.StatusOK
 	case http.MethodPost:
 		player, err = p.playerStore.GetOrCreatePlayer(playerName)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("could not create player: %v", err), http.StatusInternalServerError)
+			return
+		}
 		statusCode = http.StatusOK
-	}
-
-	if err != nil {
-		http.Error(w, fmt.Sprintf("could not get player: %v", err), http.StatusInternalServerError)
-		return
 	}
 
 	w.Header().Set("content-type", jsonContentType)

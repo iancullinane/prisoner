@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
+	"strings"
 
 	"github.com/Pallinder/go-randomdata"
 	"github.com/google/uuid"
@@ -13,13 +15,13 @@ import (
 const devPlayerName = "Steve"
 
 var (
-	ErrPlayerNotFound = errors.New("player not found")
+	ErrPlayerNotFound       = errors.New("player not found")
+	ErrCouldNotCreatePlayer = errors.New("could not create player")
 )
 
 type Player struct {
 	ID   uuid.UUID
 	Name string
-	// Wins int
 }
 
 func NewPlayer(name string) *Player {
@@ -57,6 +59,8 @@ type PlayerStore interface {
 	GetPlayerByID(id uuid.UUID) (Player, error)
 	GetPlayerByName(name string) (Player, error)
 	GetAllPlayers() (Players, error)
+	GetRandomPlayer() (Player, error)
+	GetRandomPlayerExcept(exceptID uuid.UUID) (Player, error)
 }
 
 type Players []Player
@@ -91,4 +95,35 @@ func (l Players) FindByName(name string) *Player {
 
 func (l Players) GetAllPlayers() Players {
 	return l
+}
+
+func (l Players) String() string {
+	var buf strings.Builder
+	for i, p := range l {
+		if i > 0 {
+			buf.WriteString(",\n")
+		}
+		fmt.Fprintf(&buf, "%s\t\t(%s)", p.Name, p.ID.String())
+	}
+	return buf.String()
+}
+
+func (l Players) GetRandomPlayer() (Player, error) {
+	if len(l) == 0 {
+		return Player{}, ErrPlayerNotFound
+	}
+	return l[rand.Intn(len(l))], nil
+}
+
+func (l Players) GetRandomPlayerExcept(exceptID uuid.UUID) (Player, error) {
+	candidates := make(Players, 0, len(l))
+	for _, p := range l {
+		if p.ID != exceptID {
+			candidates = append(candidates, p)
+		}
+	}
+	if len(candidates) == 0 {
+		return Player{}, ErrPlayerNotFound
+	}
+	return candidates[rand.Intn(len(candidates))], nil
 }

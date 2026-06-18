@@ -39,10 +39,15 @@ type StubPlayerStore struct {
 	scores                 map[string]int
 	players                []types.Player
 	getOrCreatePlayerCalls []string
+	getOrCreatePlayerError error
 }
 
 func (s *StubPlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
 	s.getOrCreatePlayerCalls = append(s.getOrCreatePlayerCalls, name)
+
+	if s.getOrCreatePlayerError != nil {
+		return types.Player{}, s.getOrCreatePlayerError
+	}
 
 	player := types.Players(s.players).FindByName(name)
 	if player != nil {
@@ -84,4 +89,12 @@ func (s *StubPlayerStore) GetPlayerByName(name string) (types.Player, error) {
 
 func (s *StubPlayerStore) GetAllPlayers() (types.Players, error) {
 	return types.Players(s.players), nil
+}
+
+func (s *StubPlayerStore) GetRandomPlayer() (types.Player, error) {
+	return types.Players(s.players).GetRandomPlayer()
+}
+
+func (s *StubPlayerStore) GetRandomPlayerExcept(exceptID uuid.UUID) (types.Player, error) {
+	return types.Players(s.players).GetRandomPlayerExcept(exceptID)
 }

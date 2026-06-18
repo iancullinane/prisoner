@@ -113,6 +113,28 @@ func (q *Queries) GetPlayerByName(ctx context.Context, name string) (Player, err
 	return i, err
 }
 
+const getRandomPlayer = `-- name: GetRandomPlayer :one
+SELECT id, name FROM players ORDER BY RANDOM() LIMIT 1
+`
+
+func (q *Queries) GetRandomPlayer(ctx context.Context) (Player, error) {
+	row := q.db.QueryRow(ctx, getRandomPlayer)
+	var i Player
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
+const getRandomPlayerExcept = `-- name: GetRandomPlayerExcept :one
+SELECT id, name FROM players WHERE id != $1 ORDER BY RANDOM() LIMIT 1
+`
+
+func (q *Queries) GetRandomPlayerExcept(ctx context.Context, id pgtype.UUID) (Player, error) {
+	row := q.db.QueryRow(ctx, getRandomPlayerExcept, id)
+	var i Player
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const listPlayers = `-- name: ListPlayers :many
 SELECT id, name FROM players
 ORDER BY name
