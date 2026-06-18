@@ -144,33 +144,38 @@ func TestCreatePlayers(t *testing.T) {
 // MARK: play test
 // ========================================
 
-func TestPlay(t *testing.T) {
+func TestPlay_Refactor(t *testing.T) {
 	tests := []struct {
 		name          string
-		playerA       string
-		playerB       string
-		result        types.Interaction
+		requestBody   PlayRequest
+		response      PlayResponse
 		code          int
 		expectedError error
 	}{
 		{
-			name:    "test play",
-			playerA: playerID1.String(),
-			playerB: playerID2.String(),
-			result: types.Interaction{
+			name: "test play with body",
+			requestBody: PlayRequest{
 				PlayerA:     playerID1,
 				PlayerB:     playerID2,
 				PlayerAMove: prisoner.Cooperate,
-				PlayerBMove: prisoner.Cooperate,
+				PlayerBMove: prisoner.Betray,
+			},
+			response: PlayResponse{
+				PlayerAScore: prisoner.Sucker,
+				PlayerBScore: prisoner.Temptation,
 			},
 			code:          http.StatusCreated,
 			expectedError: nil,
 		},
 		{
-			name:          "player should not be able to player themselves",
-			playerA:       playerID1.String(),
-			playerB:       playerID1.String(),
-			result:        types.Interaction{},
+			name: "player should not be able to play themselves",
+			requestBody: PlayRequest{
+				PlayerA:     playerID1,
+				PlayerB:     playerID1,
+				PlayerAMove: prisoner.Cooperate,
+				PlayerBMove: prisoner.Betray,
+			},
+			response:      PlayResponse{},
 			code:          http.StatusBadRequest,
 			expectedError: ErrPlayerCannotPlaySelf,
 		},
@@ -188,8 +193,9 @@ func TestPlay(t *testing.T) {
 			historyStore := StubHistoryStore{}
 			server := NewPlayerServer(testLogger(), &playerStore, &historyStore)
 
-			buf := bytes.NewBufferString("body")
-			req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/play/%s/%s", tc.playerA, tc.playerB), buf)
+			body, _ := json.Marshal(tc.requestBody)
+			req, err := http.NewRequest(http.MethodPost, "/play", bytes.NewBuffer(body))
+			req.Header.Set("Content-Type", "application/json")
 			response := httptest.NewRecorder()
 
 			server.ServeHTTP(response, req)
@@ -199,14 +205,19 @@ func TestPlay(t *testing.T) {
 				return
 			}
 
-			if len(historyStore.recordInteractionCalls) != 1 {
-				t.Errorf("incorrect number of calls on record interaction")
+			if err != nil {
+				t.Errorf("err should be nil: %v", err)
+				return
 			}
 
-			assertResponseStatus(t, response.Code, tc.code)
-			assertInteraction(t, getInterationFromResponse(t, response.Body), tc.result)
-		})
+			if len(historyStore.recordInteractionCalls) != 1 {
+				t.Errorf("incorrect number of calls on record interaction got %d want 1", len(historyStore.recordInteractionCalls))
+				return
+			}
 
+			assertPlayResponse(t, getPlayResponseFromResponse(t, response.Body), tc.response)
+
+		})
 	}
 }
 
@@ -327,4 +338,23 @@ func assertInteraction(t testing.TB, got, want types.Interaction) {
 		t.Fatalf("marshal want interaction: %v", err)
 	}
 	t.Errorf("interaction mismatch\n  got:  %s\n  want: %s", gotJSON, wantJSON)
+}
+
+func getPlayResponseFromResponse(t testing.TB, body io.Reader) PlayResponse {
+	t.Helper()
+	var resp PlayResponse
+	err := json.NewDecoder(body).Decode(&resp)
+	if err != nil {
+		t.Fatalf("unable to parse response into PlayResponse: %v", err)
+	}
+	return resp
+}
+
+func assertPlayResponse(t testing.TB, got, want PlayResponse) {
+	t.Helper()
+	got.ID = uuid.UUID{}
+	want.ID = uuid.UUID{}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("play response mismatch\n  got:  %+v\n  want: %+v", got, want)
+	}
 }
