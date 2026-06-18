@@ -6,14 +6,11 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/iancullinane/prisoner/db"
-	storefile "github.com/iancullinane/prisoner/internal/store/file"
-	"github.com/iancullinane/prisoner/internal/store/memory"
-	storepostgres "github.com/iancullinane/prisoner/internal/store/postgres"
-	"github.com/iancullinane/prisoner/internal/types"
-	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jackc/pgx/v5/stdlib"
-	"github.com/pressly/goose/v3"
+    storefile "github.com/iancullinane/prisoner/internal/store/file"
+    "github.com/iancullinane/prisoner/internal/store/memory"
+    storepostgres "github.com/iancullinane/prisoner/internal/store/postgres"
+    "github.com/iancullinane/prisoner/internal/types"
+    "github.com/jackc/pgx/v5/pgxpool"
 )
 
 const (
@@ -116,22 +113,11 @@ func openPostgresPool(ctx context.Context, logger *slog.Logger) (*pgxpool.Pool, 
 		return nil, err
 	}
 
-	if err := pool.Ping(ctx); err != nil {
-		pool.Close()
-		return nil, fmt.Errorf("postgres ping: %w", err)
-	}
+    if err := pool.Ping(ctx); err != nil {
+        pool.Close()
+        return nil, fmt.Errorf("postgres ping: %w", err)
+    }
 
-	// needed for goose
-	stdDB := stdlib.OpenDBFromPool(pool)
-
-	// this is kind of the 'explicit' bit needed to use the embedded migrations
-	goose.SetBaseFS(db.Migrations)
-	goose.SetDialect("postgres")
-	if err := goose.Up(stdDB, "migrations"); err != nil {
-		pool.Close()
-		return nil, fmt.Errorf("run migrations: %w", err)
-	}
-
-	logger.Info("postgres connected, migrations applied")
-	return pool, nil
+    logger.Info("postgres connected")
+    return pool, nil
 }
