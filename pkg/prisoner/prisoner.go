@@ -6,6 +6,9 @@ import (
 	"math/rand"
 )
 
+// MARK: Move Types
+// ==================
+
 type Move rune
 
 const (
@@ -16,6 +19,11 @@ const (
 var (
 	moves = []Move{Cooperate, Betray}
 )
+
+func RandomMove() Move {
+	oneOrZero := rand.Intn(2)
+	return moves[oneOrZero]
+}
 
 func (m Move) String() string {
 	return string(m)
@@ -51,6 +59,22 @@ func (r Result) String() string {
 	return string(r)
 }
 
+func (r Result) MarshalJSON() ([]byte, error) {
+	return json.Marshal(string(r))
+}
+
+func (r *Result) UnmarshalJSON(data []byte) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	if len(s) != 1 {
+		return fmt.Errorf("invalid Result: %q", s)
+	}
+	*r = Result(s[0])
+	return nil
+}
+
 // Payoff is a generic type for implementing scores
 // each score type could be different, including time
 // itself, but mostly just integers...
@@ -76,6 +100,15 @@ var Positive = Payoff[int]{
 	None:   0,
 	Punish: -1,
 }
+
+var Algebraic = Payoff[string]{
+	High:   "T",
+	Low:    "R",
+	None:   "P",
+	Punish: "S",
+}
+
+// MARK: Compute Functions
 
 func (payoff Payoff[T]) Compute(result Result) T {
 	switch result {
@@ -106,9 +139,4 @@ func Play(m1, m2 Move) (r1, r2 Result) {
 		// Should never be reached
 		panic("prisoner.Compute: invalid Move")
 	}
-}
-
-func RandomMove() Move {
-	oneOrZero := rand.Intn(2)
-	return moves[oneOrZero]
 }

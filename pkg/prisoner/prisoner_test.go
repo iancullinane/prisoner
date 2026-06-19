@@ -7,39 +7,45 @@ import (
 	"time"
 )
 
-func TestPayoff_Classic(t *testing.T) {
-	spec := []struct {
+func TestPayoff_IntCompute(t *testing.T) {
+	intSpec := []struct {
+		name   string
+		payoff Payoff[int]
 		result Result
 		want   int
 	}{
-		{Temptation, 0},
-		{Reward, -1},
-		{Punish, 0},
-		{Sucker, -3},
+		{"Classic/Temptation", Classic, Temptation, 0},
+		{"Classic/Reward", Classic, Reward, -1},
+		{"Classic/Punish", Classic, Punish, 0},
+		{"Classic/Sucker", Classic, Sucker, -3},
+		{"Positive/Temptation", Positive, Temptation, 3},
+		{"Positive/Reward", Positive, Reward, 2},
+		{"Positive/Punish", Positive, Punish, 0},
+		{"Positive/Sucker", Positive, Sucker, -1},
 	}
-	for _, tc := range spec {
-		t.Run(string(tc.result), func(t *testing.T) {
-			if got := Classic.Compute(tc.result); got != tc.want {
-				t.Errorf("Classic.Compute(%q): got %d, want %d", tc.result, got, tc.want)
+	for _, tc := range intSpec {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.payoff.Compute(tc.result); got != tc.want {
+				t.Errorf("%s.Compute(%q): got %d, want %d", tc.name, tc.result, got, tc.want)
 			}
 		})
 	}
-}
 
-func TestPayoff_Positive(t *testing.T) {
-	spec := []struct {
+	stringSpec := []struct {
+		name   string
+		payoff Payoff[string]
 		result Result
-		want   int
+		want   string
 	}{
-		{Temptation, 3},
-		{Reward, 2},
-		{Punish, 0},
-		{Sucker, -1},
+		{"Algebraic/Temptation", Algebraic, Temptation, "T"},
+		{"Algebraic/Reward", Algebraic, Reward, "R"},
+		{"Algebraic/Punish", Algebraic, Punish, "P"},
+		{"Algebraic/Sucker", Algebraic, Sucker, "S"},
 	}
-	for _, tc := range spec {
-		t.Run(string(tc.result), func(t *testing.T) {
-			if got := Positive.Compute(tc.result); got != tc.want {
-				t.Errorf("Positive.Compute(%q): got %d, want %d", tc.result, got, tc.want)
+	for _, tc := range stringSpec {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := tc.payoff.Compute(tc.result); got != tc.want {
+				t.Errorf("%s.Compute(%q): got %q, want %q", tc.name, tc.result, got, tc.want)
 			}
 		})
 	}
@@ -55,7 +61,7 @@ var timePayoffSpec = []struct {
 	{Sucker, 3 * 365 * 24 * time.Hour},
 }
 
-func TestRefactor_Reward_resultMapsToTime(t *testing.T) {
+func Test_Reward_resultMapsToTime(t *testing.T) {
 	traditional := Payoff[time.Duration]{
 		High:   0,
 		Low:    365 * 24 * time.Hour,
@@ -72,7 +78,7 @@ func TestRefactor_Reward_resultMapsToTime(t *testing.T) {
 	}
 }
 
-func TestRefactor_Result(t *testing.T) {
+func TestPlay(t *testing.T) {
 	var tests = []struct {
 		name string
 		m1   Move
@@ -114,6 +120,35 @@ func TestMove_JSON(t *testing.T) {
 	for _, in := range []string{`""`, `"CC"`, `123`} {
 		var m Move
 		if err := json.Unmarshal([]byte(in), &m); err == nil {
+			t.Errorf("unmarshal %s: expected error", in)
+		}
+	}
+}
+
+func TestResult_JSON(t *testing.T) {
+	cases := []struct {
+		result Result
+		json   string
+	}{
+		{Temptation, `"T"`},
+		{Reward, `"R"`},
+		{Punish, `"P"`},
+		{Sucker, `"S"`},
+	}
+	for _, c := range cases {
+		got, err := json.Marshal(c.result)
+		if err != nil || string(got) != c.json {
+			t.Errorf("marshal %v: got %s err=%v, want %s", c.result, got, err, c.json)
+		}
+		var back Result
+		if err := json.Unmarshal([]byte(c.json), &back); err != nil || back != c.result {
+			t.Errorf("unmarshal %s: got %v err=%v, want %v", c.json, back, err, c.result)
+		}
+	}
+
+	for _, in := range []string{`""`, `"TR"`, `123`} {
+		var r Result
+		if err := json.Unmarshal([]byte(in), &r); err == nil {
 			t.Errorf("unmarshal %s: expected error", in)
 		}
 	}

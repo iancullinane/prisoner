@@ -20,7 +20,7 @@ TEST_PKGS    := $(filter-out test,$(MAKECMDGOALS))
 TEST_TARGETS := $(if $(TEST_PKGS),$(addsuffix /...,$(addprefix ./,$(TEST_PKGS))),./...)
 
 test:
-	go test -count=1 -cover $(TEST_TARGETS)
+	go test $(if $(TEST_PKGS),-v -count=1) -cover $(TEST_TARGETS)
 
 ifneq (,$(filter test -v,$(MAKECMDGOALS)))
 %:

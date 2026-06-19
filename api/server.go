@@ -18,10 +18,6 @@ var (
 	ErrPlayerCannotPlaySelf = errors.New("player cannot play itself")
 )
 
-// var (
-// 	luigi, _ = uuid.Parse("00000000-0000-0000-0000-000000000000")
-// )
-
 type Player = types.Player
 
 type PlayerServer struct {

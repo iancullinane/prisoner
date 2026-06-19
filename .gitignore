@@ -1,3 +1,4 @@
 bin
 prisonerdb
 *.db.json
+.prisoner
