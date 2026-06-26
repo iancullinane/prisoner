@@ -117,7 +117,7 @@ func TestMove_JSON(t *testing.T) {
 		}
 	}
 
-	for _, in := range []string{`""`, `"CC"`, `123`} {
+	for _, in := range []string{`""`, `"CC"`, `123`, `"X"`} {
 		var m Move
 		if err := json.Unmarshal([]byte(in), &m); err == nil {
 			t.Errorf("unmarshal %s: expected error", in)
@@ -146,7 +146,7 @@ func TestResult_JSON(t *testing.T) {
 		}
 	}
 
-	for _, in := range []string{`""`, `"TR"`, `123`} {
+	for _, in := range []string{`""`, `"TR"`, `123`, `"X"`} {
 		var r Result
 		if err := json.Unmarshal([]byte(in), &r); err == nil {
 			t.Errorf("unmarshal %s: expected error", in)

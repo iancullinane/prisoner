@@ -6,6 +6,14 @@ import (
 	"math/rand"
 )
 
+type rune = int32
+
+type runeEnum interface {
+	~rune // ← set is {int32, Move, Result, and any `type X rune` within this package}
+	// allow both Move and Result to satisfy this interface
+	Valid() bool
+}
+
 // MARK: Move Types
 // ==================
 
@@ -25,6 +33,10 @@ func RandomMove() Move {
 	return moves[oneOrZero]
 }
 
+func (m Move) Valid() bool {
+	return m == Cooperate || m == Betray
+}
+
 func (m Move) String() string {
 	return string(m)
 }
@@ -32,16 +44,9 @@ func (m Move) String() string {
 func (m Move) MarshalJSON() ([]byte, error) {
 	return json.Marshal(string(m))
 }
+
 func (m *Move) UnmarshalJSON(data []byte) error {
-	var s string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return err
-	}
-	if len(s) != 1 {
-		return fmt.Errorf("invalid Move: %q", s)
-	}
-	*m = Move(s[0])
-	return nil
+	return unmarshalRuneEnum(data, m)
 }
 
 // MARK: Result Types
@@ -55,6 +60,10 @@ const (
 	Sucker     Result = 'S' // p1 cooperates, p2 betrays
 )
 
+func (r Result) Valid() bool {
+	return r == Temptation || r == Reward || r == Punish || r == Sucker
+}
+
 func (r Result) String() string {
 	return string(r)
 }
@@ -64,15 +73,7 @@ func (r Result) MarshalJSON() ([]byte, error) {
 }
 
 func (r *Result) UnmarshalJSON(data []byte) error {
-	var s string
-	if err := json.Unmarshal(data, &s); err != nil {
-		return err
-	}
-	if len(s) != 1 {
-		return fmt.Errorf("invalid Result: %q", s)
-	}
-	*r = Result(s[0])
-	return nil
+	return unmarshalRuneEnum(data, r)
 }
 
 // Payoff is a generic type for implementing scores
@@ -139,4 +140,22 @@ func Play(m1, m2 Move) (r1, r2 Result) {
 		// Should never be reached
 		panic("prisoner.Compute: invalid Move")
 	}
+}
+
+// MARK: Rune Unmarshaller
+
+func unmarshalRuneEnum[T runeEnum](data []byte, dst *T) error {
+	var s string
+	if err := json.Unmarshal(data, &s); err != nil {
+		return err
+	}
+	if len(s) != 1 {
+		return fmt.Errorf("invalid %T: %q", *dst, s)
+	}
+	v := T(s[0])
+	if !v.Valid() {
+		return fmt.Errorf("invalid %T: %q", *dst, s)
+	}
+	*dst = v
+	return nil
 }
