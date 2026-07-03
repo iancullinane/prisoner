@@ -13,7 +13,7 @@ type PlayRequest struct {
 }
 
 type PlayResponse struct {
-	ID           uuid.UUID       `json:"ID"`
+	ID           uuid.UUID       `json:"id"`
 	PlayerAScore prisoner.Result `json:"player_a_score"`
 	PlayerBScore prisoner.Result `json:"player_b_score"`
 }

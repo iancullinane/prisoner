@@ -18,8 +18,6 @@ var (
 	ErrPlayerCannotPlaySelf = errors.New("player cannot play itself")
 )
 
-type Player = types.Player
-
 type PlayerServer struct {
 	logger       *slog.Logger
 	playerStore  types.PlayerStore
@@ -80,13 +78,13 @@ func (p *PlayerServer) playHandler(w http.ResponseWriter, r *http.Request) {
 
 	playerB, err := p.playerStore.GetPlayerByID(req.PlayerB)
 	if err != nil {
-		http.Error(w, "could not find player a", http.StatusInternalServerError)
+		http.Error(w, "could not find player b", http.StatusInternalServerError)
 		return
 	}
 
 	interaction := types.NewInteraction(playerA.ID, playerB.ID, req.PlayerAMove, req.PlayerBMove)
 	if err := p.historyStore.RecordInteraction(interaction); err != nil {
-		fmt.Printf("record interaction: %v", err)
+		p.logger.Error("could not record interaction", "error", err)
 		http.Error(w, "could not record interaction", http.StatusInternalServerError)
 		return
 	}
@@ -146,14 +144,17 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) historyHandler(w http.ResponseWriter, r *http.Request) {
-	pID := r.PathValue("id")
-	if pID == "" {
-		//do nothing
-	}
 
 	history, err := p.historyStore.GetHistory()
 	if err != nil {
 		http.Error(w, "could not load history", http.StatusInternalServerError)
+		return
+	}
+
+	pID := r.PathValue("id")
+	if pID == "" {
+		w.Header().Set("content-type", jsonContentType)
+		json.NewEncoder(w).Encode(history)
 		return
 	}
 

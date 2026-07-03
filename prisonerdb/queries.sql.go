@@ -161,8 +161,8 @@ func (q *Queries) ListPlayers(ctx context.Context) ([]Player, error) {
 }
 
 const recordInteraction = `-- name: RecordInteraction :exec
-INSERT INTO interactions (player_a_id, player_b_id, player_a_move, player_b_move)
-VALUES ($1, $2, $3, $4)
+INSERT INTO interactions (player_a_id, player_b_id, player_a_move, player_b_move, played_at)
+VALUES ($1, $2, $3, $4, $5)
 `
 
 type RecordInteractionParams struct {
@@ -170,6 +170,7 @@ type RecordInteractionParams struct {
 	PlayerBID   pgtype.UUID
 	PlayerAMove string
 	PlayerBMove string
+	PlayedAt    pgtype.Timestamptz
 }
 
 func (q *Queries) RecordInteraction(ctx context.Context, arg RecordInteractionParams) error {
@@ -178,6 +179,7 @@ func (q *Queries) RecordInteraction(ctx context.Context, arg RecordInteractionPa
 		arg.PlayerBID,
 		arg.PlayerAMove,
 		arg.PlayerBMove,
+		arg.PlayedAt,
 	)
 	return err
 }
