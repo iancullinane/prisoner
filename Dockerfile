@@ -12,9 +12,10 @@ RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 COPY --from=build /prisoner /app/prisoner
-COPY docker-entrypoint.sh /app/docker-entrypoint.sh
-RUN chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 5001
 
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# The image never migrates on its own. Default run serves HTTP; migrations are a
+# deliberate one-off invocation of the same image: `<image> migrate up`.
+ENTRYPOINT ["/app/prisoner"]
+CMD ["server"]
