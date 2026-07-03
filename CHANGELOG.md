@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.1.0](https://github.com/iancullinane/prisoner/compare/v1.0.0...v1.1.0) (2026-07-03)
+
+
+### Features
+
+* add migrate command, rm migrate from server startup ([5270c7c](https://github.com/iancullinane/prisoner/commit/5270c7c82a9f350f44734929a210bfebca4005c5))
+
+
+### Bug Fixes
+
+* improve test coverage in prisoner package ([cb22b9b](https://github.com/iancullinane/prisoner/commit/cb22b9bd80da9344b976f186872ec7e69056c121))
+* migrate no longer runs on container start ([2d79f7b](https://github.com/iancullinane/prisoner/commit/2d79f7b201f88c0a3d2e46777cada52480ab474d))
+* validate Move and Result internally ([f3fab2f](https://github.com/iancullinane/prisoner/commit/f3fab2f0696ab0d82f158047d054d857971f7726))
+
 ## 1.0.0 (2026-06-18)
 
 
