@@ -12,8 +12,9 @@ RUN apk add --no-cache ca-certificates
 
 WORKDIR /app
 COPY --from=build /prisoner /app/prisoner
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
 EXPOSE 5001
 
-ENTRYPOINT ["/app/prisoner"]
-CMD ["-server"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
