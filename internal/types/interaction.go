@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/pkg/prisoner"
@@ -34,7 +35,7 @@ type Interaction struct {
 	PlayerB     uuid.UUID
 	PlayerAMove prisoner.Move
 	PlayerBMove prisoner.Move
-	// CreatedAt       time.Time
+	PlayedAt    time.Time
 }
 
 func NewInteraction(playerA, playerB uuid.UUID, playerAMove, playerBMove prisoner.Move) Interaction {
@@ -44,7 +45,7 @@ func NewInteraction(playerA, playerB uuid.UUID, playerAMove, playerBMove prisone
 		PlayerB:     playerB,
 		PlayerAMove: playerAMove,
 		PlayerBMove: playerBMove,
-		// CreatedAt:       time.Now(),
+		PlayedAt:    time.Now(),
 	}
 }
 

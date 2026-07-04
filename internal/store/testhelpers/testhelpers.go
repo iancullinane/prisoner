@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/internal/types"
@@ -92,6 +93,26 @@ func RunHistoryStoreContract(t *testing.T, newStore func(t *testing.T) types.His
 			t.Errorf("got player b move %v, want %v", history[0].PlayerBMove, move2)
 		}
 
+	})
+
+	t.Run("interaction played_at round-trips", func(t *testing.T) {
+		store := newStore(t)
+		recorded := mustRecordInteraction(t, store, TestPlayerOneID, TestPlayerTwoID, prisoner.Cooperate, prisoner.Cooperate)
+
+		history := mustGetHistory(t, store)
+		if len(history) != 1 {
+			t.Fatalf("got %d interactions, want 1", len(history))
+		}
+
+		got := history[0].PlayedAt
+		if got.IsZero() {
+			t.Fatalf("got zero PlayedAt, want it to round-trip")
+		}
+		// Postgres stores timestamptz at microsecond precision; truncate so the
+		// comparison holds across all backends. Equal ignores location (UTC vs local).
+		if !got.Truncate(time.Microsecond).Equal(recorded.PlayedAt.Truncate(time.Microsecond)) {
+			t.Errorf("got PlayedAt %v, want %v", got, recorded.PlayedAt)
+		}
 	})
 
 	t.Run("history of unknown player is empty list", func(t *testing.T) {
@@ -215,12 +236,13 @@ func assertPlayerNotFound(t testing.TB, err error) {
 	}
 }
 
-func mustRecordInteraction(t *testing.T, store types.HistoryStore, player1, player2 uuid.UUID, move1, move2 prisoner.Move) {
+func mustRecordInteraction(t *testing.T, store types.HistoryStore, player1, player2 uuid.UUID, move1, move2 prisoner.Move) types.Interaction {
 	t.Helper()
 	interaction := types.NewInteraction(player1, player2, move1, move2)
 	if err := store.RecordInteraction(interaction); err != nil {
 		t.Fatalf("RecordInteraction(%v) returned error: %v", interaction, err)
 	}
+	return interaction
 }
 
 func mustGetHistory(t *testing.T, store types.HistoryStore) types.History {

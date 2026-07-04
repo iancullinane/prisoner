@@ -36,6 +36,7 @@ func interactionFromRow(i sqlcdb.Interaction) types.Interaction {
 		PlayerB:     i.PlayerBID.Bytes,
 		PlayerAMove: prisoner.Move([]rune(i.PlayerAMove)[0]),
 		PlayerBMove: prisoner.Move([]rune(i.PlayerBMove)[0]),
+		PlayedAt:    i.PlayedAt.Time,
 	}
 }
 
@@ -59,6 +60,7 @@ func (s *HistoryStore) RecordInteraction(interaction types.Interaction) error {
 		PlayerBID:   pgtype.UUID{Bytes: interaction.PlayerB, Valid: true},
 		PlayerAMove: string(interaction.PlayerAMove),
 		PlayerBMove: string(interaction.PlayerBMove),
+		PlayedAt:    pgtype.Timestamptz{Time: interaction.PlayedAt, Valid: true},
 	}
 	if err := s.q.RecordInteraction(ctx, params); err != nil {
 		return err
