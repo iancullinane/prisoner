@@ -44,6 +44,11 @@ strategies and simulations as the tool grows.`,
 	// logger reflects the resolved --log-level / --log-format (flag, env, config,
 	// then default). Subcommands read the package-level logger var.
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Args/flag validation runs before this hook, so anything that gets
+		// here has already passed usage checks. Silence usage so runtime
+		// errors (store failures, not-found, etc.) don't dump --help too.
+		cmd.SilenceUsage = true
+
 		level := logging.ParseLevel(viper.GetString("log-level"))
 		logger = logging.New(os.Stdout, level, viper.GetString("log-format"))
 		logger.Debug("logger initialised",

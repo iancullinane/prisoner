@@ -39,6 +39,11 @@ var simulateCmd = &cobra.Command{
 			return fmt.Errorf("unknown scoring %q: use classic or positive", scoring)
 		}
 
+		asJSON, err := cmd.Flags().GetBool("json")
+		if err != nil {
+			return err
+		}
+
 		// set stores, one for players and one for history
 		st, cleanup, err := openStores(context.Background(), storeKind, logger)
 		if err != nil {
@@ -46,13 +51,7 @@ var simulateCmd = &cobra.Command{
 		}
 		defer cleanup()
 		historyStore := st.history
-
-		//get history to see how many already exist
-		history, err := historyStore.GetHistory()
-		if err != nil {
-			return fmt.Errorf("loading history from %s store: %w", storeKind, err)
-		}
-		fmt.Printf("Using %s store (%d interactions in history)\n", storeKind, len(history))
+		playerStore := st.players
 
 		roundCount, err := strconv.Atoi(args[0])
 		if err != nil {
@@ -61,8 +60,10 @@ var simulateCmd = &cobra.Command{
 		fmt.Printf("Playing %d rounds\n", roundCount)
 
 		// empty strings generate random names
-		player1 := types.NewPlayer("")
-		player2 := types.NewPlayer("")
+		player1, player2, err := getTwoRandomPlayers(playerStore)
+		if err != nil {
+			return fmt.Errorf("getting two random players: %w", err)
+		}
 
 		for range roundCount {
 			player1Move := prisoner.RandomMove()
@@ -73,18 +74,10 @@ var simulateCmd = &cobra.Command{
 				player1Move,
 				player2Move)
 			err = historyStore.RecordInteraction(interaction)
+			fmt.Println(interaction.PrintInteraction(payoff, asJSON))
 			if err != nil {
 				return fmt.Errorf("recording interaction in %s store: %w", storeKind, err)
 			}
-		}
-
-		history, err = historyStore.GetHistory()
-		if err != nil {
-			return fmt.Errorf("loading history from %s store: %w", storeKind, err)
-		}
-
-		for _, interaction := range history {
-			fmt.Println(interaction.PrintScore(payoff))
 		}
 
 		return nil
@@ -92,18 +85,20 @@ var simulateCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(simulateCmd)
+	gameCmd.AddCommand(simulateCmd)
 
 	simulateCmd.Flags().String("scoring", "positive", "scoring system to use, accepts, classic or positive")
 	_ = viper.BindPFlag("scoring", simulateCmd.Flags().Lookup("scoring"))
+}
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// playCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// playCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+func getTwoRandomPlayers(ps types.PlayerStore) (types.Player, types.Player, error) {
+	player1, err := ps.GetRandomPlayer()
+	if err != nil {
+		return types.Player{}, types.Player{}, fmt.Errorf("getting random player: %w", err)
+	}
+	player2, err := ps.GetRandomPlayerExcept(player1.ID)
+	if err != nil {
+		return types.Player{}, types.Player{}, fmt.Errorf("getting random player except %v: %w", player1.ID, err)
+	}
+	return player1, player2, nil
 }
