@@ -20,8 +20,8 @@ var (
 )
 
 type Player struct {
-	ID   uuid.UUID
-	Name string
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 func NewPlayer(name string) *Player {

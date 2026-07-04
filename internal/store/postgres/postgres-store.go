@@ -2,10 +2,12 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -124,6 +126,9 @@ func (s *PlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
 func (s *PlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 	ctx := context.Background()
 	player, err := s.q.GetPlayerByID(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return types.Player{}, types.ErrPlayerNotFound
+	}
 	if err != nil {
 		return types.Player{}, fmt.Errorf("get player by id %q: %w", id, err)
 	}
@@ -134,6 +139,9 @@ func (s *PlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 func (s *PlayerStore) GetPlayerByName(name string) (types.Player, error) {
 	ctx := context.Background()
 	player, err := s.q.GetPlayerByName(ctx, name)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return types.Player{}, types.ErrPlayerNotFound
+	}
 	if err != nil {
 		return types.Player{}, fmt.Errorf("get player by name %q: %w", name, err)
 	}

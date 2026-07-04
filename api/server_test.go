@@ -53,7 +53,7 @@ func TestPlayers_Get(t *testing.T) {
 		{
 			"test base",
 			"/players/Chris",
-			`{"ID":"11111111-1111-bbbb-3333-333333333333","Name":"Chris"}` + "\n",
+			`{"id":"11111111-1111-bbbb-3333-333333333333","name":"Chris"}` + "\n",
 			http.StatusOK,
 		},
 		{
