@@ -30,12 +30,12 @@ func NewHistory(rdr io.Reader) (History, error) {
 }
 
 type Interaction struct {
-	ID          uuid.UUID
-	PlayerA     uuid.UUID
-	PlayerB     uuid.UUID
-	PlayerAMove prisoner.Move
-	PlayerBMove prisoner.Move
-	PlayedAt    time.Time
+	ID          uuid.UUID     `json:"id"`
+	PlayerA     uuid.UUID     `json:"playerA"`
+	PlayerB     uuid.UUID     `json:"playerB"`
+	PlayerAMove prisoner.Move `json:"playerAMove"`
+	PlayerBMove prisoner.Move `json:"playerBMove"`
+	PlayedAt    time.Time     `json:"playedAt"`
 }
 
 func NewInteraction(playerA, playerB uuid.UUID, playerAMove, playerBMove prisoner.Move) Interaction {
@@ -75,4 +75,24 @@ func (r Interaction) PrintScore(scoring prisoner.Payoff[int]) string {
 
 func (r Interaction) String() string {
 	return fmt.Sprintf("%s vs %s: %s, %s", r.PlayerA, r.PlayerB, r.PlayerAMove, r.PlayerBMove)
+}
+
+// PrintInteraction renders the interaction as a human-readable line, or as
+// indented JSON (including the computed score) when asJSON is true.
+func (r Interaction) PrintInteraction(scoring prisoner.Payoff[int], asJSON bool) string {
+	if asJSON {
+		out := struct {
+			Interaction
+			Score string `json:"score"`
+			// PlayerAScore int `json:"playerAScore"`
+			// PlayerBScore int `json:"playerBScore"`
+		}{Interaction: r, Score: r.PrintScore(scoring)}
+
+		b, err := json.MarshalIndent(out, "", "  ")
+		if err != nil {
+			return fmt.Sprintf("error marshaling interaction: %v", err)
+		}
+		return string(b)
+	}
+	return fmt.Sprintf("%s: %s", r, r.PrintScore(scoring))
 }
