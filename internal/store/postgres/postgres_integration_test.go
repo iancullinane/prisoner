@@ -44,7 +44,9 @@ func TestMain(m *testing.M) {
 		panic(err)
 	}
 
-	// Run goose migrations — same path as the server takes.
+	// Run goose migrations — In production, migrations are run "manually"
+	// via the cmd/migrate command, this just keeps the test container up
+	// to date during local development, so this is isolated
 	stdDB := stdlib.OpenDBFromPool(pool)
 	if err := runMigrations(stdDB); err != nil {
 		panic(err)

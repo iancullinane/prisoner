@@ -103,8 +103,9 @@ func NewPlayerStore(logger *slog.Logger, pool *pgxpool.Pool) *PlayerStore {
 
 func playerFromRow(p sqlcdb.Player) types.Player {
 	return types.Player{
-		ID:   uuid.UUID(p.ID.Bytes),
-		Name: p.Name,
+		ID:        uuid.UUID(p.ID.Bytes),
+		Name:      p.Name,
+		CreatedAt: p.CreatedAt.Time,
 	}
 }
 
