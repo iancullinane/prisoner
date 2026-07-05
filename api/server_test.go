@@ -53,7 +53,7 @@ func TestPlayers_Get(t *testing.T) {
 		{
 			"test base",
 			"/players/Chris",
-			`{"id":"11111111-1111-bbbb-3333-333333333333","name":"Chris"}` + "\n",
+			`{"id":"11111111-1111-bbbb-3333-333333333333","name":"Chris","CreatedAt":"0001-01-01T00:00:00Z"}` + "\n",
 			http.StatusOK,
 		},
 		{
@@ -276,7 +276,7 @@ func newHistoryRequest(id uuid.UUID) *http.Request {
 func assertResponseBody(t testing.TB, got, want string) {
 	t.Helper()
 	if got != want {
-		t.Errorf("response body wrong, got %s, want %s", got, want)
+		t.Errorf("response body wrong\ngot %s\nwant %s", got, want)
 	}
 }
 

@@ -20,6 +20,15 @@ var cfgFile string
 // loggers from it when constructing stores and servers.
 var logger *slog.Logger
 
+// Execute adds all child commands to the root command and sets flags appropriately.
+// This is called by main.main(). It only needs to happen once to the rootCmd.
+func Execute() {
+	err := rootCmd.Execute()
+	if err != nil {
+		os.Exit(1)
+	}
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "prisoner",
@@ -34,7 +43,7 @@ Scores are recorded via their algebraic symbols as follows:
 - Temptation: T
 - Reward: R
 - Punish: P
-- Sucker: S	
+- Sucker: S
 
 Scoring mechanisms convert these symbols based on the payoff matrix used.
 
@@ -44,6 +53,11 @@ strategies and simulations as the tool grows.`,
 	// logger reflects the resolved --log-level / --log-format (flag, env, config,
 	// then default). Subcommands read the package-level logger var.
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Args/flag validation runs before this hook, so anything that gets
+		// here has already passed usage checks. Silence usage so runtime
+		// errors (store failures, not-found, etc.) don't dump --help too.
+		cmd.SilenceUsage = true
+
 		level := logging.ParseLevel(viper.GetString("log-level"))
 		logger = logging.New(os.Stdout, level, viper.GetString("log-format"))
 		logger.Debug("logger initialised",
@@ -54,25 +68,17 @@ strategies and simulations as the tool grows.`,
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute() {
-	err := rootCmd.Execute()
-	if err != nil {
-		os.Exit(1)
-	}
-}
-
 func init() {
 	cobra.OnInitialize(initConfig)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.prisoner)")
+
 	rootCmd.PersistentFlags().String("store", StoreMemory, "player store backend: memory, file, or postgres")
 	_ = viper.BindPFlag("store", rootCmd.PersistentFlags().Lookup("store"))
 
 	rootCmd.PersistentFlags().String("log-level", "debug", "log level: debug, info, warn, or error")
-	rootCmd.PersistentFlags().String("log-format", "text", "log output format: text or json")
 	_ = viper.BindPFlag("log-level", rootCmd.PersistentFlags().Lookup("log-level"))
+	rootCmd.PersistentFlags().String("log-format", "text", "log output format: text or json")
 	_ = viper.BindPFlag("log-format", rootCmd.PersistentFlags().Lookup("log-format"))
 }
 

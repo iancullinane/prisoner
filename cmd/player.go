@@ -79,9 +79,7 @@ func lookupPlayer(store types.PlayerStore, arg string) (types.Player, error) {
 }
 
 func init() {
-	rootCmd.AddCommand(playerCmd)
-
-	playerCmd.Flags().Bool("json", false, "print output as JSON")
+	gameCmd.AddCommand(playerCmd)
 }
 
 // MARK:Helpers

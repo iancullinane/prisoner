@@ -2,6 +2,7 @@ package file
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/internal/store/testhelpers"
@@ -20,8 +21,8 @@ var (
 // =========================
 
 const goldenPlayerStoreData = `[
-		{"ID": "00000000-0000-aaaa-2222-222222222222", "Name": "Chris"},
-		{"ID": "11111111-1111-bbbb-3333-333333333333", "Name": "Cleo"}
+		{"ID": "00000000-0000-aaaa-2222-222222222222", "Name": "Chris", "CreatedAt": "2000-01-01T00:00:00Z"},
+		{"ID": "11111111-1111-bbbb-3333-333333333333", "Name": "Cleo", "CreatedAt": "2000-01-01T00:00:00Z"}
 	]`
 
 func TestFileSystemPlayerStore(t *testing.T) {
@@ -34,7 +35,7 @@ func TestFileSystemPlayerStore(t *testing.T) {
 
 		got, err := store.GetPlayerByID(player1)
 		testhelpers.AssertNoError(t, err)
-		want := types.Player{ID: player1, Name: "Chris"}
+		want := types.Player{ID: player1, Name: "Chris", CreatedAt: time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)}
 
 		testhelpers.AssertPlayer(t, got, want)
 

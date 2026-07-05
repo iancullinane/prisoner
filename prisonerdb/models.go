@@ -18,6 +18,7 @@ type Interaction struct {
 }
 
 type Player struct {
-	ID   pgtype.UUID
-	Name string
+	ID        pgtype.UUID
+	Name      string
+	CreatedAt pgtype.Timestamptz
 }
