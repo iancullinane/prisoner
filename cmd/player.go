@@ -27,6 +27,7 @@ var playerCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		storeKind := viper.GetString("store")
+		logger.Info(fmt.Sprintf("Using %s store", storeKind))
 
 		// set stores, one for players and one for history
 		st, cleanup, err := openStores(context.Background(), storeKind, logger)
@@ -62,7 +63,6 @@ var playerCmd = &cobra.Command{
 		if asJSON {
 			return printJSON(player)
 		}
-		fmt.Printf("Using %s store for player %q\n", storeKind, arg)
 		fmt.Printf("Player: %+v\n", player)
 
 		return nil
