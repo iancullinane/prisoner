@@ -57,7 +57,7 @@ var simulateCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Playing %d rounds\n", roundCount)
+		logger.Info(fmt.Sprintf("Playing %d rounds", roundCount))
 
 		// empty strings generate random names
 		player1, player2, err := getTwoRandomPlayers(playerStore)
@@ -74,10 +74,10 @@ var simulateCmd = &cobra.Command{
 				player1Move,
 				player2Move)
 			err = historyStore.RecordInteraction(interaction)
-			fmt.Println(interaction.PrintInteraction(payoff, asJSON))
 			if err != nil {
 				return fmt.Errorf("recording interaction in %s store: %w", storeKind, err)
 			}
+			fmt.Println(interaction.PrintInteraction(payoff, asJSON))
 		}
 
 		return nil
