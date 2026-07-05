@@ -2,3 +2,5 @@ bin
 prisonerdb
 *.db.json
 .prisoner
+.zed
+.vscode
