@@ -125,7 +125,7 @@ func NewFileSystemPlayerStore(logger *slog.Logger, file *os.File) (*FileSystemSt
 	}
 
 	if store.players.FindByName(seedPlayerName) == nil {
-		store.players = append(store.players, types.Player{ID: seedPlayerID, Name: seedPlayerName})
+		store.players = append(store.players, *types.NewPlayerWithID(seedPlayerID, seedPlayerName))
 		if err := store.database.Encode(store.players); err != nil {
 			return nil, fmt.Errorf("seeding %s player to file: %w", seedPlayerName, err)
 		}
@@ -146,12 +146,9 @@ func (f *FileSystemStore) GetOrCreatePlayer(name string) (types.Player, error) {
 		return types.Player{}, fmt.Errorf("generate UUID: %w", err)
 	}
 
-	newPlayer := types.Player{
-		ID:   id,
-		Name: name,
-	}
+	newPlayer := types.NewPlayerWithID(id, name)
 
-	f.players = append(f.players, newPlayer)
+	f.players = append(f.players, *newPlayer)
 
 	if err := f.database.Encode(f.players); err != nil {
 		return types.Player{}, fmt.Errorf("encoding players to file: %w", err)
@@ -161,7 +158,7 @@ func (f *FileSystemStore) GetOrCreatePlayer(name string) (types.Player, error) {
 		slog.String("name", newPlayer.Name),
 		slog.String("id", newPlayer.ID.String()),
 	)
-	return newPlayer, nil
+	return *newPlayer, nil
 }
 
 func (f *FileSystemStore) GetAllPlayers() (types.Players, error) {

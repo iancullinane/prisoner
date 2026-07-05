@@ -40,8 +40,12 @@ func AssertPlayer(t testing.TB, got, want types.Player) {
 		t.Errorf("got nil ID, want valid UUID")
 	}
 
+	if got.CreatedAt.IsZero() {
+		t.Errorf("got zero CreatedAt, want it set")
+	}
+
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("got %+v, want %+v", got, want)
+		t.Errorf("\ngot %+v\nwant %+v", got, want)
 	}
 }
 
@@ -143,7 +147,7 @@ func RunPlayerStoreContract(t *testing.T, newStore func(t *testing.T) types.Play
 		store := newStore(t)
 
 		player := mustGetOrCreatePlayer(t, store, "Alice")
-		want := types.Player{ID: player.ID, Name: "Alice"}
+		want := types.Player{ID: player.ID, Name: "Alice", CreatedAt: player.CreatedAt}
 		AssertPlayer(t, player, want)
 	})
 

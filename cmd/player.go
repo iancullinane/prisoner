@@ -5,6 +5,8 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -25,6 +27,7 @@ var playerCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		storeKind := viper.GetString("store")
+		logger.Info(fmt.Sprintf("Using %s store", storeKind))
 
 		// set stores, one for players and one for history
 		st, cleanup, err := openStores(context.Background(), storeKind, logger)
@@ -35,27 +38,30 @@ var playerCmd = &cobra.Command{
 
 		playerStore := st.players
 
+		asJSON, err := cmd.Flags().GetBool("json")
+		if err != nil {
+			return err
+		}
+
 		// No argument: list every player.
 		if len(args) == 0 {
-			fmt.Printf("Using %s store, listing all players\n", storeKind)
-
-			players, err := playerStore.GetAllPlayers()
-			if err != nil {
-				return fmt.Errorf("getting players from %s store: %w", storeKind, err)
-			}
-			fmt.Printf("Players: %+v\n", players)
-
-			return nil
+			return printAllPlayers(playerStore, asJSON)
 		}
 
 		// Argument: look up a single player by ID if it parses as a
 		// UUID, otherwise by name.
 		arg := args[0]
-		fmt.Printf("Using %s store for player %q\n", storeKind, arg)
 
 		player, err := lookupPlayer(playerStore, arg)
+		if errors.Is(err, types.ErrPlayerNotFound) {
+			return fmt.Errorf("no player %q in %s store", arg, storeKind)
+		}
 		if err != nil {
 			return fmt.Errorf("getting player %q from %s store: %w", arg, storeKind, err)
+		}
+
+		if asJSON {
+			return printJSON(player)
 		}
 		fmt.Printf("Player: %+v\n", player)
 
@@ -73,18 +79,35 @@ func lookupPlayer(store types.PlayerStore, arg string) (types.Player, error) {
 }
 
 func init() {
-	rootCmd.AddCommand(playerCmd)
+	gameCmd.AddCommand(playerCmd)
+}
 
-	// playerCmd.Flags().String("scoring", "positive", "scoring system to use, accepts, classic or positive")
-	// _ = viper.BindPFlag("scoring", playerCmd.Flags().Lookup("scoring"))
+// MARK:Helpers
 
-	// Here you will define your flags and configuration settings.
+func listPlayers(players types.Players) {
+	fmt.Println("Players:")
+	for _, player := range players {
+		fmt.Printf("%v\t%v\n", player.ID, player.Name)
+	}
+}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// playCmd.PersistentFlags().String("foo", "", "A help for foo")
+func printJSON(v any) error {
+	b, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshaling json: %w", err)
+	}
+	fmt.Println(string(b))
+	return nil
+}
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// playCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+func printAllPlayers(ps types.PlayerStore, asJSON bool) error {
+	players, err := ps.GetAllPlayers()
+	if err != nil {
+		return fmt.Errorf("getting players from store: %w", err)
+	}
+	if asJSON {
+		return printJSON(players)
+	}
+	listPlayers(players)
+	return nil
 }

@@ -81,62 +81,62 @@ func (q *Queries) GetHistoryByPlayerID(ctx context.Context, playerAID pgtype.UUI
 const getOrCreatePlayer = `-- name: GetOrCreatePlayer :one
 INSERT INTO players (name) VALUES ($1)
 ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-RETURNING id, name
+RETURNING id, name, created_at
 `
 
 func (q *Queries) GetOrCreatePlayer(ctx context.Context, name string) (Player, error) {
 	row := q.db.QueryRow(ctx, getOrCreatePlayer, name)
 	var i Player
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.CreatedAt)
 	return i, err
 }
 
 const getPlayerByID = `-- name: GetPlayerByID :one
-SELECT id, name FROM players WHERE id = $1
+SELECT id, name, created_at FROM players WHERE id = $1
 `
 
 func (q *Queries) GetPlayerByID(ctx context.Context, id pgtype.UUID) (Player, error) {
 	row := q.db.QueryRow(ctx, getPlayerByID, id)
 	var i Player
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.CreatedAt)
 	return i, err
 }
 
 const getPlayerByName = `-- name: GetPlayerByName :one
-SELECT id, name FROM players WHERE name = $1
+SELECT id, name, created_at FROM players WHERE name = $1
 `
 
 func (q *Queries) GetPlayerByName(ctx context.Context, name string) (Player, error) {
 	row := q.db.QueryRow(ctx, getPlayerByName, name)
 	var i Player
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.CreatedAt)
 	return i, err
 }
 
 const getRandomPlayer = `-- name: GetRandomPlayer :one
-SELECT id, name FROM players ORDER BY RANDOM() LIMIT 1
+SELECT id, name, created_at FROM players ORDER BY RANDOM() LIMIT 1
 `
 
 func (q *Queries) GetRandomPlayer(ctx context.Context) (Player, error) {
 	row := q.db.QueryRow(ctx, getRandomPlayer)
 	var i Player
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.CreatedAt)
 	return i, err
 }
 
 const getRandomPlayerExcept = `-- name: GetRandomPlayerExcept :one
-SELECT id, name FROM players WHERE id != $1 ORDER BY RANDOM() LIMIT 1
+SELECT id, name, created_at FROM players WHERE id != $1 ORDER BY RANDOM() LIMIT 1
 `
 
 func (q *Queries) GetRandomPlayerExcept(ctx context.Context, id pgtype.UUID) (Player, error) {
 	row := q.db.QueryRow(ctx, getRandomPlayerExcept, id)
 	var i Player
-	err := row.Scan(&i.ID, &i.Name)
+	err := row.Scan(&i.ID, &i.Name, &i.CreatedAt)
 	return i, err
 }
 
 const listPlayers = `-- name: ListPlayers :many
-SELECT id, name FROM players
+SELECT id, name, created_at FROM players
 ORDER BY name
 `
 
@@ -149,7 +149,7 @@ func (q *Queries) ListPlayers(ctx context.Context) ([]Player, error) {
 	var items []Player
 	for rows.Next() {
 		var i Player
-		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+		if err := rows.Scan(&i.ID, &i.Name, &i.CreatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

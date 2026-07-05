@@ -7,6 +7,7 @@ import (
 	"io"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/Pallinder/go-randomdata"
 	"github.com/google/uuid"
@@ -20,37 +21,29 @@ var (
 )
 
 type Player struct {
-	ID   uuid.UUID
-	Name string
+	ID        uuid.UUID `json:"id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"CreatedAt"`
 }
 
-func NewPlayer(name string) *Player {
+func newPlayer(id uuid.UUID, name string) *Player {
 	if name == "" {
 		name = randomdata.FirstName(randomdata.RandomGender)
 	}
+	return &Player{ID: id, Name: name, CreatedAt: time.Now().UTC()}
+}
 
+func NewPlayer(name string) *Player {
 	id, err := uuid.NewRandom()
 	if err != nil {
 		panic(fmt.Sprintf("failed to generate uuid for player: %v", err))
 	}
 
-	return &Player{
-		ID:   id,
-		Name: name,
-	}
+	return newPlayer(id, name)
 }
 
-func NewPlayerFromID(id string) (*Player, error) {
-
-	uuid, err := uuid.Parse(id)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Player{
-		ID:   uuid,
-		Name: devPlayerName,
-	}, nil
+func NewPlayerWithID(id uuid.UUID, name string) *Player {
+	return newPlayer(id, name)
 }
 
 type PlayerStore interface {
