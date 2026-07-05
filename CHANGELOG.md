@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.2.0](https://github.com/iancullinane/prisoner/compare/v1.1.0...v1.2.0) (2026-07-05)
+
+
+### Features
+
+* new command tree topology, wire up json flag ([cb5f158](https://github.com/iancullinane/prisoner/commit/cb5f158adda503202ce1b2a73db88288e4c1afbd))
+* Update stores and API with CreadtedAt for player field ([6e6a53a](https://github.com/iancullinane/prisoner/commit/6e6a53a594aab947d4cb52e6ad6d85bf6f0b4276))
+
+
+### Bug Fixes
+
+* add the printInteracton method on interactions ([290e383](https://github.com/iancullinane/prisoner/commit/290e3830f1e71d9c2c3898c6b874c573abece1aa))
+* better errors out of postgres store ([ce0a8aa](https://github.com/iancullinane/prisoner/commit/ce0a8aabe1ac790a571e7c3a52b1f3d7723d56c6))
+* build-and-test builds sqlc ([08f42c1](https://github.com/iancullinane/prisoner/commit/08f42c10f5a303b0bb6f9540ab9a924ae15c58f8))
+* exclude sqlc files from git ([b07ce1b](https://github.com/iancullinane/prisoner/commit/b07ce1b448280c6596c047fc36adff0200490f40))
+* give claude code review the apprpriate permissions ([2b4f080](https://github.com/iancullinane/prisoner/commit/2b4f080f7a1751619af2d147be3ffd0b46f94344))
+* log store type earlier and better on player ([9f472d0](https://github.com/iancullinane/prisoner/commit/9f472d018d16badad36fc2c15b8f8a81064a7d01))
+* update postgres store with player:CreatedAt ([543e32f](https://github.com/iancullinane/prisoner/commit/543e32f8b1963fb5a8744f3306638aa73e76e630))
+
 ## [1.1.0](https://github.com/iancullinane/prisoner/compare/v1.0.0...v1.1.0) (2026-07-04)
 
 
