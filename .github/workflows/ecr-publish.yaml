@@ -7,7 +7,7 @@ on:
 
 env:
   AWS_REGION: us-east-2
-  ECR_REPOSITORY: prisoner
+  ECR_REPOSITORY: adventurebrave
 
 jobs:
   build-and-push:
