@@ -13,8 +13,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const devPlayerName = "Steve"
-
 var (
 	ErrPlayerNotFound       = errors.New("player not found")
 	ErrCouldNotCreatePlayer = errors.New("could not create player")

@@ -44,7 +44,7 @@ jobs:
           # interactive use; CI has no human to approve prompts, so anything outside
           # that allowlist gets silently denied. Grant the tools needed to actually
           # post review feedback.
-          claude_args: '--allowed-tools mcp__github_inline_comment__create_inline_comment,mcp__github_comment__update_claude_comment,Bash(gh pr *)'
+          claude_args: '--allowed-tools "mcp__github_inline_comment__create_inline_comment,mcp__github_comment__update_claude_comment,Bash(gh pr *)"'
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
 
