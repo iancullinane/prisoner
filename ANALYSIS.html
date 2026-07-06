@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>prisoner — Service Analysis</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+:root{
+  --bg0:#282828; --bg1:#3c3836; --bg2:#504945; --bg3:#665c54;
+  --fg0:#fbf1c7; --fg1:#ebdbb2; --fg2:#d5c4a1; --fg3:#bdae93;
+  --red:#fb4934; --green:#b8bb26; --yellow:#fabd2f; --blue:#83a598;
+  --purple:#d3869b; --aqua:#8ec07c; --orange:#fe8019; --gray:#928374;
+  --red-dim:#cc241d; --green-dim:#98971a; --yellow-dim:#d79921; --blue-dim:#458588; --purple-dim:#b16286; --aqua-dim:#689d6a;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg0); color:var(--fg1);
+  font-family:'SF Mono',Menlo,Consolas,monospace;
+  line-height:1.6;
+}
+header{
+  background:linear-gradient(135deg,var(--bg1) 0%, var(--bg2) 60%, var(--blue-dim) 140%);
+  padding:3rem 2rem; border-bottom:4px solid var(--orange);
+}
+header h1{margin:0 0 .5rem 0; font-size:2.2rem; color:var(--fg0);}
+header p{margin:0; color:var(--fg2); max-width:60ch;}
+.container{max-width:1150px; margin:0 auto; padding:2rem;}
+h2{
+  color:var(--yellow); border-bottom:2px solid var(--bg2);
+  padding-bottom:.4rem; margin-top:3rem; font-size:1.5rem;
+}
+h3{color:var(--aqua); margin-top:2rem;}
+h4{color:var(--fg0);}
+a{color:var(--blue);}
+code, .inline-code{
+  background:var(--bg1); color:var(--orange); padding:.1rem .35rem;
+  border-radius:3px; font-size:.9em;
+}
+pre{
+  background:var(--bg1); border:1px solid var(--bg2); border-left:4px solid var(--aqua);
+  padding:1rem; border-radius:6px; overflow-x:auto;
+}
+pre code{background:none; color:var(--fg1); padding:0;}
+.card-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:1rem; margin:1.5rem 0;
+}
+.card{
+  background:var(--bg1); border:1px solid var(--bg2); border-radius:8px;
+  padding:1.1rem; transition:transform .15s, border-color .15s;
+}
+.card:hover{transform:translateY(-3px); border-color:var(--orange);}
+.card h4{margin:0 0 .5rem 0; color:var(--orange);}
+.card p{margin:0; color:var(--fg2); font-size:.92rem;}
+table.endpoints{width:100%; border-collapse:collapse; margin:1rem 0;}
+table.endpoints th, table.endpoints td{
+  padding:.6rem .8rem; border-bottom:1px solid var(--bg2); text-align:left; font-size:.92rem;
+}
+table.endpoints th{color:var(--yellow); background:var(--bg1);}
+.method{font-weight:bold; padding:.15rem .5rem; border-radius:4px; font-size:.8rem;}
+.method.get{background:var(--blue-dim); color:var(--fg0);}
+.method.post{background:var(--green-dim); color:var(--fg0);}
+.box{border-left:4px solid; padding:1rem 1.2rem; margin:1rem 0; border-radius:0 6px 6px 0; background:var(--bg1);}
+.box.success{border-color:var(--green);}
+.box.warning{border-color:var(--yellow);}
+.box.info{border-color:var(--blue);}
+.box.danger{border-color:var(--red);}
+.box h4{margin-top:0;}
+.box ul{margin:.3rem 0 0 0; padding-left:1.3rem;}
+.risk-badge{
+  display:inline-block; padding:.3rem .9rem; border-radius:20px; font-weight:bold;
+  font-size:.95rem; letter-spacing:.03em;
+}
+.risk-low{background:var(--green-dim); color:var(--fg0);}
+.risk-medium{background:var(--yellow-dim); color:var(--bg0);}
+.risk-high{background:var(--red-dim); color:var(--fg0);}
+.mermaid{background:var(--bg1); border-radius:8px; padding:1rem; margin:1.5rem 0; border:1px solid var(--bg2);}
+.db-table-container{
+  background:var(--bg1); border:1px solid var(--bg2); border-radius:8px; margin:1.5rem 0; overflow:hidden;
+}
+.db-table-header{
+  display:flex; align-items:center; gap:.8rem; padding:1rem 1.2rem; background:var(--bg2);
+}
+.db-table-icon{font-size:1.6rem;}
+.db-table-title h4{margin:0; color:var(--fg0);}
+.db-table-title p{margin:0; color:var(--fg3); font-size:.85rem;}
+table.db-table{width:100%; border-collapse:collapse;}
+table.db-table th, table.db-table td{padding:.55rem .9rem; border-bottom:1px solid var(--bg2); font-size:.88rem; text-align:left;}
+table.db-table th{color:var(--yellow);}
+.column-name{color:var(--aqua); font-weight:bold;}
+.column-type{color:var(--purple);}
+.constraint-badge{
+  display:inline-block; font-size:.7rem; padding:.12rem .5rem; border-radius:10px;
+  margin-right:.3rem; font-weight:bold;
+}
+.constraint-badge.pk{background:var(--orange); color:var(--bg0);}
+.constraint-badge.fk{background:var(--blue-dim); color:var(--fg0);}
+.constraint-badge.unique{background:var(--purple-dim); color:var(--fg0);}
+.constraint-badge.not-null{background:var(--bg3); color:var(--fg1);}
+.constraint-badge.idx{background:var(--aqua-dim); color:var(--bg0);}
+.toc{background:var(--bg1); border:1px solid var(--bg2); border-radius:8px; padding:1.2rem 1.5rem;}
+.toc ul{margin:0; padding-left:1.3rem; columns:2;}
+.toc a{text-decoration:none;}
+.toc a:hover{text-decoration:underline;}
+footer{text-align:center; color:var(--gray); padding:2rem; font-size:.85rem;}
+@media (max-width:700px){.toc ul{columns:1;}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎲 prisoner</h1>
+  <p>Iterated Prisoner's Dilemma laboratory — a Go library, CLI, and HTTP API (with a React frontend) for modeling cooperation/defection games between recorded players.</p>
+</header>
+
+<div class="container">
+
+<div class="toc">
+<strong>Contents</strong>
+<ul>
+  <li><a href="#overview">Overview</a></li>
+  <li><a href="#api">API &amp; Endpoints</a></li>
+  <li><a href="#architecture">Architecture &amp; Dependencies</a></li>
+  <li><a href="#flows">Flow Diagrams</a></li>
+  <li><a href="#db">Database Schema</a></li>
+  <li><a href="#review">Technical Review</a></li>
+</ul>
+</div>
+
+<h2 id="overview">Overview</h2>
+<p>
+<code>prisoner</code> is a portfolio/side project modeling the <a href="https://en.wikipedia.org/wiki/Prisoner%27s_dilemma">Prisoner's Dilemma</a>.
+It is three things at once: a reusable Go library (<code>pkg/prisoner</code>) implementing the payoff matrix, a Cobra-based CLI (<code>cmd/</code>) for running games/simulations from the terminal, and an HTTP API (<code>api/</code>) plus a Vite/React frontend (<code>web/</code>) so humans can create players and record interactions against a shared backend.
+Storage is pluggable — in-memory, flat JSON file, or Postgres — selected via the <code>--store</code> flag / <code>PRISONER_STORE</code> env, all constructed behind a single <code>openStores</code> factory (<code>cmd/store-opener.go</code>).
+</p>
+
+<div class="card-grid">
+  <div class="card"><h4>Language</h4><p>Go 1.26, stdlib-first by design philosophy</p></div>
+  <div class="card"><h4>CLI</h4><p>Cobra + Viper (config/env/flags)</p></div>
+  <div class="card"><h4>Storage</h4><p>Memory / JSON file / Postgres (pgx + sqlc)</p></div>
+  <div class="card"><h4>Migrations</h4><p>goose, embedded SQL, run as a separate one-off command — server never auto-migrates</p></div>
+  <div class="card"><h4>Frontend</h4><p>React + TypeScript + Vite, talks to the API over CORS</p></div>
+  <div class="card"><h4>Packaging</h4><p>Multi-stage Alpine Docker image; docker-compose wires db + api + web</p></div>
+</div>
+
+<h2 id="api">API &amp; Endpoints</h2>
+<p>The HTTP surface is a single <code>*http.ServeMux</code> (Go 1.22+ pattern routing) wrapped in a CORS middleware, constructed in <code>api/server.go</code>'s <code>NewPlayerServer</code>.</p>
+
+<table class="endpoints">
+<thead><tr><th>Method</th><th>Path</th><th>Handler</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><span class="method get">GET</span></td><td><code>/players</code></td><td><code>listPlayersHandler</code></td><td>List all players</td></tr>
+<tr><td><span class="method get">GET</span></td><td><code>/players/{name}</code></td><td><code>playersHandler</code></td><td>Fetch a player by name</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/players/{name}</code></td><td><code>playersHandler</code></td><td>Get-or-create a player by name</td></tr>
+<tr><td><span class="method get">GET</span></td><td><code>/history</code></td><td><code>historyHandler</code></td><td>List all recorded interactions</td></tr>
+<tr><td><span class="method get">GET</span></td><td><code>/history/{id}</code></td><td><code>historyHandler</code></td><td>Filter history by player UUID</td></tr>
+<tr><td><span class="method post">POST</span></td><td><code>/play</code></td><td><code>playHandler</code></td><td>Play one round between two players, score it, record it</td></tr>
+</tbody>
+</table>
+
+<div class="box info">
+<h4>CORS middleware (<code>withCORS</code>)</h4>
+<p>Reflects whatever <code>Origin</code> header is sent back as <code>Access-Control-Allow-Origin</code> (rather than a hardcoded origin), so the Vite dev server or any future frontend origin works without configuration. Handles <code>OPTIONS</code> preflight with a 204 short-circuit before it reaches the mux. Covered by <code>api/cors_test.go</code>.</p>
+</div>
+
+<h3>Request/response shapes</h3>
+<pre><code>POST /play
+{
+  "player_a": "&lt;uuid&gt;", "player_b": "&lt;uuid&gt;",
+  "player_a_move": "C", "player_b_move": "B"
+}
+→ 201 { "id": "&lt;uuid&gt;", "player_a_score": "S", "player_b_score": "T" }</code></pre>
+<p><code>Move</code> and <code>Result</code> are single-rune enums (<code>C</code>/<code>B</code>, <code>T</code>/<code>R</code>/<code>P</code>/<code>S</code>) that marshal to/from single-character JSON strings (<code>pkg/prisoner/prisoner.go</code>) via a shared generic <code>unmarshalRuneEnum</code>.</p>
+
+<h2 id="architecture">Architecture &amp; Dependencies</h2>
+
+<h3>Layering</h3>
+<div class="card-grid">
+  <div class="card"><h4>cmd/</h4><p>Cobra commands: <code>server</code>, <code>game</code>, <code>simulate</code>, <code>player</code>, <code>migrate</code>. <code>root.go</code> wires Viper config resolution and a process-wide <code>*slog.Logger</code>. <code>store-opener.go</code> is the shared store factory used by every command.</p></div>
+  <div class="card"><h4>api/</h4><p>Thin HTTP layer: <code>PlayerServer</code> embeds <code>http.Handler</code>, depends only on the <code>types.PlayerStore</code> / <code>types.HistoryStore</code> interfaces — no knowledge of which backend is behind them.</p></div>
+  <div class="card"><h4>internal/types/</h4><p>Domain model: <code>Player</code>, <code>Interaction</code>, <code>History</code>, and the store interfaces every backend implements.</p></div>
+  <div class="card"><h4>internal/store/{memory,file,postgres}/</h4><p>Three interchangeable implementations of the same store interfaces.</p></div>
+  <div class="card"><h4>pkg/prisoner/</h4><p>Pure game logic — payoff matrix, move/result enums, <code>Play()</code>. No I/O, fully unit-testable, exported for external reuse.</p></div>
+  <div class="card"><h4>prisonerdb/</h4><p>sqlc-generated code from <code>db/queries.sql</code> against the goose migrations — gitignored, regenerated at build/Docker time.</p></div>
+  <div class="card"><h4>web/</h4><p>React + TS + Vite SPA; <code>src/api/players.ts</code> is the only fetch boundary, reading <code>VITE_API_BASE_URL</code>.</p></div>
+</div>
+
+<h3>Configuration</h3>
+<ul>
+<li><code>--store</code> / <code>PRISONER_STORE</code>: <code>memory</code> (default), <code>file</code>, or <code>postgres</code></li>
+<li><code>--log-level</code>, <code>--log-format</code>: text or json, resolved once in <code>PersistentPreRunE</code></li>
+<li><code>DATABASE_URL</code>: required only for the postgres store and for <code>migrate</code></li>
+<li><code>~/.prisoner</code> (yaml) or <code>--config</code>: optional Viper config file</li>
+<li><code>VITE_API_BASE_URL</code>: frontend's API origin (e.g. <code>http://localhost:5001</code>)</li>
+</ul>
+
+<h3>Key dependencies</h3>
+<div class="card-grid">
+  <div class="card"><h4>spf13/cobra + viper</h4><p>CLI command tree + layered config (flag &gt; env &gt; file &gt; default)</p></div>
+  <div class="card"><h4>jackc/pgx v5</h4><p>Postgres driver + connection pool (<code>pgxpool</code>)</p></div>
+  <div class="card"><h4>sqlc</h4><p>Generates typed Go from <code>db/queries.sql</code>; regenerated in the Docker build stage</p></div>
+  <div class="card"><h4>pressly/goose</h4><p>Embedded SQL migrations, run as a distinct <code>migrate</code> subcommand/container invocation</p></div>
+  <div class="card"><h4>google/uuid</h4><p>Player &amp; interaction identifiers</p></div>
+  <div class="card"><h4>testcontainers-go/postgres</h4><p>Real-Postgres integration tests for the postgres store</p></div>
+</div>
+
+<h2 id="flows">Flow Diagrams</h2>
+
+<h3>Request lifecycle: playing a round</h3>
+<div class="mermaid">
+sequenceDiagram
+    participant FE as Web Frontend
+    participant API as PlayerServer
+    participant PS as PlayerStore
+    participant HS as HistoryStore
+    participant G as prisoner.Play
+
+    FE->>API: POST /play player_a, player_b, moves
+    API->>PS: GetPlayerByID player_a
+    PS-->>API: Player or not-found
+    API->>PS: GetPlayerByID player_b
+    PS-->>API: Player or not-found
+    API->>HS: RecordInteraction
+    HS-->>API: ok or error
+    API->>G: Play(moveA, moveB)
+    G-->>API: resultA, resultB
+    API-->>FE: 201 id, scores
+</div>
+
+<h3>Get-or-create player</h3>
+<div class="mermaid">
+sequenceDiagram
+    participant FE as Web Frontend
+    participant API as PlayerServer
+    participant PS as PlayerStore
+    participant DB as Backend memory, file, or Postgres
+
+    FE->>API: POST /players/name
+    API->>PS: GetOrCreatePlayer name
+    PS->>DB: lookup by name
+    alt found
+        DB-->>PS: existing player
+    else not found
+        PS->>DB: insert new player
+        DB-->>PS: created player
+    end
+    PS-->>API: Player
+    API-->>FE: 200 Player JSON
+</div>
+
+<h3>Store selection at startup</h3>
+<div class="mermaid">
+flowchart TD
+    A[cmd invoked: server, game, simulate, player] --> B{store flag}
+    B -->|memory or empty| C[InMemoryPlayerStore + InMemoryHistoryStore]
+    B -->|file| D[Open player.db.json + history.db.json]
+    B -->|postgres| E[Read DATABASE_URL, open pgxpool, Ping]
+    E -->|ping fails| F[Return error, exit nonzero]
+    C --> G[stores bundle returned]
+    D --> G
+    E -->|ping ok| G
+    G --> H[Command runs against types.PlayerStore / HistoryStore interfaces]
+</div>
+
+<h3>Deploy: migrate then roll server</h3>
+<div class="mermaid">
+sequenceDiagram
+    participant Op as Operator/CI
+    participant Img as prisoner image
+    participant DB as Postgres
+
+    Op->>Img: docker run migrate up (one-off task)
+    Img->>DB: goose apply pending migrations
+    DB-->>Img: ok
+    Op->>Img: roll out server (default CMD)
+    Img->>DB: pgxpool.New + Ping
+    DB-->>Img: connected
+    Img-->>Op: listening on :5001
+</div>
+
+<h3>CORS preflight</h3>
+<div class="mermaid">
+flowchart TD
+    A[Incoming request] --> B{Origin header present?}
+    B -->|yes| C[Set Access-Control-Allow-Origin to that origin]
+    B -->|no| D[Skip CORS headers]
+    C --> E{Method is OPTIONS?}
+    D --> E
+    E -->|yes| F[204 No Content, short-circuit before mux]
+    E -->|no| G[Pass to ServeMux router]
+</div>
+
+<h2 id="db">Database Schema</h2>
+<p>Two tables, managed by four goose migrations under <code>db/migrations/</code>. Schema is intentionally minimal — no scoring/session tables yet, scores are computed on the fly from the payoff matrix.</p>
+
+<div class="db-table-container">
+  <div class="db-table-header">
+    <div class="db-table-icon">👤</div>
+    <div class="db-table-title"><h4>players</h4><p>One row per named participant (human or CLI-generated)</p></div>
+  </div>
+  <table class="db-table">
+    <thead><tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="column-name">id</span></td><td><span class="column-type">UUID</span></td><td><span class="constraint-badge pk">PRIMARY KEY</span></td><td>Default <code>gen_random_uuid()</code></td></tr>
+      <tr><td><span class="column-name">name</span></td><td><span class="column-type">TEXT</span></td><td><span class="constraint-badge not-null">NOT NULL</span> <span class="constraint-badge unique">UNIQUE</span></td><td>Display name; get-or-create key</td></tr>
+      <tr><td><span class="column-name">created_at</span></td><td><span class="column-type">TIMESTAMPTZ</span></td><td><span class="constraint-badge not-null">NOT NULL</span></td><td>Added in migration 004, default <code>NOW()</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="db-table-container">
+  <div class="db-table-header">
+    <div class="db-table-icon">🤝</div>
+    <div class="db-table-title"><h4>interactions</h4><p>One row per played round between two players</p></div>
+  </div>
+  <table class="db-table">
+    <thead><tr><th>Column</th><th>Type</th><th>Constraints</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="column-name">id</span></td><td><span class="column-type">UUID</span></td><td><span class="constraint-badge pk">PRIMARY KEY</span></td><td>Default <code>gen_random_uuid()</code></td></tr>
+      <tr><td><span class="column-name">player_a_id</span></td><td><span class="column-type">UUID</span></td><td><span class="constraint-badge fk">FK → players.id</span> <span class="constraint-badge not-null">NOT NULL</span></td><td>ON DELETE CASCADE, indexed</td></tr>
+      <tr><td><span class="column-name">player_b_id</span></td><td><span class="column-type">UUID</span></td><td><span class="constraint-badge fk">FK → players.id</span> <span class="constraint-badge not-null">NOT NULL</span></td><td>ON DELETE CASCADE, indexed</td></tr>
+      <tr><td><span class="column-name">player_a_move</span></td><td><span class="column-type">TEXT</span></td><td><span class="constraint-badge not-null">NOT NULL</span></td><td>Single-char move symbol, e.g. <code>C</code>/<code>B</code></td></tr>
+      <tr><td><span class="column-name">player_b_move</span></td><td><span class="column-type">TEXT</span></td><td><span class="constraint-badge not-null">NOT NULL</span></td><td>Single-char move symbol</td></tr>
+      <tr><td><span class="column-name">played_at</span></td><td><span class="column-type">TIMESTAMPTZ</span></td><td><span class="constraint-badge not-null">NOT NULL</span></td><td>Default <code>NOW()</code></td></tr>
+    </tbody>
+  </table>
+  <div style="padding:.8rem 1.2rem; color:var(--fg3); font-size:.85rem;">
+    <span class="constraint-badge idx">IDX</span> interactions_player_a_idx (player_a_id)
+    &nbsp;&nbsp;<span class="constraint-badge idx">IDX</span> interactions_player_b_idx (player_b_id)
+  </div>
+</div>
+
+<h3>Entity relationship</h3>
+<div class="mermaid">
+erDiagram
+    PLAYERS ||--o{ INTERACTIONS : "player_a_id"
+    PLAYERS ||--o{ INTERACTIONS : "player_b_id"
+    PLAYERS {
+        uuid id PK
+        text name UK
+        timestamptz created_at
+    }
+    INTERACTIONS {
+        uuid id PK
+        uuid player_a_id FK
+        uuid player_b_id FK
+        text player_a_move
+        text player_b_move
+        timestamptz played_at
+    }
+</div>
+
+<h3>Migration history</h3>
+<ul>
+  <li><code>001_initial_schema.sql</code> — create <code>players</code></li>
+  <li><code>002_add_interactions.sql</code> — create <code>interactions</code> + both indexes</li>
+  <li><code>003_seed_luigi.sql</code> — seeds a fixed-UUID "Luigi" player (nil UUID), idempotent via <code>ON CONFLICT</code></li>
+  <li><code>004_add_created_at.sql</code> — backfills <code>players.created_at</code></li>
+</ul>
+<div class="box info">
+<h4>Migration safety model</h4>
+<p>The server process never runs migrations itself (documented deliberately in the README). <code>migrate</code> is a separate Cobra subcommand backed by embedded SQL (<code>db/embed.go</code>), invoked as a one-off task against the same container image — avoids concurrent DDL from multiple replicas and keeps the running server's DB role least-privilege.</p>
+</div>
+
+<h2 id="review">Technical Review</h2>
+
+<div class="box success">
+<h4>✅ Strengths</h4>
+<ul>
+<li><strong>Clean interface boundaries</strong> — <code>types.PlayerStore</code>/<code>types.HistoryStore</code> let <code>api/</code> and <code>cmd/</code> stay backend-agnostic; three backends (memory, file, Postgres) implement the same contract and are swappable at runtime via one flag.</li>
+<li><strong>Pure, dependency-free game core</strong> — <code>pkg/prisoner</code> has no I/O and is exported independently, making the payoff logic trivially unit-testable (and reusable outside this repo).</li>
+<li><strong>Deliberate migration/deploy separation</strong> — explicit design choice (documented in README) to keep schema changes out of the server's hot path, appropriate for a managed DB like RDS.</li>
+<li><strong>Decent test surface for the size of the project</strong> — CORS behavior, HTTP handlers (via stub stores), and the Postgres store (via testcontainers, real DB not mocks) all have dedicated tests.</li>
+<li><strong>Structured logging with slog</strong>, component-scoped via <code>logger.With(...)</code>, consistent from <code>root.go</code> down through stores.</li>
+</ul>
+</div>
+
+<div class="box warning">
+<h4>⚠️ Concerns</h4>
+<ul>
+<li><strong>In-memory store is not concurrency-safe</strong> (<code>internal/store/memory/in-memory-store.go</code>) — <code>players</code>/<code>history</code> slices are mutated with no mutex. The HTTP server can receive concurrent requests; two simultaneous <code>POST /players/{name}</code> or <code>POST /play</code> calls racing on the same store is a real data race (not just theoretical) whenever <code>--store memory</code> backs the server.</li>
+<li><strong><code>/play</code> error handling swallows the real failure mode</strong> (<code>api/server.go:88-97</code>) — a "player not found" from <code>GetPlayerByID</code> returns <code>500</code> instead of <code>404</code>, hiding a client error as a server error.</li>
+<li><strong>Repo root polluted with dev artifacts</strong> — <code>player.db.json</code>, <code>history.db.json</code> exist at repo root from local `file` store runs and aren't gitignored consistently; risk of accidentally committing local play data.</li>
+<li><strong>CORS reflects any Origin unconditionally</strong> — appropriate for a dev-only frontend, but if this server is ever exposed beyond localhost, reflecting an arbitrary <code>Origin</code> with no allowlist effectively disables the same-origin protection CORS is meant to provide (there's no credentialed-cookie use today, which limits the real-world impact, but it's worth an explicit allowlist before any public deploy).</li>
+<li><strong>No request size limits or timeouts</strong> on the HTTP server (<code>cmd/server.go:36</code>) — <code>http.ListenAndServe</code> with no <code>ReadTimeout</code>/<code>WriteTimeout</code>/<code>MaxHeaderBytes</code> is vulnerable to slow-loris-style resource exhaustion once this leaves localhost.</li>
+<li><strong>Frontend has a single happy-path component</strong> — <code>PlayerManager.tsx</code> covers list/create only; no UI yet for <code>/play</code> or <code>/history</code>, so the API's core gameplay loop isn't reachable from the web frontend yet.</li>
+</ul>
+</div>
+
+<div class="box info">
+<h4>💡 Recommendations</h4>
+<ul>
+<li>Add a <code>sync.RWMutex</code> to <code>InMemoryPlayerStore</code>/<code>InMemoryHistoryStore</code>, or document <code>--store memory</code> as single-connection/dev-only and default the server command to a safer store.</li>
+<li>In <code>playHandler</code>, distinguish <code>types.ErrPlayerNotFound</code> from other errors and return <code>404</code> for it, matching the pattern already used in <code>playersHandler</code>'s GET path.</li>
+<li>Set explicit timeouts on the server (<code>&amp;http.Server{ReadHeaderTimeout: ..., WriteTimeout: ..., Handler: server}</code>) instead of the bare <code>http.ListenAndServe</code> convenience wrapper.</li>
+<li>Replace CORS origin reflection with an explicit allowlist (env-configurable) before any non-localhost deployment.</li>
+<li>Extend the web frontend to cover <code>/play</code> and <code>/history</code> so the full game loop is playable end-to-end from the browser, matching the README's stated goal of "playing against real humans."</li>
+<li><code>.gitignore</code> the root-level <code>*.db.json</code> files unconditionally (currently only partially ignored per the working tree status).</li>
+</ul>
+</div>
+
+<h3>Risk Assessment</h3>
+<p><span class="risk-badge risk-low">LOW</span> &nbsp; for the CLI/library and Postgres-backed API path — well-tested, interface-driven, deliberate migration safety.</p>
+<p><span class="risk-badge risk-medium">MEDIUM</span> &nbsp; for the HTTP server overall — the memory-store race condition and missing timeouts are real but only matter once this is running multi-connection or outside localhost, which is exactly the direction the project (web frontend, "play against real humans") is heading.</p>
+
+</div>
+
+<footer>Generated by Freud service analysis · prisoner @ icullinane/add-web-frontend</footer>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  securityLevel: 'strict',
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#3c3836',
+    primaryTextColor: '#fbf1c7',
+    primaryBorderColor: '#fe8019',
+    lineColor: '#83a598',
+    secondaryColor: '#504945',
+    tertiaryColor: '#282828',
+    background: '#282828',
+    mainBkg: '#3c3836',
+    textColor: '#ebdbb2',
+    nodeTextColor: '#ebdbb2'
+  }
+});
+</script>
+</body>
+</html>
