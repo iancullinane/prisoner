@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/iancullinane/prisoner/compare/v1.2.0...v1.2.1) (2026-07-06)
+
+
+### Bug Fixes
+
+* Add Claude review to CI flow ([1af37c1](https://github.com/iancullinane/prisoner/commit/1af37c190b0c3415291aefa288cd22e4963828e0))
+* add ecr push for real ([1af37c1](https://github.com/iancullinane/prisoner/commit/1af37c190b0c3415291aefa288cd22e4963828e0))
+
 ## [1.2.0](https://github.com/iancullinane/prisoner/compare/v1.1.0...v1.2.0) (2026-07-05)
 
 
