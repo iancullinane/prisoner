@@ -3,7 +3,9 @@ FROM golang:1.26-alpine AS build
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
+RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
 COPY . .
+RUN sqlc generate
 RUN CGO_ENABLED=0 go build -o /prisoner .
 
 FROM alpine:3.21
