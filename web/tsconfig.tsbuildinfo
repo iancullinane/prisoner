@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/setuptests.ts","./src/types.ts","./src/vite-env.d.ts","./src/api/players.test.ts","./src/api/players.ts","./src/components/playermanager.test.tsx","./src/components/playermanager.tsx"],"version":"5.9.3"}
