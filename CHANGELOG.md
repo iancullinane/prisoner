@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.3.0](https://github.com/iancullinane/prisoner/compare/v1.2.1...v1.3.0) (2026-07-06)
+
+
+### Features
+
+* add web frontend ([bece50c](https://github.com/iancullinane/prisoner/commit/bece50c104da0e27e30fbfe894b0333fc9d54a5b))
+
+
+### Bug Fixes
+
+* add analysis page ([1450979](https://github.com/iancullinane/prisoner/commit/1450979bccab70b951deb8bcc1bf72503dba46f6))
+* add pages deploy of ANALYSIS.html ([aa42a74](https://github.com/iancullinane/prisoner/commit/aa42a746c6b2365b2e3aeb0fa88d7238a429abf4))
+* add run dev for holistic testing ([1f7e6e6](https://github.com/iancullinane/prisoner/commit/1f7e6e68ada5b5d013ae166a418383397b61bf79))
+* build `sqlc` files in the container ([4c3c91a](https://github.com/iancullinane/prisoner/commit/4c3c91a5668862b40b45d6726ba1e726cc300be9))
+* handle CORS on server side ([ce9731e](https://github.com/iancullinane/prisoner/commit/ce9731ec040a50a83c9ea5ac1517c4a41e4e4d67))
+* publish to ecr on like everything ([b2f25cd](https://github.com/iancullinane/prisoner/commit/b2f25cd7daaaef20760fc03c1e208c1272816283))
+* update ECR repository to adventurebrave ([d20990e](https://github.com/iancullinane/prisoner/commit/d20990e81a3303306837d476fa36990d41f85c67))
+
 ## [1.2.1](https://github.com/iancullinane/prisoner/compare/v1.2.0...v1.2.1) (2026-07-06)
 
 
