@@ -7,3 +7,22 @@ services:
       POSTGRES_DB: prisoner
     ports:
       - "5432:5432"
+
+  api:
+    build: .
+    ports:
+      - "5001:5001"
+    command: ["server"]
+
+  web:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - ./web:/app
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: http://localhost:5001
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - api

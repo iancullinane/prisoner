@@ -1,4 +1,7 @@
-.PHONY: build docker compose-up compose-down compose-reset test test-integration run-server-postgres
+.PHONY: build docker compose-up compose-down compose-reset test test-integration run-server-postgres run-server-memory run-server run-web dev
+
+STORE ?= memory
+POSTGRES_DATABASE_URL := postgres://prisoner:prisoner@127.0.0.1:5432/prisoner?sslmode=disable
 
 build:
 	mkdir -p bin
@@ -43,4 +46,21 @@ start-db: compose-up
 	@until docker compose exec -T db pg_isready -U prisoner -d prisoner >/dev/null 2>&1; do sleep 0.3; done
 
 run-server-postgres: build start-db
-	DATABASE_URL='postgres://prisoner:prisoner@127.0.0.1:5432/prisoner?sslmode=disable' ./bin/prisoner --store postgres server
+	DATABASE_URL='$(POSTGRES_DATABASE_URL)' ./bin/prisoner --store postgres server
+
+run-server-memory: build
+	./bin/prisoner server
+
+# Runs the server against STORE (memory, file, or postgres; default memory),
+# e.g. `make run-server STORE=file` or `make dev STORE=postgres`.
+run-server: build
+ifeq ($(STORE),postgres)
+run-server: start-db
+endif
+	$(if $(filter postgres,$(STORE)),DATABASE_URL='$(POSTGRES_DATABASE_URL)') ./bin/prisoner --store $(STORE) server
+
+run-web:
+	cd web && npm install && npm run dev
+
+dev:
+	$(MAKE) -j2 run-server run-web STORE=$(STORE)
