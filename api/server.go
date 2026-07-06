@@ -49,9 +49,29 @@ func NewPlayerServer(logger *slog.Logger, playerStore types.PlayerStore, history
 	router.Handle("GET /history/{id}", http.HandlerFunc(p.historyHandler))
 	router.Handle("POST /play", http.HandlerFunc(p.playHandler))
 
-	p.Handler = router
+	p.Handler = withCORS(router)
 
 	return p
+}
+
+// withCORS allows a browser-based frontend running on a different origin
+// (e.g. the Vite dev server) to call this API. The origin is reflected back
+// rather than hardcoded so it works regardless of where the frontend runs.
+func withCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if origin := r.Header.Get("Origin"); origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "content-type")
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 // MARK: Handlers
