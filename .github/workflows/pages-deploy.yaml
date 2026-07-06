@@ -1,0 +1,51 @@
+name: Deploy Analysis to Pages
+
+on:
+  push:
+    branches:
+      - icullinane/version2
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for ANALYSIS.html
+        id: check
+        run: |
+          if [ -f ./ANALYSIS.html ]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Prepare Pages site
+        if: steps.check.outputs.found == 'true'
+        run: |
+          mkdir -p _site
+          cp ANALYSIS.html _site/index.html
+
+      - name: Upload Pages artifact
+        if: steps.check.outputs.found == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        if: steps.check.outputs.found == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
