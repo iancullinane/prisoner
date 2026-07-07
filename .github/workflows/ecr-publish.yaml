@@ -43,20 +43,24 @@ jobs:
             echo "tags=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${SHORT_SHA},${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build Docker image
-        run: |
-          docker build -t prisoner:local .
+      # registers QEMU emulators so the x86 runner can execute arm64 steps
+      # (needed for the `apk add` in the arm64 runtime stage)
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Tag and push Docker image
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-        run: |
-          IFS=',' read -ra TAG_ARRAY <<< "$TAGS"
-          for tag in "${TAG_ARRAY[@]}"; do
-            echo "Tagging and pushing: $tag"
-            docker tag prisoner:local "$tag"
-            docker push "$tag"
-          done
+      # sets up the buildx builder that can produce multi-arch manifest lists
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # builds both arches and pushes the manifest list under all tags in one step
+      - name: Build and push (multi-arch)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          provenance: false
 
       - name: Image digest
         run: |
