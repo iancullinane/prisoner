@@ -3,6 +3,11 @@
 
 # prisoner
 
+See [iancullinane.github.io/prisoner](https://iancullinane.github.io/prisoner/) for notes on codebase written by [freud](https://github.com/iancullinane/freud) my LLM code analysis skill (In development).
+
+>[!NOTE]
+>The Go code is written _mostly_ by hand and AI in this project is only used for specific pieces, like the analysis page and the web fronted (As I am not a webdev...).
+
 This is v2 of my personal repo that is both portfolio project (I try to use different features of Go for professional development) and fun side project. 
 
 This both a library to model a [Prisoner's Dilemma](https://en.wikipedia.org/wiki/Prisoner%27s_dilemma), a CLI tool to execute those models as different kinds of game (including group runs like round robin) and different "peronalities" that can play, and a deployment that allows you to play against real humans (or are they?).
