@@ -29,6 +29,21 @@ var (
 	playerID2, _ = uuid.Parse("22222222-2222-bbbb-3333-333333333333")
 )
 
+// MARK: Healthz test
+
+func TestHealthz(t *testing.T) {
+	server := NewPlayerServer(testLogger(), &StubPlayerStore{}, &StubHistoryStore{})
+
+	request, _ := http.NewRequest(http.MethodGet, "/healthz", nil)
+	response := httptest.NewRecorder()
+
+	server.ServeHTTP(response, request)
+
+	assertResponseStatus(t, response.Code, http.StatusOK)
+	assertResponseBody(t, response.Body.String(), "ok")
+
+}
+
 // MARK: GET test
 
 func TestPlayers_Get(t *testing.T) {

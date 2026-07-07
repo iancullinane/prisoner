@@ -33,12 +33,10 @@ func NewPlayerServer(logger *slog.Logger, playerStore types.PlayerStore, history
 	p.playerStore = playerStore
 	p.historyStore = historyStore
 
-	/*
-		2026-06-05
-		As of the player needs to exist, and be passed as a parameter into the url
-	*/
-
 	router := http.NewServeMux()
+	router.Handle("GET /healthz", http.HandlerFunc(p.healthzHandler))
+
+	// business routes
 	router.Handle("GET /players", http.HandlerFunc(p.listPlayersHandler))
 	// Get a player by id
 	router.Handle("GET /players/{name}", http.HandlerFunc(p.playersHandler))
@@ -72,6 +70,12 @@ func withCORS(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+// healthzHandler is a K8s liveness probe: 200 while the process serves.
+func (p *PlayerServer) healthzHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "ok")
 }
 
 // MARK: Handlers
