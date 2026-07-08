@@ -1,0 +1,71 @@
+name: Build and Push Web to ECR
+
+on:
+  push:
+    branches: [icullinane/version2]   # publish when the SPA changes on the default branch
+    paths: ['web/**']                  # only fire on frontend source changes
+  workflow_dispatch:                   # manual re-publish
+
+# One publish per ref; cancel a superseded build.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: us-east-2
+  ECR_REPOSITORY: prisoner-web
+
+jobs:
+  build-and-push:
+    name: Build and Push Web Image
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write        # mint the OIDC token used to assume the AWS role
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Extract metadata
+        id: meta
+        run: |
+          # The k8s Deployment pulls :latest; :<short-sha> is an immutable pin.
+          # Versioned :v* release images aren't wired for the frontend yet (paths
+          # filters skip on tags); add a runtime change-filter if you want them.
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          echo "tags=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${SHORT_SHA},${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
+
+      # registers QEMU emulators so the x86 runner can build the arm64 image
+      # (the frontend also runs on the arm64 t4g nodes)
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # buildx builder capable of producing multi-arch manifest lists
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # build both arches from web/ and push the manifest list under all tags
+      - name: Build and push (multi-arch)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./web
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          provenance: false
+
+      - name: Image digest
+        run: |
+          echo "Web image pushed!"
+          echo "Tags: ${{ steps.meta.outputs.tags }}"
