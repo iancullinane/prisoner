@@ -2,8 +2,8 @@ name: Build and Push Web to ECR
 
 on:
   push:
-    branches: [icullinane/version2]   # publish when the SPA changes on the default branch
-    paths: ['web/**']                  # only fire on frontend source changes
+    branches: [icullinane/version2]   # publish on default-branch merges
+    tags: ['v*']                       # and on release tags (versioned image)
   workflow_dispatch:                   # manual re-publish
 
 # One publish per ref; cancel a superseded build.
@@ -16,8 +16,31 @@ env:
   ECR_REPOSITORY: prisoner-web
 
 jobs:
+  # Cheap gate: did the frontend source actually change? Lets us skip the heavy
+  # image build on backend-only merges. Tag / dispatch runs bypass it via `if:`.
+  # (No base ref on a tag push → paths-filter marks everything changed & succeeds.)
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read         # paths-filter reads the push diff via the API
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3.0.3
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'web/**'
+
   build-and-push:
     name: Build and Push Web Image
+    needs: changes
+    # build when web/ changed, OR it's a release tag, OR a manual run
+    if: >-
+      needs.changes.outputs.web == 'true' ||
+      startsWith(github.ref, 'refs/tags/') ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       id-token: write        # mint the OIDC token used to assume the AWS role
@@ -40,11 +63,15 @@ jobs:
       - name: Extract metadata
         id: meta
         run: |
-          # The k8s Deployment pulls :latest; :<short-sha> is an immutable pin.
-          # Versioned :v* release images aren't wired for the frontend yet (paths
-          # filters skip on tags); add a runtime change-filter if you want them.
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "tags=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${SHORT_SHA},${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
+          # Tag push -> :<version> + :latest ; branch push -> :<short-sha> + :latest.
+          # The k8s Deployment pulls :latest; the other tag is an immutable pin.
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+            echo "tags=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${VERSION},${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
+          else
+            SHORT_SHA=$(git rev-parse --short HEAD)
+            echo "tags=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${SHORT_SHA},${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
+          fi
 
       # registers QEMU emulators so the x86 runner can build the arm64 image
       # (the frontend also runs on the arm64 t4g nodes)

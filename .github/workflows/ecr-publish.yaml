@@ -16,8 +16,32 @@ env:
   ECR_REPOSITORY: prisoner
 
 jobs:
+  # Cheap gate: did any NON-frontend source change? Lets us skip the heavy image
+  # build on web-only merges. Tag / dispatch runs bypass it via `if:`.
+  # (No base ref on a tag push → paths-filter marks everything changed & succeeds.)
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read         # paths-filter reads the push diff via the API
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3.0.3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - '**'          # anything…
+              - '!web/**'      # …except the frontend
+
   build-and-push:
     name: Build and Push Docker Image
+    needs: changes
+    # build when non-web source changed, OR it's a release tag, OR a manual run
+    if: >-
+      needs.changes.outputs.backend == 'true' ||
+      startsWith(github.ref, 'refs/tags/') ||
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
