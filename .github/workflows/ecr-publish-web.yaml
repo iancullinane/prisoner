@@ -1,9 +1,9 @@
-name: Build and Push to ECR
+name: Build and Push Web to ECR
 
 on:
   push:
-    branches: [icullinane/version2]   # publish :sha + :latest on merge
-    tags: ['v*']                       # publish :version + :latest on release
+    branches: [icullinane/version2]   # publish on default-branch merges
+    tags: ['v*']                       # and on release tags (versioned image)
   workflow_dispatch:                   # manual re-publish
 
 # One publish per ref; cancel a superseded build.
@@ -13,38 +13,37 @@ concurrency:
 
 env:
   AWS_REGION: us-east-2
-  ECR_REPOSITORY: prisoner
+  ECR_REPOSITORY: prisoner-web
 
 jobs:
-  # Cheap gate: did any NON-frontend source change? Lets us skip the heavy image
-  # build on web-only merges. Tag / dispatch runs bypass it via `if:`.
+  # Cheap gate: did the frontend source actually change? Lets us skip the heavy
+  # image build on backend-only merges. Tag / dispatch runs bypass it via `if:`.
   # (No base ref on a tag push → paths-filter marks everything changed & succeeds.)
   changes:
     runs-on: ubuntu-latest
     permissions:
       contents: read         # paths-filter reads the push diff via the API
     outputs:
-      backend: ${{ steps.filter.outputs.backend }}
+      web: ${{ steps.filter.outputs.web }}
     steps:
       - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3.0.3
         id: filter
         with:
           filters: |
-            backend:
-              - '**'          # anything…
-              - '!web/**'      # …except the frontend
+            web:
+              - 'web/**'
 
   build-and-push:
-    name: Build and Push Docker Image
+    name: Build and Push Web Image
     needs: changes
-    # build when non-web source changed, OR it's a release tag, OR a manual run
+    # build when web/ changed, OR it's a release tag, OR a manual run
     if: >-
-      needs.changes.outputs.backend == 'true' ||
+      needs.changes.outputs.web == 'true' ||
       startsWith(github.ref, 'refs/tags/') ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
+      id-token: write        # mint the OIDC token used to assume the AWS role
       contents: read
 
     steps:
@@ -64,7 +63,8 @@ jobs:
       - name: Extract metadata
         id: meta
         run: |
-          # Generate tags based on git ref
+          # Tag push -> :<version> + :latest ; branch push -> :<short-sha> + :latest.
+          # The k8s Deployment pulls :latest; the other tag is an immutable pin.
           if [[ $GITHUB_REF == refs/tags/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/}
             echo "tags=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${VERSION},${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
@@ -73,20 +73,20 @@ jobs:
             echo "tags=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${SHORT_SHA},${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
           fi
 
-      # registers QEMU emulators so the x86 runner can execute arm64 steps
-      # (needed for the `apk add` in the arm64 runtime stage)
+      # registers QEMU emulators so the x86 runner can build the arm64 image
+      # (the frontend also runs on the arm64 t4g nodes)
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      # sets up the buildx builder that can produce multi-arch manifest lists
+      # buildx builder capable of producing multi-arch manifest lists
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # builds both arches and pushes the manifest list under all tags in one step
+      # build both arches from web/ and push the manifest list under all tags
       - name: Build and push (multi-arch)
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./web
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -94,5 +94,5 @@ jobs:
 
       - name: Image digest
         run: |
-          echo "Image pushed successfully!"
+          echo "Web image pushed!"
           echo "Tags: ${{ steps.meta.outputs.tags }}"
