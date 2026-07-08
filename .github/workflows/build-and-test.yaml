@@ -2,7 +2,14 @@ name: Build and Test
 
 on:
   push:
-  pull_request:
+    branches: [icullinane/version2]   # CI on merge to the default branch
+  pull_request:                        # CI on PRs (feature branches)
+
+# Cancel an in-progress run when a newer commit lands on the same ref, so
+# rapid pushes don't stack up redundant CI jobs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-and-test:

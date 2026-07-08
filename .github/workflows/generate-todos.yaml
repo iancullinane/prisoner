@@ -1,6 +1,8 @@
 name: Run TODO to Issue
 
-on: [push]
+on:
+  push:
+    branches: [icullinane/version2]   # only mint issues from the default branch
 
 jobs:
   run-todo-to-issue:
