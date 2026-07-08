@@ -22,11 +22,14 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     permissions:
-      contents: read         # paths-filter reads the push diff via the API
+      contents: read         # checkout + paths-filter read the repo
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
     steps:
-      - uses: dorny/paths-filter@d1c1ffe0248fe513906c8e24db8ea791d46f8590 # v3.0.3
+      # On PUSH events paths-filter diffs with local git, so the repo must be
+      # checked out — without this it errors "fatal: not a git repository".
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
         id: filter
         with:
           filters: |
