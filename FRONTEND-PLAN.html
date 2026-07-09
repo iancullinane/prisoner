@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>prisoner — Frontend Plan</title>
+<style>
+@font-face{font-family:'US Army'; src:url('web/src/assets/fonts/USArmy-Bold.ttf') format('truetype'); font-weight:700;}
+@font-face{font-family:'US Army'; src:url('web/src/assets/fonts/USArmy-Regular.ttf') format('truetype'); font-weight:400;}
+@font-face{font-family:'US Army'; src:url('web/src/assets/fonts/USArmy-Light.ttf') format('truetype'); font-weight:300;}
+:root{
+  --bg0:#000000; --bg1:#0a0a0a; --bg2:#111611; --bg3:#1c231c;
+  --green:#39ff14; --green-dim:#1f9e0c; --green-dark:#0d3306;
+  --fg0:#d8ffd0; --fg1:#a8d9a0; --fg2:#7a9a85; --fg3:#4d5f52;
+  --orange:#ff6a1a; --orange-dim:#b8480c; --orange-dark:#3d1704;
+  --red:#ff3b3b; --amber:#ffb020;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg0); color:var(--fg1);
+  font-family:'US Army','SF Mono',Menlo,Consolas,monospace;
+  line-height:1.6;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(57,255,20,0.025) 0px, rgba(57,255,20,0.025) 1px, transparent 1px, transparent 3px);
+}
+header{
+  background:var(--bg1);
+  padding:3rem 2rem;
+  border-bottom:2px solid var(--green);
+  border-image:linear-gradient(90deg, var(--green) 0%, var(--green) 70%, var(--orange) 100%) 1;
+  box-shadow:0 0 24px -6px var(--green-dim);
+}
+header h1{
+  margin:0 0 .5rem 0; font-size:2.2rem; color:var(--green);
+  text-shadow:0 0 8px var(--green-dim), 0 0 2px var(--green);
+  letter-spacing:.04em; font-weight:700;
+}
+header p{margin:0; color:var(--fg2); max-width:64ch;}
+.status{
+  display:inline-block; margin-top:1rem; padding:.3rem .9rem; border-radius:2px;
+  font-weight:bold; font-size:.8rem; letter-spacing:.08em; text-transform:uppercase;
+  background:var(--bg2); color:var(--green); border:1px solid var(--green-dim);
+}
+.status::before{content:'● '; }
+.container{max-width:1150px; margin:0 auto; padding:2rem;}
+h2{
+  color:var(--green); border-bottom:1px solid var(--green-dark);
+  padding-bottom:.4rem; margin-top:3rem; font-size:1.4rem;
+  letter-spacing:.05em; text-transform:uppercase;
+}
+h2::before{content:'// '; color:var(--fg3);}
+h3{color:var(--fg0); margin-top:2rem; letter-spacing:.02em;}
+h3::before{content:'> '; color:var(--green-dim);}
+h4{color:var(--green);}
+a{color:var(--green); text-decoration:underline; text-decoration-color:var(--green-dark);}
+a:hover{text-decoration-color:var(--green);}
+code, .inline-code{
+  background:var(--bg2); color:var(--green); padding:.1rem .4rem;
+  border:1px solid var(--bg3); border-radius:2px; font-size:.9em;
+}
+pre{
+  background:var(--bg1); border:1px solid var(--green-dark); border-left:3px solid var(--green);
+  padding:1rem; border-radius:2px; overflow-x:auto;
+}
+pre code{background:none; border:none; color:var(--fg0); padding:0;}
+.card-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:1rem; margin:1.5rem 0;
+}
+.card{
+  background:var(--bg1); border:1px solid var(--bg3); border-radius:2px;
+  padding:1.1rem; transition:border-color .15s, box-shadow .15s;
+}
+.card:hover{border-color:var(--green); box-shadow:0 0 14px -4px var(--green-dim);}
+.card h4{margin:0 0 .5rem 0; color:var(--green);}
+.card p{margin:0; color:var(--fg2); font-size:.92rem;}
+table.plan{width:100%; border-collapse:collapse; margin:1rem 0;}
+table.plan th, table.plan td{
+  padding:.6rem .8rem; border-bottom:1px solid var(--bg3); text-align:left; font-size:.92rem; vertical-align:top;
+}
+table.plan th{color:var(--green); background:var(--bg1); text-transform:uppercase; font-size:.78rem; letter-spacing:.05em;}
+.swatch{display:inline-flex; align-items:center; gap:.5rem; margin:.3rem 1.2rem .3rem 0;}
+.swatch .dot{width:1rem; height:1rem; border-radius:2px; border:1px solid var(--bg3); display:inline-block;}
+.box{border-left:3px solid; padding:1rem 1.2rem; margin:1rem 0; border-radius:0 2px 2px 0; background:var(--bg1);}
+.box.success{border-color:var(--green);}
+.box.warning{border-color:var(--orange);}
+.box.warning h4{color:var(--orange);}
+.box.info{border-color:var(--fg2);}
+.box.danger{border-color:var(--red);}
+.box h4{margin-top:0;}
+.box ul{margin:.3rem 0 0 0; padding-left:1.3rem;}
+.status-badge{
+  display:inline-block; padding:.15rem .6rem; border-radius:2px; font-weight:bold;
+  font-size:.72rem; letter-spacing:.05em; text-transform:uppercase; border:1px solid;
+}
+.status-outofscope{background:var(--bg2); color:var(--fg3); border-color:var(--bg3);}
+.status-alert{background:var(--orange-dark); color:var(--orange); border-color:var(--orange-dim);}
+.nav-active{color:var(--orange); border-left-color:var(--orange);}
+.toc{background:var(--bg1); border:1px solid var(--bg3); border-radius:2px; padding:1.2rem 1.5rem;}
+.toc strong{color:var(--green);}
+.toc ul{margin:0; padding-left:1.3rem; columns:2;}
+.toc a{text-decoration:none;}
+.toc a:hover{text-decoration:underline;}
+footer{text-align:center; color:var(--fg3); padding:2rem; font-size:.85rem; border-top:1px solid var(--bg3);}
+::selection{background:var(--green-dim); color:#000;}
+@media (max-width:700px){.toc ul{columns:1;}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>PRISONER :: FRONTEND PLAN</h1>
+  <p>Design for turning <code>web/</code> into a multi-page SPA: Players, History, and Play, with a black-background cyberpunk-terminal look and a US Army display font.</p>
+  <span class="status">approved — spec 2026-07-09</span>
+</header>
+
+<div class="container">
+
+<div class="toc">
+<strong>Contents</strong>
+<ul>
+  <li><a href="#goal">Goal</a></li>
+  <li><a href="#architecture">Architecture</a></li>
+  <li><a href="#versioning">API Versioning &amp; Infra</a></li>
+  <li><a href="#theme">Visual Theme</a></li>
+  <li><a href="#components">Components &amp; Data Flow</a></li>
+  <li><a href="#errors">Error Handling</a></li>
+  <li><a href="#testing">Testing</a></li>
+  <li><a href="#outofscope">Out of Scope</a></li>
+</ul>
+</div>
+
+<h2 id="goal">Goal</h2>
+<p>
+Turn <code>web/</code> from a single Players screen into a small multi-page SPA covering Players, History, and Play, with a cyberpunk-terminal visual identity (black background, neon-green accent, US Army display font) and a responsive left-sidebar navigation.
+</p>
+
+<h2 id="architecture">Architecture</h2>
+<div class="card-grid">
+  <div class="card"><h4>Routing</h4><p><code>react-router-dom</code>. Routes: <code>/players</code> (default), <code>/history</code>, <code>/play</code>.</p></div>
+  <div class="card"><h4>Styling</h4><p>Tailwind CSS v4 via <code>@tailwindcss/vite</code>, replacing ad-hoc CSS. Content globs over <code>src/**/*.tsx</code>.</p></div>
+  <div class="card"><h4>Layout</h4><p><code>Layout</code> renders a <code>Sidebar</code> (fixed left nav on desktop, collapses to a top bar below <code>md</code>) + <code>&lt;main&gt;</code> with <code>&lt;Outlet /&gt;</code>. Active nav item highlighted in <span class="nav-active" style="border-left:2px solid; padding-left:.3rem;">orange</span>.</p></div>
+  <div class="card"><h4>Fonts</h4><p>US Army Bold/Regular/Light <code>.ttf</code> in <code>web/src/assets/fonts/</code>, loaded via <code>@font-face</code> in <code>src/theme.css</code>, registered as <code>font-army</code>.</p></div>
+  <div class="card"><h4>State</h4><p>Each page fetches independently on mount — no shared player context. Roster is small; redundant fetches are cheap.</p></div>
+</div>
+
+<h2 id="versioning">API Versioning &amp; Infra</h2>
+<div class="box danger">
+<h4><span class="status-badge status-alert">collision</span> SPA routes vs. the deployed Ingress</h4>
+<p><code>sheeta-games/k8s/backend-ingress.yaml</code> currently routes the exact path prefixes <code>/players</code>, <code>/play</code>, and <code>/history</code> straight to the Go backend Service, bypassing the SPA entirely. That collides head-on with the planned SPA routes: a hard refresh or deep link to <code>/history</code> would hit the backend and get raw JSON instead of the React app, and <code>/play</code> has no <code>GET</code> handler at all (only <code>POST</code>) — it would 404.</p>
+</div>
+<div class="box success">
+<h4>Fix: version the API under <code>/api/v1</code></h4>
+<p>All business routes in <code>api/server.go</code> move to <code>/api/v1/players</code>, <code>/api/v1/players/{name}</code>, <code>/api/v1/history</code>, <code>/api/v1/history/{id}</code>, <code>/api/v1/play</code>. <code>/healthz</code> stays unprefixed — ALB target-group health checks hit the pod port directly via the <code>alb.ingress.kubernetes.io/healthcheck-path</code> annotation, never through an Ingress path rule. Frontend API modules prefix their fetch paths with <code>/api/v1</code>; <code>VITE_API_BASE_URL</code> semantics are unchanged.</p>
+</div>
+<div class="box info">
+<h4>Infra follow-up (separate repo: <code>sheeta-games</code>)</h4>
+<p>The Ingress's three path rules collapse into <strong>one</strong>: <code>path: /api</code>, <code>pathType: Prefix</code> → <code>prisoner-backend</code>. Prefix matching is segment-based, so <code>/api</code> also matches <code>/api/v1/players</code> — any future endpoint under <code>/api/v1/*</code> routes correctly with zero further Ingress edits. The <code>/</code> catch-all → frontend is unchanged, and <code>/players</code>/<code>/history</code>/<code>/play</code> now fall through to the SPA as intended.</p>
+<p><strong>Deploy sequencing:</strong> the versioned backend/frontend images and the Ingress change must land together — deploying one without the other 404s API calls for the window in between. Ships as its own PR in <code>sheeta-games</code>, coordinated with the <code>prisoner</code> release.</p>
+</div>
+
+<h2 id="theme">Visual Theme</h2>
+<p>Neon-green terminal on black, with a burnt-orange secondary accent for warnings, destructive actions, and the active nav item — a hazard/alert hue that reads as a natural companion to phosphor green rather than competing with it.</p>
+<div class="swatch"><span class="dot" style="background:#0a0a0a"></span>Page background <code>#0a0a0a</code></div>
+<div class="swatch"><span class="dot" style="background:#000"></span>Chrome / sidebar <code>#000</code></div>
+<div class="swatch"><span class="dot" style="background:#39ff14"></span>Primary accent (links, buttons, focus) <code>#39ff14</code></div>
+<div class="swatch"><span class="dot" style="background:#ff6a1a"></span>Secondary accent (warnings, danger, active nav) <code>#ff6a1a</code></div>
+<div class="swatch"><span class="dot" style="background:#7a9a85"></span>Secondary / disabled text <code>#7a9a85</code></div>
+<pre><code>@font-face { font-family: 'US Army'; src: url('/assets/fonts/USArmy-Bold.ttf'); font-weight: 700; }
+@font-face { font-family: 'US Army'; src: url('/assets/fonts/USArmy-Regular.ttf'); font-weight: 400; }
+@font-face { font-family: 'US Army'; src: url('/assets/fonts/USArmy-Light.ttf'); font-weight: 300; }
+/* headings/nav → font-army; body falls back to system/monospace stack */</code></pre>
+
+<h2 id="components">Components &amp; Data Flow</h2>
+
+<table class="plan">
+<thead><tr><th>Page</th><th>Fetches</th><th>Behavior</th></tr></thead>
+<tbody>
+<tr>
+  <td><code>PlayersPage</code></td>
+  <td><code>GET /api/v1/players</code></td>
+  <td>Thin wrapper around existing <code>PlayerManager</code> (list + create-player form), restyled with Tailwind.</td>
+</tr>
+<tr>
+  <td><code>HistoryPage</code></td>
+  <td><code>GET /api/v1/history</code>, optional <code>GET /api/v1/history/{id}</code></td>
+  <td>Table of interactions (player IDs, moves, played-at). Optional player filter <code>&lt;select&gt;</code> sourced from <code>GET /api/v1/players</code>.</td>
+</tr>
+<tr>
+  <td><code>PlayPage</code></td>
+  <td><code>GET /api/v1/players</code>, <code>POST /api/v1/play</code></td>
+  <td>Two dropdowns (Player A/B) + Cooperate/Betray button pairs per side. Submit disabled while in-flight; shows returned scores on success.</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Wire types (new frontend mirrors of Go JSON shapes)</h3>
+<pre><code>// camelCase everywhere — matches internal/types.Interaction's convention
+Interaction { id, playerA, playerB, playerAMove, playerBMove, playedAt }
+
+// api.PlayRequest / api.PlayResponse (fixed from snake_case → camelCase)
+PlayRequest  { playerA, playerB, playerAMove, playerBMove }
+PlayResponse { id, playerAScore, playerBScore }
+
+Move   = "C" | "B"
+Result = "T" | "R" | "P" | "S"   // Temptation, Reward, Punish, Sucker</code></pre>
+
+<h3>New API modules</h3>
+<p>Same pattern as existing <code>api/players.ts</code>: fetch, throw <code>Error</code> with status on <code>!response.ok</code>, return parsed JSON.</p>
+<ul>
+  <li><code>api/history.ts</code> — <code>listHistory()</code>, <code>listHistoryForPlayer(id)</code></li>
+  <li><code>api/play.ts</code> — <code>playRound(req): Promise&lt;PlayResponse&gt;</code></li>
+</ul>
+
+<h2 id="errors">Error Handling</h2>
+<div class="box info">
+<h4>Pattern</h4>
+<p>Each page owns local <code>error: string | null</code> state (same as <code>PlayerManager</code> today), rendered as <code>&lt;p role="alert"&gt;</code>. No global error boundary this pass.</p>
+</div>
+<div class="box warning">
+<h4><span class="status-badge status-alert">guard</span> Double-submit</h4>
+<p><code>PlayPage</code> disables its submit button for the duration of the in-flight request, re-enabling on both success and failure.</p>
+</div>
+<div class="box success">
+<h4>Self-play guard</h4>
+<p>Server already enforces player-cannot-play-itself (400). UI additionally disables submit client-side when Player A === Player B to skip the round-trip.</p>
+</div>
+
+<h2 id="testing">Testing</h2>
+<p>Test-first (TDD) for all new code, matching existing <code>vitest</code> + <code>@testing-library/react</code> setup — <code>players.test.ts</code> and <code>PlayerManager.test.tsx</code> are the reference patterns.</p>
+<table class="plan">
+<thead><tr><th>File</th><th>Covers</th></tr></thead>
+<tbody>
+<tr><td><code>api/history.test.ts</code></td><td><code>listHistory</code> / <code>listHistoryForPlayer</code> success + non-ok-response</td></tr>
+<tr><td><code>api/play.test.ts</code></td><td><code>playRound</code> success + non-ok-response</td></tr>
+<tr><td><code>components/Sidebar.test.tsx</code></td><td>Renders nav links, marks active route</td></tr>
+<tr><td><code>components/HistoryPage.test.tsx</code></td><td>Loads/renders interactions, surfaces fetch errors</td></tr>
+<tr><td><code>components/PlayPage.test.tsx</code></td><td>Loads dropdowns, submits play, renders score, disables while pending, surfaces errors</td></tr>
+<tr><td><code>api/server_test.go</code> (backend, existing)</td><td>Update paths to <code>/api/v1/players</code>, <code>/api/v1/history</code>, <code>/api/v1/play</code>; <code>/healthz</code> unchanged</td></tr>
+</tbody>
+</table>
+
+<h2 id="outofscope">Out of Scope</h2>
+<ul>
+<li><span class="status-badge status-outofscope">cut</span> Shared/global player state across pages</li>
+<li><span class="status-badge status-outofscope">cut</span> Editing/deleting players or history entries</li>
+<li><span class="status-badge status-outofscope">cut</span> Real-time updates (polling/websockets) for history</li>
+</ul>
+
+</div>
+
+<footer>
+  Mirrors <code>docs/superpowers/specs/2026-07-09-web-spa-feature-rich-design.md</code> — keep both in sync as the plan evolves.
+</footer>
+
+</body>
+</html>
