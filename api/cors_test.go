@@ -14,7 +14,7 @@ func TestCORS_GetCarriesOriginHeader(t *testing.T) {
 	}
 	server := NewPlayerServer(testLogger(), &playerStore, nil)
 
-	request, _ := http.NewRequest(http.MethodGet, "/players", nil)
+	request, _ := http.NewRequest(http.MethodGet, "/api/v1/players", nil)
 	request.Header.Set("Origin", "http://localhost:5173")
 	response := httptest.NewRecorder()
 
@@ -30,7 +30,7 @@ func TestCORS_PreflightOptionsRequest(t *testing.T) {
 	playerStore := StubPlayerStore{}
 	server := NewPlayerServer(testLogger(), &playerStore, nil)
 
-	request, _ := http.NewRequest(http.MethodOptions, "/players", nil)
+	request, _ := http.NewRequest(http.MethodOptions, "/api/v1/players", nil)
 	request.Header.Set("Origin", "http://localhost:5173")
 	request.Header.Set("Access-Control-Request-Method", "POST")
 	response := httptest.NewRecorder()
