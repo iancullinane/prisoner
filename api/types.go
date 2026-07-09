@@ -6,14 +6,14 @@ import (
 )
 
 type PlayRequest struct {
-	PlayerA     uuid.UUID     `json:"player_a"`
-	PlayerB     uuid.UUID     `json:"player_b"`
-	PlayerAMove prisoner.Move `json:"player_a_move"`
-	PlayerBMove prisoner.Move `json:"player_b_move"`
+	PlayerA     uuid.UUID     `json:"playerA"`
+	PlayerB     uuid.UUID     `json:"playerB"`
+	PlayerAMove prisoner.Move `json:"playerAMove"`
+	PlayerBMove prisoner.Move `json:"playerBMove"`
 }
 
 type PlayResponse struct {
 	ID           uuid.UUID       `json:"id"`
-	PlayerAScore prisoner.Result `json:"player_a_score"`
-	PlayerBScore prisoner.Result `json:"player_b_score"`
+	PlayerAScore prisoner.Result `json:"playerAScore"`
+	PlayerBScore prisoner.Result `json:"playerBScore"`
 }
