@@ -14,7 +14,7 @@ describe("listPlayers", () => {
 
     const result = await listPlayers();
 
-    expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/\/players$/));
+    expect(fetch).toHaveBeenCalledWith(expect.stringMatching(/\/api\/v1\/players$/));
     expect(result).toEqual(players);
   });
 
@@ -41,7 +41,7 @@ describe("createPlayer", () => {
     const result = await createPlayer("Pepper");
 
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringMatching(/\/players\/Pepper$/),
+      expect.stringMatching(/\/api\/v1\/players\/Pepper$/),
       expect.objectContaining({ method: "POST" }),
     );
     expect(result).toEqual(player);
