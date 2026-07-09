@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "US Army";
+  src: url("./assets/fonts/USArmy-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "US Army";
+  src: url("./assets/fonts/USArmy-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "US Army";
+  src: url("./assets/fonts/USArmy-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+}
+
+@theme {
+  --font-army: "US Army", ui-monospace, SFMono-Regular, monospace;
+  --color-hacker-bg: #0a0a0a;
+  --color-hacker-chrome: #000000;
+  --color-hacker-green: #39ff14;
+  --color-hacker-orange: #ff6a1a;
+  --color-hacker-fg-muted: #7a9a85;
+}
+
+body {
+  background-color: var(--color-hacker-bg);
+  color: var(--color-hacker-green);
+}

@@ -1,0 +1,29 @@
+import { NavLink } from "react-router-dom";
+
+const links = [
+  { to: "/players", label: "Players" },
+  { to: "/history", label: "History" },
+  { to: "/play", label: "Play" },
+];
+
+export default function Sidebar() {
+  return (
+    <nav className="flex gap-4 border-b border-hacker-green/30 bg-hacker-chrome p-4 md:min-h-screen md:w-48 md:flex-col md:border-b-0 md:border-r">
+      {links.map((link) => (
+        <NavLink
+          key={link.to}
+          to={link.to}
+          className={({ isActive }) =>
+            `font-army px-2 py-1 uppercase tracking-wide ${
+              isActive
+                ? "border-l-2 border-hacker-orange text-hacker-orange"
+                : "text-hacker-green hover:text-hacker-orange"
+            }`
+          }
+        >
+          {link.label}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
