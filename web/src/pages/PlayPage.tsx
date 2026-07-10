@@ -60,11 +60,25 @@ export default function PlayPage() {
             </option>
           ))}
         </select>
-        <div role="group" aria-label="Move for A">
-          <button type="button" aria-pressed={moveA === "C"} onClick={() => setMoveA("C")}>
+        <div role="group" aria-label="Move for A" className="flex gap-2">
+          <button
+            type="button"
+            aria-pressed={moveA === "C"}
+            onClick={() => setMoveA("C")}
+            className={`border border-hacker-green px-3 py-1 ${
+              moveA === "C" ? "bg-hacker-green text-hacker-bg" : "text-hacker-green"
+            }`}
+          >
             Cooperate
           </button>
-          <button type="button" aria-pressed={moveA === "B"} onClick={() => setMoveA("B")}>
+          <button
+            type="button"
+            aria-pressed={moveA === "B"}
+            onClick={() => setMoveA("B")}
+            className={`border border-hacker-green px-3 py-1 ${
+              moveA === "B" ? "bg-hacker-green text-hacker-bg" : "text-hacker-green"
+            }`}
+          >
             Betray
           </button>
         </div>
@@ -83,11 +97,25 @@ export default function PlayPage() {
             </option>
           ))}
         </select>
-        <div role="group" aria-label="Move for B">
-          <button type="button" aria-pressed={moveB === "C"} onClick={() => setMoveB("C")}>
+        <div role="group" aria-label="Move for B" className="flex gap-2">
+          <button
+            type="button"
+            aria-pressed={moveB === "C"}
+            onClick={() => setMoveB("C")}
+            className={`border border-hacker-green px-3 py-1 ${
+              moveB === "C" ? "bg-hacker-green text-hacker-bg" : "text-hacker-green"
+            }`}
+          >
             Cooperate
           </button>
-          <button type="button" aria-pressed={moveB === "B"} onClick={() => setMoveB("B")}>
+          <button
+            type="button"
+            aria-pressed={moveB === "B"}
+            onClick={() => setMoveB("B")}
+            className={`border border-hacker-green px-3 py-1 ${
+              moveB === "B" ? "bg-hacker-green text-hacker-bg" : "text-hacker-green"
+            }`}
+          >
             Betray
           </button>
         </div>
