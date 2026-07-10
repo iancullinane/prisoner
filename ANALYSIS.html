@@ -123,6 +123,7 @@ footer{text-align:center; color:var(--gray); padding:2rem; font-size:.85rem;}
   <li><a href="#architecture">Architecture &amp; Dependencies</a></li>
   <li><a href="#flows">Flow Diagrams</a></li>
   <li><a href="#db">Database Schema</a></li>
+  <li><a href="#deployment">Deployment &amp; Platform Patterns</a></li>
   <li><a href="#review">Technical Review</a></li>
 </ul>
 </div>
@@ -166,10 +167,10 @@ Storage is pluggable — in-memory, flat JSON file, or Postgres — selected via
 <h3>Request/response shapes</h3>
 <pre><code>POST /play
 {
-  "player_a": "&lt;uuid&gt;", "player_b": "&lt;uuid&gt;",
-  "player_a_move": "C", "player_b_move": "B"
+  "playerA": "&lt;uuid&gt;", "playerB": "&lt;uuid&gt;",
+  "playerAMove": "C", "playerBMove": "B"
 }
-→ 201 { "id": "&lt;uuid&gt;", "player_a_score": "S", "player_b_score": "T" }</code></pre>
+→ 201 { "id": "&lt;uuid&gt;", "playerAScore": "S", "playerBScore": "T" }</code></pre>
 <p><code>Move</code> and <code>Result</code> are single-rune enums (<code>C</code>/<code>B</code>, <code>T</code>/<code>R</code>/<code>P</code>/<code>S</code>) that marshal to/from single-character JSON strings (<code>pkg/prisoner/prisoner.go</code>) via a shared generic <code>unmarshalRuneEnum</code>.</p>
 
 <h2 id="architecture">Architecture &amp; Dependencies</h2>
@@ -360,6 +361,134 @@ erDiagram
 <div class="box info">
 <h4>Migration safety model</h4>
 <p>The server process never runs migrations itself (documented deliberately in the README). <code>migrate</code> is a separate Cobra subcommand backed by embedded SQL (<code>db/embed.go</code>), invoked as a one-off task against the same container image — avoids concurrent DDL from multiple replicas and keeps the running server's DB role least-privilege.</p>
+</div>
+
+<h2 id="deployment">Deployment &amp; Platform Patterns</h2>
+<p>
+Beyond <code>docker-compose</code> for local dev, <code>prisoner</code> runs in production on <strong>AWS EKS</strong>, provisioned by a sibling <strong>AWS CDK</strong> repo (<code>sheeta-games</code>). The split is deliberate: the app repo stays lean and self-contained, while <em>all</em> Kubernetes manifests and cloud infrastructure live in <code>sheeta-games</code>. CDK owns the cluster and platform add-ons; application workloads are plain <code>kubectl</code> YAML applied by hand. This section documents the patterns that connect the two.
+</p>
+
+<div class="box info">
+<h4>What the <code>prisoner</code> repo contributes to be "deployable"</h4>
+<ul>
+<li><strong>Multi-arch images</strong> — the Dockerfile cross-compiles (<code>GOOS/GOARCH=$TARGETOS/$TARGETARCH</code>) and CI builds <code>linux/amd64,linux/arm64</code> via <code>buildx</code>, because the nodes are arm64 Graviton (<code>t4g</code>).</li>
+<li><strong>A dependency-free <code>/healthz</code></strong> — returns 200 without touching the DB; used for both k8s probes and the ALB target-group health check.</li>
+<li><strong>Embedded migrations</strong> — <code>migrate up</code> ships schema inside the binary (<code>goose.SetBaseFS</code>), so a migration Job needs no mounted files.</li>
+<li><strong>Runtime store selection</strong> — the same image runs memory or Postgres via <code>--store</code>, so the DB cutover is a manifest change, not a rebuild.</li>
+<li><strong>Same-origin SPA build</strong> — <code>VITE_API_BASE_URL</code> defaults empty, so the frontend calls relative <code>/players</code>, making the image environment- and domain-agnostic.</li>
+</ul>
+</div>
+
+<h3>Container &amp; image strategy</h3>
+<div class="card-grid">
+  <div class="card"><h4>Backend image</h4><p>Multi-stage Alpine, cross-compiled multi-arch. Built + pushed to ECR <code>prisoner:latest</code> by GitHub Actions via OIDC (no static keys).</p></div>
+  <div class="card"><h4>Frontend image</h4><p>Separate <code>nginx</code> image (<code>prisoner-web</code>) serving the Vite build with an SPA <code>try_files</code> fallback and its own <code>/healthz</code>. The backend stays API-only.</p></div>
+  <div class="card"><h4>Moving tags</h4><p>Both run <code>:latest</code> with <code>imagePullPolicy: Always</code>; a new build is rolled in via <code>kubectl rollout restart</code>.</p></div>
+  <div class="card"><h4>CI cross-trigger guard</h4><p>The two publish workflows use a runtime <code>dorny/paths-filter</code> gate so a <code>web/**</code>-only change doesn't rebuild the Go image (and vice-versa); tags/dispatch always build.</p></div>
+</div>
+
+<h3>Platform provisioning (CDK, three stacks)</h3>
+<div class="card-grid">
+  <div class="card"><h4>Foundation</h4><p>VPC (public + private-with-egress), the Route53 hosted zone, and a wildcard <code>*.adventurebrave.com</code> ACM cert. Shared primitives, exposed as CDK refs.</p></div>
+  <div class="card"><h4>Database</h4><p>RDS Postgres (private, non-public), its credentials Secret, and the DB security group (bastion-only until wired to EKS).</p></div>
+  <div class="card"><h4>Platform</h4><p>The <code>eks.Cluster</code> (stable construct), an arm64 managed node group (AL2023), EKS <em>access entries</em> (not <code>aws-auth</code>), and every IRSA/Helm add-on below.</p></div>
+</div>
+<p>Platform consumes Foundation's <code>vpc</code>/<code>hostedZone</code> and Database's <code>dbSecurityGroup</code>/<code>secret</code> as cross-stack references — one-way (Platform → Database), which is what keeps <code>cdk destroy PlatformStack</code> unblocked during teardown.</p>
+
+<h3>IRSA + Helm controllers</h3>
+<p>One pattern applied three times: a Kubernetes ServiceAccount is bound to a narrowly-scoped IAM role via <strong>IRSA</strong> (OIDC <code>AssumeRoleWithWebIdentity</code>), then a Helm chart runs the controller Pod <em>as</em> that ServiceAccount so it inherits only the permissions it needs.</p>
+<table class="endpoints">
+<thead><tr><th>Controller</th><th>Job</th><th>IRSA permission scope</th></tr></thead>
+<tbody>
+<tr><td>AWS Load Balancer Controller</td><td>Builds/updates an ALB from each Ingress</td><td>Vendored official ELB / EC2 / ACM policy</td></tr>
+<tr><td>ExternalDNS</td><td>Reconciles Route53 records from the Ingress <code>host:</code></td><td><code>route53:ChangeResourceRecordSets</code> on the zone ARN; list ops on <code>*</code></td></tr>
+<tr><td>External Secrets Operator</td><td>Syncs Secrets Manager → a k8s Secret</td><td><code>secretsmanager:GetSecretValue</code> on <em>only</em> the RDS secret ARN</td></tr>
+</tbody>
+</table>
+
+<h3>Ingress → ALB path routing (same-origin)</h3>
+<p>A single internet-facing ALB, built from one Ingress, fronts the whole app. Because the SPA and API share one hostname, there is no CORS and only one DNS record / cert to manage.</p>
+<div class="mermaid">
+flowchart LR
+    U[Browser] -->|HTTPS 443| ALB[ALB internet-facing]
+    ALB -->|path root| FE[frontend nginx Pods :80]
+    ALB -->|/players /play /history| BE[backend Go Pods :5001]
+    BE -->|TCP 5432 via cluster SG| RDS[(RDS Postgres)]
+    ESO[External Secrets Operator] -.->|DATABASE_URL k8s Secret| BE
+</div>
+<ul>
+<li><code>target-type: ip</code> — the ALB targets Pod IPs directly (VPC CNI), no NodePort hop.</li>
+<li><code>healthcheck-path: /healthz</code> — one setting keeps both target groups healthy (both services answer it).</li>
+<li>Backend path prefixes are more specific than <code>/</code>, so the ALB evaluates them first; everything else falls through to the SPA.</li>
+</ul>
+
+<h3>DNS &amp; TLS</h3>
+<div class="card-grid">
+  <div class="card"><h4>Stable hostname</h4><p>ExternalDNS reads the Ingress <code>host:</code> and upserts <code>prisoner.adventurebrave.com</code> A/TXT records to the ALB — re-pointed automatically on every redeploy, so the URL survives new ALBs.</p></div>
+  <div class="card"><h4>Wildcard cert, auto-discovered</h4><p>The <code>*.adventurebrave.com</code> ACM cert (DNS-validated, in Foundation) is <em>auto-discovered</em> by the ALB controller from the Ingress host — no ARN in any manifest. Reusable by other apps, and it survives teardown.</p></div>
+  <div class="card"><h4>HTTPS redirect</h4><p><code>listen-ports [{HTTP:80},{HTTPS:443}]</code> + <code>ssl-redirect: '443'</code> — plain HTTP is 301'd to TLS at the ALB.</p></div>
+</div>
+
+<h3>RDS: network path, secret, migration, cutover</h3>
+<div class="mermaid">
+sequenceDiagram
+    participant ESO as ExternalSecrets
+    participant SM as Secrets Manager
+    participant Sec as Secret prisoner-db
+    participant Job as migrate Job
+    participant Dep as backend Deployment
+    participant RDS as RDS Postgres
+
+    ESO->>SM: GetSecretValue (IRSA)
+    SM-->>ESO: RDS credentials JSON
+    ESO->>Sec: template DATABASE_URL
+    Job->>Sec: read DATABASE_URL
+    Job->>RDS: goose migrate up (one-off)
+    RDS-->>Job: schema applied
+    Dep->>Sec: read DATABASE_URL
+    Dep->>RDS: connect with --store postgres
+</div>
+<ul>
+<li><strong>Network path</strong> — a security-group rule opens 5432 to the EKS <em>cluster SG</em>; the rule is owned by the Platform stack (importing the DB SG id) so teardown stays clean.</li>
+<li><strong>Secret delivery</strong> — an <code>ExternalSecret</code> templates <code>DATABASE_URL</code> from the RDS secret's JSON into the <code>prisoner-db</code> k8s Secret; the credential is never baked into a manifest or image.</li>
+<li><strong>Migration</strong> — a run-to-completion <code>Job</code> (kept out of the bulk apply, run via <code>make migrate</code>) applies goose migrations before the app serves Postgres.</li>
+<li><strong>Cutover</strong> — the Deployment flips to <code>args: [server, --store, postgres]</code> plus the <code>DATABASE_URL</code> env; the flag is explicit so it deterministically wins over Viper's env resolution.</li>
+</ul>
+
+<h3>Cluster lifecycle (bring-up &amp; teardown)</h3>
+<div class="mermaid">
+sequenceDiagram
+    participant Op as make eks-up
+    participant CFN as CloudFormation
+    participant K8s as EKS control plane
+    participant ALB as ALB Controller
+    participant EDNS as ExternalDNS
+
+    Op->>CFN: cdk deploy PlatformStack
+    CFN->>K8s: cluster + nodegroup + IRSA + Helm add-ons
+    Op->>K8s: wait for controller rollouts (webhooks ready)
+    Op->>K8s: kubectl apply -f k8s/
+    K8s->>ALB: Ingress observed, provision ALB + target groups
+    K8s->>EDNS: host observed, upsert Route53 records
+</div>
+<div class="box warning">
+<h4>⚠️ Operational gotchas (learned the hard way)</h4>
+<ul>
+<li><strong>Editing a manifest isn't deploying it</strong> — the Deployment must be <code>kubectl apply</code>'d, or the running Pod keeps its old spec (e.g. still <code>--store memory</code> while you think it's on Postgres).</li>
+<li><strong>Apply order matters on a fresh cluster</strong> — the namespace applies first, and the ALB/ESO admission webhooks must be ready before their objects, or apply fails with "connection refused calling webhook". <code>make eks-up</code> bakes in both waits.</li>
+<li><strong>Teardown order matters</strong> — <code>make eks-down</code> deletes the Ingress first so the ALB drains via its finalizer, <em>then</em> <code>cdk destroy</code>; the reverse can orphan ENIs and hang.</li>
+<li><strong>RDS is private</strong> — unreachable from a laptop; connect through the SSM bastion tunnel (and use <code>host=127.0.0.1</code> so a local Docker Postgres on <code>::1</code> doesn't shadow it).</li>
+</ul>
+</div>
+<div class="box success">
+<h4>✅ Patterns worth reusing</h4>
+<ul>
+<li><strong>Repo split</strong> — the app stays deployable-anywhere; infra + manifests live with the CDK that owns the cluster.</li>
+<li><strong>Same-origin routing</strong> — one ALB, one hostname, one cert; CORS eliminated by construction.</li>
+<li><strong>IRSA per controller</strong> — least-privilege, keyless AWS access for each add-on, scoped to exactly one zone/secret where possible.</li>
+<li><strong>Auto-discovered wildcard cert + ExternalDNS</strong> — no cross-stack cert wiring, and a stable hostname that survives cluster teardown/redeploy.</li>
+<li><strong>Migration as a deliberate one-off</strong> — decoupled from server startup, matching the app's existing "server never auto-migrates" design.</li>
+</ul>
 </div>
 
 <h2 id="review">Technical Review</h2>

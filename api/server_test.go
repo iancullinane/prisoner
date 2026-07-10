@@ -67,13 +67,13 @@ func TestPlayers_Get(t *testing.T) {
 	}{
 		{
 			"test base",
-			"/players/Chris",
+			"/api/v1/players/Chris",
 			`{"id":"11111111-1111-bbbb-3333-333333333333","name":"Chris","CreatedAt":"0001-01-01T00:00:00Z"}` + "\n",
 			http.StatusOK,
 		},
 		{
 			"test player not found",
-			"/players/NotChris",
+			"/api/v1/players/NotChris",
 			"could not get player: player not found\n",
 			http.StatusNotFound,
 		},
@@ -134,7 +134,7 @@ func TestCreatePlayers(t *testing.T) {
 			server := NewPlayerServer(testLogger(), &playerStore, nil)
 
 			buf := bytes.NewBufferString("body") // if there were a body on post...
-			request, _ := http.NewRequest(http.MethodPost, "/players/Pepper", buf)
+			request, _ := http.NewRequest(http.MethodPost, "/api/v1/players/Pepper", buf)
 			response := httptest.NewRecorder()
 
 			server.ServeHTTP(response, request)
@@ -209,7 +209,7 @@ func TestPlay_Refactor(t *testing.T) {
 			server := NewPlayerServer(testLogger(), &playerStore, &historyStore)
 
 			body, _ := json.Marshal(tc.requestBody)
-			req, err := http.NewRequest(http.MethodPost, "/play", bytes.NewBuffer(body))
+			req, err := http.NewRequest(http.MethodPost, "/api/v1/play", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 			response := httptest.NewRecorder()
 
@@ -282,7 +282,7 @@ func TestHistory_Get(t *testing.T) {
 // ====================================
 
 func newHistoryRequest(id uuid.UUID) *http.Request {
-	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/history/%s", id.String()), nil)
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/history/%s", id.String()), nil)
 	return req
 }
 

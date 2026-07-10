@@ -37,15 +37,15 @@ func NewPlayerServer(logger *slog.Logger, playerStore types.PlayerStore, history
 	router.Handle("GET /healthz", http.HandlerFunc(p.healthzHandler))
 
 	// business routes
-	router.Handle("GET /players", http.HandlerFunc(p.listPlayersHandler))
+	router.Handle("GET /api/v1/players", http.HandlerFunc(p.listPlayersHandler))
 	// Get a player by id
-	router.Handle("GET /players/{name}", http.HandlerFunc(p.playersHandler))
+	router.Handle("GET /api/v1/players/{name}", http.HandlerFunc(p.playersHandler))
 	// Create a player by name
-	router.Handle("POST /players/{name}", http.HandlerFunc(p.playersHandler))
-	router.Handle("GET /history", http.HandlerFunc(p.historyHandler))
+	router.Handle("POST /api/v1/players/{name}", http.HandlerFunc(p.playersHandler))
+	router.Handle("GET /api/v1/history", http.HandlerFunc(p.historyHandler))
 	// History of a player
-	router.Handle("GET /history/{id}", http.HandlerFunc(p.historyHandler))
-	router.Handle("POST /play", http.HandlerFunc(p.playHandler))
+	router.Handle("GET /api/v1/history/{id}", http.HandlerFunc(p.historyHandler))
+	router.Handle("POST /api/v1/play", http.HandlerFunc(p.playHandler))
 
 	p.Handler = withCORS(router)
 
