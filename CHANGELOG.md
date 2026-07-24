@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.4.0](https://github.com/iancullinane/prisoner/compare/v1.3.0...v1.4.0) (2026-07-10)
+
+
+### Features
+
+* add frontend container ([ebad2d9](https://github.com/iancullinane/prisoner/commit/ebad2d960bd000dc105731742f7435bd3c738a5e))
+* add history API client ([1051199](https://github.com/iancullinane/prisoner/commit/1051199671350c132e19d267b6b4ea12a879a312))
+* add HistoryPage ([283dfee](https://github.com/iancullinane/prisoner/commit/283dfee802c06c9a2fbe99827a21d94e7ae3fd0f))
+* add Interaction/PlayRequest/PlayResponse frontend types ([e66bdf0](https://github.com/iancullinane/prisoner/commit/e66bdf03ef8349a9eac882c8c9524fa8738b7684))
+* add play API client ([67a8768](https://github.com/iancullinane/prisoner/commit/67a87682b73d58362a44982d95f6b9b824c31a13))
+* add PlayersPage ([adce0c2](https://github.com/iancullinane/prisoner/commit/adce0c2d8c355d3a0a82abb790ebf9864d149b70))
+* add PlayPage ([6fcbbfe](https://github.com/iancullinane/prisoner/commit/6fcbbfe6b24a43b625ba01e05fe8232bfb14474c))
+* add router, Tailwind theme, Sidebar, and Layout ([65fa8bd](https://github.com/iancullinane/prisoner/commit/65fa8bd8c32157e5e15ea82fbe3b28744d1f854b))
+* point players API client at /api/v1 ([aad3f20](https://github.com/iancullinane/prisoner/commit/aad3f20259f1470f6b1cc23fd5eb70bd076c8e31))
+* version backend API under /api/v1 ([06e6e46](https://github.com/iancullinane/prisoner/commit/06e6e465fe057aad13bd2a1181f1708ecf202981))
+* wire up multi-page routing in App ([8185600](https://github.com/iancullinane/prisoner/commit/8185600cc7abd2f6ad2439b5c4065d5cbdff2d56))
+
+
+### Bug Fixes
+
+* add healtz endpoint ([4b19041](https://github.com/iancullinane/prisoner/commit/4b1904115448d54f299bf6c17d93e5b9fb1a38f5))
+* style PlayPage move-selection buttons for visible selected state ([37d8140](https://github.com/iancullinane/prisoner/commit/37d814026efcad2d3ea0df8383721567e55dfdfc))
+* update json casing to be consistent ([9b1f877](https://github.com/iancullinane/prisoner/commit/9b1f877c83a8058294d011a7f79eb2932445bc5c))
+
 ## [1.3.0](https://github.com/iancullinane/prisoner/compare/v1.2.1...v1.3.0) (2026-07-06)
 
 
