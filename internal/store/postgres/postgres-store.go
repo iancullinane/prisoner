@@ -55,6 +55,29 @@ func (s *HistoryStore) GetHistory() (types.History, error) {
 	return out, nil
 }
 
+func prettyFromRow(r sqlcdb.GetPrettyHistoryRow) types.PrettyInteraction {
+	return types.PrettyInteraction{
+		PlayerAName: r.PlayerAName,
+		PlayerBName: r.PlayerBName,
+		PlayerAMove: prisoner.Move([]rune(r.PlayerAMove)[0]),
+		PlayerBMove: prisoner.Move([]rune(r.PlayerBMove)[0]),
+		PlayedAt:    r.PlayedAt.Time,
+	}
+}
+
+func (s *HistoryStore) GetPrettyHistory() (types.PrettyHistory, error) {
+	ctx := context.Background()
+	rows, err := s.q.GetPrettyHistory(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get pretty history: %w", err)
+	}
+	out := make(types.PrettyHistory, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, prettyFromRow(r))
+	}
+	return out, nil
+}
+
 func (s *HistoryStore) RecordInteraction(interaction types.Interaction) error {
 	ctx := context.Background()
 	params := sqlcdb.RecordInteractionParams{

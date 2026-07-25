@@ -34,3 +34,12 @@ SELECT id, player_a_id, player_b_id, player_a_move, player_b_move, played_at
 FROM interactions
 WHERE player_a_id = $1 OR player_b_id = $1
 ORDER BY played_at DESC;
+
+
+
+-- name: GetPrettyHistory :many
+SELECT pa.name as player_a_name, pb.name as player_b_name, player_a_move, player_b_move, played_at
+FROM interactions
+INNER JOIN players pa ON interactions.player_a_id = pa.id
+INNER JOIN players pb ON interactions.player_b_id = pb.id
+ORDER BY interactions.played_at DESC;

@@ -96,3 +96,17 @@ func (r Interaction) PrintInteraction(scoring prisoner.Payoff[int], asJSON bool)
 	}
 	return fmt.Sprintf("%s: %s", r, r.PrintScore(scoring))
 }
+
+// ----------------------------------------------------------
+
+// PrettyInteraction is a display-ready view of an interaction,
+// with player names resolved.
+type PrettyInteraction struct {
+	PlayerAName string        `json:"playerAName"`
+	PlayerBName string        `json:"playerBName"`
+	PlayerAMove prisoner.Move `json:"playerAMove"`
+	PlayerBMove prisoner.Move `json:"playerBMove"`
+	PlayedAt    time.Time     `json:"playedAt"`
+}
+
+type PrettyHistory []PrettyInteraction
