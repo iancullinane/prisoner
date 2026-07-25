@@ -16,8 +16,8 @@ export default function Sidebar() {
           className={({ isActive }) =>
             `font-army px-2 py-1 uppercase tracking-wide ${
               isActive
-                ? "border-l-2 border-hacker-orange text-hacker-orange"
-                : "text-hacker-green hover:text-hacker-orange"
+                ? "border-l-2 border-hacker-ochre text-hacker-ochre"
+                : "text-hacker-green hover:text-hacker-ochre"
             }`
           }
         >
