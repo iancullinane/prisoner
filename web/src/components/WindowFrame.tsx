@@ -16,7 +16,7 @@ export default function WindowFrame({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center md:p-[max(1rem,3vmin)]">
+    <div className="fixed inset-x-0 top-0 h-dvh flex items-center justify-center md:p-[max(1rem,3vmin)]">
       <div className="flex h-full w-full max-h-[860px] max-w-[1280px] flex-col border border-hacker-ochre bg-hacker-bg shadow-[0_0_24px_rgb(43_217_74_/_0.15)]">
         <header className="flex items-center justify-between border-b border-hacker-ochre bg-hacker-chrome px-3 py-1.5 font-army text-sm uppercase tracking-wide text-hacker-ochre">
           <span>PRISONER — ~{pathname}</span>

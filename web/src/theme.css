@@ -31,6 +31,11 @@
   --color-hacker-fg-muted: #7a9a85;
 }
 
+html,
+body {
+  min-height: 100dvh;
+}
+
 body {
   background-color: var(--color-hacker-desktop);
   color: var(--color-hacker-green);
