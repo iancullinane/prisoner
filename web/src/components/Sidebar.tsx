@@ -8,7 +8,7 @@ const links = [
 
 export default function Sidebar() {
   return (
-    <nav className="flex gap-4 border-b border-hacker-green/30 bg-hacker-chrome p-4 md:min-h-screen md:w-48 md:flex-col md:border-b-0 md:border-r">
+    <nav className="flex gap-4 border-b border-hacker-green/30 bg-hacker-chrome p-4 md:w-48 md:flex-col md:border-b-0 md:border-r">
       {links.map((link) => (
         <NavLink
           key={link.to}
