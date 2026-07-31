@@ -47,7 +47,7 @@ export default function HistoryPage() {
 
       <table className="w-full border-collapse text-left">
         <thead>
-          <tr className="text-sm uppercase text-hacker-orange">
+          <tr className="text-sm uppercase text-hacker-ochre">
             <th className="border-b border-hacker-green/30 py-2">Player A</th>
             <th className="border-b border-hacker-green/30 py-2">Player B</th>
             <th className="border-b border-hacker-green/30 py-2">Moves</th>

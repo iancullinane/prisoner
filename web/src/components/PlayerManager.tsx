@@ -26,21 +26,22 @@ export default function PlayerManager() {
   }
 
   return (
-    <div>
+    <div className="flex flex-1 flex-col">
       {error && <p role="alert">{error}</p>}
       <ul>
         {players.map((player) => (
           <li key={player.id}>{player.name}</li>
         ))}
       </ul>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} className="mt-auto">
         <label htmlFor="player-name">Name</label>
-        <input
-          id="player-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <button type="submit">Add player</button>
+      <br/>
+      <input
+        id="player-name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <button type="submit">Add player</button>
       </form>
     </div>
   );

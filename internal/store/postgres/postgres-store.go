@@ -12,39 +12,26 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/iancullinane/prisoner/internal/types"
-	"github.com/iancullinane/prisoner/pkg/prisoner"
 	sqlcdb "github.com/iancullinane/prisoner/prisonerdb"
 )
 
 type HistoryStore struct {
-	logger *slog.Logger
-	pool   *pgxpool.Pool
-	q      *sqlcdb.Queries
+	logger  *slog.Logger
+	pool    *pgxpool.Pool
+	queries *sqlcdb.Queries
 }
 
 func NewHistoryStore(logger *slog.Logger, pool *pgxpool.Pool) *HistoryStore {
 	return &HistoryStore{
-		logger: logger.With(slog.String("component", "postgres-history-store")),
-		pool:   pool,
-		q:      sqlcdb.New(pool),
-	}
-}
-
-// interaction from row
-func interactionFromRow(i sqlcdb.Interaction) types.Interaction {
-	return types.Interaction{
-		ID:          i.ID.Bytes,
-		PlayerA:     i.PlayerAID.Bytes,
-		PlayerB:     i.PlayerBID.Bytes,
-		PlayerAMove: prisoner.Move([]rune(i.PlayerAMove)[0]),
-		PlayerBMove: prisoner.Move([]rune(i.PlayerBMove)[0]),
-		PlayedAt:    i.PlayedAt.Time,
+		logger:  logger.With(slog.String("component", "postgres-history-store")),
+		pool:    pool,
+		queries: sqlcdb.New(pool),
 	}
 }
 
 func (s *HistoryStore) GetHistory() (types.History, error) {
 	ctx := context.Background()
-	rows, err := s.q.GetHistory(ctx)
+	rows, err := s.queries.GetHistory(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get history: %w", err)
 	}
@@ -55,16 +42,29 @@ func (s *HistoryStore) GetHistory() (types.History, error) {
 	return out, nil
 }
 
+func (s *HistoryStore) GetPrettyHistory() (types.PrettyHistory, error) {
+	ctx := context.Background()
+	rows, err := s.queries.GetPrettyHistory(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get pretty history: %w", err)
+	}
+	out := make(types.PrettyHistory, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, prettyFromRow(r))
+	}
+	return out, nil
+}
+
 func (s *HistoryStore) RecordInteraction(interaction types.Interaction) error {
 	ctx := context.Background()
 	params := sqlcdb.RecordInteractionParams{
-		PlayerAID:   pgtype.UUID{Bytes: interaction.PlayerA, Valid: true},
-		PlayerBID:   pgtype.UUID{Bytes: interaction.PlayerB, Valid: true},
+		PlayerAID:   interaction.PlayerA,
+		PlayerBID:   interaction.PlayerB,
 		PlayerAMove: string(interaction.PlayerAMove),
 		PlayerBMove: string(interaction.PlayerBMove),
 		PlayedAt:    pgtype.Timestamptz{Time: interaction.PlayedAt, Valid: true},
 	}
-	if err := s.q.RecordInteraction(ctx, params); err != nil {
+	if err := s.queries.RecordInteraction(ctx, params); err != nil {
 		return err
 	}
 	s.logger.Debug("recorded interaction",
@@ -75,7 +75,7 @@ func (s *HistoryStore) RecordInteraction(interaction types.Interaction) error {
 
 func (s *HistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.History, error) {
 	ctx := context.Background()
-	playerHistory, err := s.q.GetHistoryByPlayerID(ctx, pgtype.UUID{Bytes: playerID, Valid: true})
+	playerHistory, err := s.queries.GetHistoryByPlayerID(ctx, playerID)
 	if err != nil {
 		return types.History{}, err
 	}
@@ -88,22 +88,22 @@ func (s *HistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.History, 
 }
 
 type PlayerStore struct {
-	logger *slog.Logger
-	pool   *pgxpool.Pool
-	q      *sqlcdb.Queries
+	logger  *slog.Logger
+	pool    *pgxpool.Pool
+	queries *sqlcdb.Queries
 }
 
 func NewPlayerStore(logger *slog.Logger, pool *pgxpool.Pool) *PlayerStore {
 	return &PlayerStore{
-		logger: logger.With(slog.String("component", "postgres-player-store")),
-		pool:   pool,
-		q:      sqlcdb.New(pool),
+		logger:  logger.With(slog.String("component", "postgres-player-store")),
+		pool:    pool,
+		queries: sqlcdb.New(pool),
 	}
 }
 
 func playerFromRow(p sqlcdb.Player) types.Player {
 	return types.Player{
-		ID:        uuid.UUID(p.ID.Bytes),
+		ID:        p.ID,
 		Name:      p.Name,
 		CreatedAt: p.CreatedAt.Time,
 	}
@@ -111,7 +111,7 @@ func playerFromRow(p sqlcdb.Player) types.Player {
 
 func (s *PlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
 	ctx := context.Background()
-	player, err := s.q.GetOrCreatePlayer(ctx, name)
+	player, err := s.queries.GetOrCreatePlayer(ctx, name)
 	if err != nil {
 		return types.Player{}, fmt.Errorf("get or create player %q: %w", name, err)
 	}
@@ -126,7 +126,7 @@ func (s *PlayerStore) GetOrCreatePlayer(name string) (types.Player, error) {
 
 func (s *PlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 	ctx := context.Background()
-	player, err := s.q.GetPlayerByID(ctx, pgtype.UUID{Bytes: id, Valid: true})
+	player, err := s.queries.GetPlayerByID(ctx, id)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return types.Player{}, types.ErrPlayerNotFound
 	}
@@ -139,7 +139,7 @@ func (s *PlayerStore) GetPlayerByID(id uuid.UUID) (types.Player, error) {
 
 func (s *PlayerStore) GetPlayerByName(name string) (types.Player, error) {
 	ctx := context.Background()
-	player, err := s.q.GetPlayerByName(ctx, name)
+	player, err := s.queries.GetPlayerByName(ctx, name)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return types.Player{}, types.ErrPlayerNotFound
 	}
@@ -152,7 +152,7 @@ func (s *PlayerStore) GetPlayerByName(name string) (types.Player, error) {
 
 func (s *PlayerStore) GetAllPlayers() (types.Players, error) {
 	ctx := context.Background()
-	players, err := s.q.ListPlayers(ctx)
+	players, err := s.queries.ListPlayers(ctx)
 	if err != nil {
 		return types.Players{}, fmt.Errorf("could not list players %w", err)
 	}
@@ -166,7 +166,7 @@ func (s *PlayerStore) GetAllPlayers() (types.Players, error) {
 
 func (s *PlayerStore) GetRandomPlayer() (types.Player, error) {
 	ctx := context.Background()
-	player, err := s.q.GetRandomPlayer(ctx)
+	player, err := s.queries.GetRandomPlayer(ctx)
 	if err != nil {
 		return types.Player{}, fmt.Errorf("get random player: %w", err)
 	}
@@ -175,7 +175,7 @@ func (s *PlayerStore) GetRandomPlayer() (types.Player, error) {
 
 func (s *PlayerStore) GetRandomPlayerExcept(exceptID uuid.UUID) (types.Player, error) {
 	ctx := context.Background()
-	player, err := s.q.GetRandomPlayerExcept(ctx, pgtype.UUID{Bytes: exceptID, Valid: true})
+	player, err := s.queries.GetRandomPlayerExcept(ctx, exceptID)
 	if err != nil {
 		return types.Player{}, fmt.Errorf("get random player except %q: %w", exceptID, err)
 	}

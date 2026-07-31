@@ -1,13 +1,14 @@
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import WindowFrame from "./WindowFrame";
 
 export default function Layout() {
   return (
-    <div className="flex min-h-screen flex-col bg-hacker-bg text-hacker-green md:flex-row">
+    <WindowFrame>
       <Sidebar />
-      <main className="flex-1 p-6">
+      <main className="flex flex-1 flex-col overflow-y-auto p-6">
         <Outlet />
       </main>
-    </div>
+    </WindowFrame>
   );
 }
