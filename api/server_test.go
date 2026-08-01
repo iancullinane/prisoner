@@ -13,6 +13,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/iancullinane/prisoner/internal/store/memory"
 	"github.com/iancullinane/prisoner/internal/types"
 	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
@@ -241,41 +242,83 @@ func TestPlay_Refactor(t *testing.T) {
 // ========================================
 
 func TestHistory_Get(t *testing.T) {
-	tests := []struct {
-		name    string
-		pID     uuid.UUID
-		history types.History
-		code    int
-	}{
-		{
-			name: "should play the game - both cooperate",
-			pID:  testID1,
-			history: types.History{
-				types.Interaction{
-					PlayerA:     testID1,
-					PlayerB:     testID2,
-					PlayerAMove: prisoner.Cooperate,
-					PlayerBMove: prisoner.Cooperate,
-				},
+	t.Run("resolves player names via the store fallback", func(t *testing.T) {
+		playerStore := StubPlayerStore{players: []types.Player{
+			{ID: testID1, Name: "Alice"},
+			{ID: testID2, Name: "Bob"},
+		}}
+		historyStore := StubHistoryStore{history: types.History{
+			types.Interaction{
+				PlayerA:     testID1,
+				PlayerB:     testID2,
+				PlayerAMove: prisoner.Cooperate,
+				PlayerBMove: prisoner.Cooperate,
 			},
-			code: http.StatusOK,
-		},
-	}
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
+		}}
+		server := NewPlayerServer(testLogger(), &playerStore, &historyStore)
 
-			historyStore := StubHistoryStore{history: tc.history}
-			server := NewPlayerServer(testLogger(), &StubPlayerStore{}, &historyStore)
+		request := newHistoryRequest(testID1)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
 
-			request := newHistoryRequest(tc.pID)
-			response := httptest.NewRecorder()
-			server.ServeHTTP(response, request)
+		assertResponseStatus(t, response.Code, http.StatusOK)
+		assertContentType(t, response, jsonContentType)
 
-			assertResponseStatus(t, response.Code, tc.code)
-			assertContentType(t, response, jsonContentType)
-			assertHistory(t, getHistoryFromResponse(t, response.Body), tc.history)
-		})
-	}
+		want := types.PrettyHistory{{
+			PlayerAName: "Alice",
+			PlayerBName: "Bob",
+			PlayerAMove: prisoner.Cooperate,
+			PlayerBMove: prisoner.Cooperate,
+		}}
+		assertPrettyHistory(t, getPrettyHistoryFromResponse(t, response.Body), want)
+	})
+
+	t.Run("memory store history comes back pretty, not empty", func(t *testing.T) {
+		playerStore := memory.NewInMemoryPlayerStore(testLogger())
+		historyStore := memory.NewInMemoryHistoryStore(testLogger())
+
+		alice, err := playerStore.GetOrCreatePlayer("Alice")
+		if err != nil {
+			t.Fatal(err)
+		}
+		bob, err := playerStore.GetOrCreatePlayer("Bob")
+		if err != nil {
+			t.Fatal(err)
+		}
+		interaction := types.NewInteraction(alice.ID, bob.ID, prisoner.Cooperate, prisoner.Betray)
+		if err := historyStore.RecordInteraction(interaction); err != nil {
+			t.Fatal(err)
+		}
+
+		server := NewPlayerServer(testLogger(), playerStore, historyStore)
+
+		request, _ := http.NewRequest(http.MethodGet, "/api/v1/history", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+
+		assertResponseStatus(t, response.Code, http.StatusOK)
+		got := getPrettyHistoryFromResponse(t, response.Body)
+		if len(got) != 1 {
+			t.Fatalf("got %d pretty interactions, want 1: %+v", len(got), got)
+		}
+		if got[0].PlayerAName != "Alice" || got[0].PlayerBName != "Bob" {
+			t.Errorf("got names %q vs %q, want Alice vs Bob", got[0].PlayerAName, got[0].PlayerBName)
+		}
+	})
+
+	t.Run("store failure returns 500, not an empty 200", func(t *testing.T) {
+		// history references a player the player store doesn't know
+		historyStore := StubHistoryStore{history: types.History{
+			types.Interaction{PlayerA: testID1, PlayerB: testID2},
+		}}
+		server := NewPlayerServer(testLogger(), &StubPlayerStore{}, &historyStore)
+
+		request, _ := http.NewRequest(http.MethodGet, "/api/v1/history", nil)
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, request)
+
+		assertResponseStatus(t, response.Code, http.StatusInternalServerError)
+	})
 }
 
 // MARK: Request Builders
@@ -310,30 +353,20 @@ func assertContentType(t testing.TB, response *httptest.ResponseRecorder, want s
 	}
 }
 
-func getHistoryFromResponse(t testing.TB, body io.Reader) types.History {
+func getPrettyHistoryFromResponse(t testing.TB, body io.Reader) types.PrettyHistory {
 	t.Helper()
-	h, err := types.NewHistory(body)
-	if err != nil {
-		t.Fatalf("unable to parse response into History: %v", err)
+	var ph types.PrettyHistory
+	if err := json.NewDecoder(body).Decode(&ph); err != nil {
+		t.Fatalf("unable to parse response into PrettyHistory: %v", err)
 	}
-	return h
+	return ph
 }
 
-func assertHistory(t testing.TB, got, want types.History) {
+func assertPrettyHistory(t testing.TB, got, want types.PrettyHistory) {
 	t.Helper()
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("history mismatch\n  got:  %+v\n  want: %+v", got, want)
+		t.Errorf("pretty history mismatch\n  got:  %+v\n  want: %+v", got, want)
 	}
-}
-
-func getInterationFromResponse(t testing.TB, body io.Reader) types.Interaction {
-	t.Helper()
-	i, err := types.NewInteractionFromJSON(body)
-	if err != nil {
-		t.Fatalf("%s", err)
-	}
-
-	return i
 }
 
 func assertInteraction(t testing.TB, got, want types.Interaction) {

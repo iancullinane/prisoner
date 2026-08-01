@@ -3,9 +3,8 @@ import { listHistory, listHistoryForPlayer } from "./history";
 
 const sample = [
   {
-    id: "i1",
-    playerA: "p1",
-    playerB: "p2",
+    playerAName: "Alice",
+    playerBName: "Bob",
     playerAMove: "C",
     playerBMove: "B",
     playedAt: "2026-01-01T00:00:00Z",

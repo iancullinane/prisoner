@@ -5,13 +5,14 @@ import HistoryPage from "./HistoryPage";
 import * as historyApi from "../api/history";
 import * as playersApi from "../api/players";
 
+const sevenHoursAgo = new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString();
+
 const interaction = {
-  id: "i1",
-  playerA: "p1",
-  playerB: "p2",
+  playerAName: "Alice",
+  playerBName: "Bob",
   playerAMove: "C" as const,
   playerBMove: "B" as const,
-  playedAt: "2026-01-01T00:00:00Z",
+  playedAt: sevenHoursAgo,
 };
 
 describe("HistoryPage", () => {
@@ -25,8 +26,17 @@ describe("HistoryPage", () => {
 
     render(<HistoryPage />);
 
-    expect(await screen.findByText("p1")).toBeInTheDocument();
-    expect(screen.getByText("p2")).toBeInTheDocument();
+    expect(await screen.findByText("Alice")).toBeInTheDocument();
+    expect(screen.getByText("Bob")).toBeInTheDocument();
+  });
+
+  it("renders played-at as a relative time", async () => {
+    vi.spyOn(playersApi, "listPlayers").mockResolvedValue([]);
+    vi.spyOn(historyApi, "listHistory").mockResolvedValue([interaction]);
+
+    render(<HistoryPage />);
+
+    expect(await screen.findByText("7 hours ago")).toBeInTheDocument();
   });
 
   it("shows an error message when listHistory fails", async () => {

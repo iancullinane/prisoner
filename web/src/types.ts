@@ -7,10 +7,9 @@ export interface Player {
 export type Move = "C" | "B";
 export type Result = "T" | "R" | "P" | "S";
 
-export interface Interaction {
-  id: string;
-  playerA: string;
-  playerB: string;
+export interface PrettyInteraction {
+  playerAName: string;
+  playerBName: string;
   playerAMove: Move;
   playerBMove: Move;
   playedAt: string;

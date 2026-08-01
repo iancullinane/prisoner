@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/iancullinane/prisoner/internal/store"
 	"github.com/iancullinane/prisoner/internal/types"
 	"github.com/iancullinane/prisoner/pkg/prisoner"
 )
@@ -25,7 +26,14 @@ type PlayerServer struct {
 	http.Handler
 }
 
-func NewPlayerServer(logger *slog.Logger, playerStore types.PlayerStore, historyStore types.HistoryStore) *PlayerServer {
+type PlayerHistoryProvider interface {
+	GetPrettyHistory(playerID *uuid.UUID) (types.PrettyHistory, error)
+}
+
+func NewPlayerServer(
+	logger *slog.Logger,
+	playerStore types.PlayerStore,
+	historyStore types.HistoryStore) *PlayerServer {
 
 	p := new(PlayerServer)
 	p.logger = logger
@@ -168,39 +176,38 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) historyHandler(w http.ResponseWriter, r *http.Request) {
-
-	history, err := p.historyStore.GetHistory()
-	if err != nil {
-		http.Error(w, "could not load history", http.StatusInternalServerError)
-		return
-	}
-
-	pID := r.PathValue("id")
-	if pID == "" {
-		w.Header().Set("content-type", jsonContentType)
-		json.NewEncoder(w).Encode(history)
-		return
-	}
-
-	if rawID := r.PathValue("id"); rawID != "" {
-		playerID, err := uuid.Parse(rawID)
+	var playerID *uuid.UUID
+	if raw := r.PathValue("id"); raw != "" {
+		id, err := uuid.Parse(raw)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("could not parse player id: %v", err), http.StatusBadRequest)
 			return
 		}
-		history = filterHistoryByPlayer(history, playerID)
+		playerID = &id
+	}
+
+	// Optional interface pattern
+	// Here we derive pretty history depending on which store is in use. In the case of SQL, it is
+	// much easier and faster to build the joins and pretty history natively. So it implements
+	// PrettyHistoryProvider. However the player and history stores are separate resources in
+	// memory and file storage. In those cases there is a functional option held in the
+	// `stores` package. We reflect whether or not historyStore provides its own PrettyHistory,
+	// if so that is the postgres store. Otherwise we use the functional method.
+	var ph types.PrettyHistory
+	var err error
+	if provider, ok := p.historyStore.(PlayerHistoryProvider); ok {
+		// postgres is one store, join it in SQL
+		ph, err = provider.GetPrettyHistory(playerID) // postgres: SQL join fast path
+	} else {
+		// take two stores, join them in go
+		ph, err = store.GetPrettyHistoryFromStores(playerID, p.playerStore, p.historyStore)
+	}
+	if err != nil {
+		p.logger.Error("could not load history", slog.Any("error", err))
+		http.Error(w, "could not load history", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("content-type", jsonContentType)
-	json.NewEncoder(w).Encode(history)
-}
-
-func filterHistoryByPlayer(history types.History, playerID uuid.UUID) types.History {
-	filtered := make(types.History, 0, len(history))
-	for _, interaction := range history {
-		if interaction.PlayerA == playerID || interaction.PlayerB == playerID {
-			filtered = append(filtered, interaction)
-		}
-	}
-	return filtered
+	json.NewEncoder(w).Encode(ph)
 }

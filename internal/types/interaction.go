@@ -15,7 +15,6 @@ type History []Interaction
 type HistoryStore interface {
 	GetHistory() (History, error)
 	RecordInteraction(interaction Interaction) error
-	// GetInteraction(id uuid.UUID) *Interaction
 	GetHistoryByPlayerID(playerID uuid.UUID) (History, error)
 }
 

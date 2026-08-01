@@ -5,6 +5,11 @@ import (
 	"github.com/iancullinane/prisoner/internal/types"
 )
 
+type StubPlayerHistoryStore struct {
+	players []types.Player
+	history types.History
+}
+
 // MARK: HistoryStore
 // =========================================
 

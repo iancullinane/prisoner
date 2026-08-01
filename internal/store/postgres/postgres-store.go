@@ -42,9 +42,13 @@ func (s *HistoryStore) GetHistory() (types.History, error) {
 	return out, nil
 }
 
-func (s *HistoryStore) GetPrettyHistory() (types.PrettyHistory, error) {
+func (s *HistoryStore) GetPrettyHistory(playerID *uuid.UUID) (types.PrettyHistory, error) {
 	ctx := context.Background()
-	rows, err := s.queries.GetPrettyHistory(ctx)
+	var arg uuid.NullUUID
+	if playerID != nil {
+		arg = uuid.NullUUID{UUID: *playerID, Valid: true}
+	}
+	rows, err := s.queries.GetPrettyHistory(ctx, arg)
 	if err != nil {
 		return nil, fmt.Errorf("get pretty history: %w", err)
 	}

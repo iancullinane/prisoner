@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import { listHistory, listHistoryForPlayer } from "../api/history";
 import { listPlayers } from "../api/players";
-import type { Interaction, Player } from "../types";
+import type { Player, PrettyInteraction } from "../types";
+
+dayjs.extend(relativeTime);
 
 export default function HistoryPage() {
-  const [history, setHistory] = useState<Interaction[]>([]);
+  const [history, setHistory] = useState<PrettyInteraction[]>([]);
   const [players, setPlayers] = useState<Player[]>([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -55,14 +59,16 @@ export default function HistoryPage() {
           </tr>
         </thead>
         <tbody>
-          {history.map((interaction) => (
-            <tr key={interaction.id}>
-              <td className="py-1">{interaction.playerA}</td>
-              <td className="py-1">{interaction.playerB}</td>
+          {history.map((interaction, index) => (
+            <tr key={index}>
+              <td className="py-1">{interaction.playerAName}</td>
+              <td className="py-1">{interaction.playerBName}</td>
               <td className="py-1">
                 {interaction.playerAMove} / {interaction.playerBMove}
               </td>
-              <td className="py-1">{interaction.playedAt}</td>
+              <td className="py-1" title={dayjs(interaction.playedAt).format("MMM D, h:mm A")}>
+                {dayjs(interaction.playedAt).fromNow()}
+              </td>
             </tr>
           ))}
         </tbody>

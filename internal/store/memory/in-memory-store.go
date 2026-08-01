@@ -1,11 +1,14 @@
 package memory
 
 import (
+	"errors"
 	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/internal/types"
 )
+
+var ErrNotImplemented = errors.New("not implemented for memory store")
 
 // MARK: HistoryStore
 // ------------------------------------------------------------

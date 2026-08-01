@@ -13,6 +13,7 @@ import (
 )
 
 var ErrInteractionNotFound = errors.New("interaction not found")
+var ErrNotImplemented = errors.New("file store not implemented")
 
 const seedPlayerName = "Luigi"
 
