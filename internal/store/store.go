@@ -8,25 +8,7 @@ import (
 	"github.com/iancullinane/prisoner/internal/types"
 )
 
-// type PlayerHistoryProvider interface {
-// 	GetPrettyHistory(playerID *uuid.UUID) (types.PrettyHistory, error)
-// }
-
 var ErrNotImplemented = errors.New("pretty history not implemented")
-
-func NewPlayerHistoryProvider(player types.PlayerStore, history types.HistoryStore) *PlayerHistoryProvider {
-	return &PlayerHistoryProvider{player: player, history: history}
-}
-
-type PlayerHistoryProvider struct {
-	player  types.PlayerStore
-	history types.HistoryStore
-}
-
-func (f PlayerHistoryProvider) GetPrettyHistory(playerID *uuid.UUID) (types.PrettyHistory, error) {
-	// return []types.PrettyHistory{}, nil
-	return types.PrettyHistory{}, ErrNotImplemented
-}
 
 func GetPrettyHistoryFromStores(playerID *uuid.UUID, playerStore types.PlayerStore, historyStore types.HistoryStore) (types.PrettyHistory, error) {
 	var history types.History
