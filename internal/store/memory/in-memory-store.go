@@ -1,11 +1,14 @@
 package memory
 
 import (
+	"errors"
 	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/iancullinane/prisoner/internal/types"
 )
+
+var ErrNotImplemented = errors.New("not implemented for memory store")
 
 // MARK: HistoryStore
 // ------------------------------------------------------------
@@ -43,6 +46,11 @@ func (i *InMemoryHistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.H
 		}
 	}
 	return historyByPlayer, nil
+}
+
+func (i *InMemoryHistoryStore) GetPrettyHistory(playerID *uuid.UUID) (types.PrettyHistory, error) {
+	// return []types.PrettyHistory{}, nil
+	return types.PrettyHistory{}, ErrNotImplemented
 }
 
 // MARK: PlayerStore

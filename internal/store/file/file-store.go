@@ -13,6 +13,7 @@ import (
 )
 
 var ErrInteractionNotFound = errors.New("interaction not found")
+var ErrNotImplemented = errors.New("file store not implemented")
 
 const seedPlayerName = "Luigi"
 
@@ -78,6 +79,11 @@ func (f *FileSystemHistoryStore) RecordInteraction(interaction types.Interaction
 		slog.Int("history_len", len(f.history)),
 	)
 	return nil
+}
+
+func (f *FileSystemHistoryStore) GetPrettyHistory(playerID *uuid.UUID) (types.PrettyHistory, error) {
+	// return []types.PrettyHistory{}, nil
+	return types.PrettyHistory{}, ErrNotImplemented
 }
 
 func (f *FileSystemHistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.History, error) {
