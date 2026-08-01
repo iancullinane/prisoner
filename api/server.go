@@ -186,11 +186,20 @@ func (p *PlayerServer) historyHandler(w http.ResponseWriter, r *http.Request) {
 		playerID = &id
 	}
 
+	// Optional interface pattern
+	// Here we derive pretty history depending on which store is in use. In the case of SQL, it is
+	// much easier and faster to build the joins and pretty history natively. So it implements
+	// PrettyHistoryProvider. However the player and history stores are separate resources in
+	// memory and file storage. In those cases there is a functional option held in the
+	// `stores` package. We reflect whether or not historyStore provides its own PrettyHistory,
+	// if so that is the postgres store. Otherwise we use the functional method.
 	var ph types.PrettyHistory
 	var err error
 	if provider, ok := p.historyStore.(PlayerHistoryProvider); ok {
+		// postgres is one store, join it in SQL
 		ph, err = provider.GetPrettyHistory(playerID) // postgres: SQL join fast path
 	} else {
+		// take two stores, join them in go
 		ph, err = store.GetPrettyHistoryFromStores(playerID, p.playerStore, p.historyStore)
 	}
 	if err != nil {
