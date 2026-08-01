@@ -6,9 +6,8 @@ import * as historyApi from "../api/history";
 import * as playersApi from "../api/players";
 
 const interaction = {
-  id: "i1",
-  playerA: "p1",
-  playerB: "p2",
+  playerAName: "Alice",
+  playerBName: "Bob",
   playerAMove: "C" as const,
   playerBMove: "B" as const,
   playedAt: "2026-01-01T00:00:00Z",
@@ -25,8 +24,8 @@ describe("HistoryPage", () => {
 
     render(<HistoryPage />);
 
-    expect(await screen.findByText("p1")).toBeInTheDocument();
-    expect(screen.getByText("p2")).toBeInTheDocument();
+    expect(await screen.findByText("Alice")).toBeInTheDocument();
+    expect(screen.getByText("Bob")).toBeInTheDocument();
   });
 
   it("shows an error message when listHistory fails", async () => {
