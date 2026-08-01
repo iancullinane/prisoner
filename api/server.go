@@ -186,24 +186,19 @@ func (p *PlayerServer) historyHandler(w http.ResponseWriter, r *http.Request) {
 		playerID = &id
 	}
 
-	if p, ok := p.historyStore.(PlayerHistoryProvider); ok {
-		ph, _ := p.GetPrettyHistory(playerID) // postgres: SQL join fast path
-		w.Header().Set("content-type", jsonContentType)
-		json.NewEncoder(w).Encode(ph)
+	var ph types.PrettyHistory
+	var err error
+	if provider, ok := p.historyStore.(PlayerHistoryProvider); ok {
+		ph, err = provider.GetPrettyHistory(playerID) // postgres: SQL join fast path
+	} else {
+		ph, err = store.GetPrettyHistoryFromStores(playerID, p.playerStore, p.historyStore)
+	}
+	if err != nil {
+		p.logger.Error("could not load history", slog.Any("error", err))
+		http.Error(w, "could not load history", http.StatusInternalServerError)
 		return
 	}
-	ph, _ := store.GetPrettyHistoryFromStores(playerID, p.playerStore, p.historyStore)
 
 	w.Header().Set("content-type", jsonContentType)
 	json.NewEncoder(w).Encode(ph)
-}
-
-func filterHistoryByPlayer(history types.History, playerID uuid.UUID) types.History {
-	filtered := make(types.History, 0, len(history))
-	for _, interaction := range history {
-		if interaction.PlayerA == playerID || interaction.PlayerB == playerID {
-			filtered = append(filtered, interaction)
-		}
-	}
-	return filtered
 }

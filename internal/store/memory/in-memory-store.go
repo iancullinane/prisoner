@@ -48,11 +48,6 @@ func (i *InMemoryHistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.H
 	return historyByPlayer, nil
 }
 
-func (i *InMemoryHistoryStore) GetPrettyHistory(playerID *uuid.UUID) (types.PrettyHistory, error) {
-	// return []types.PrettyHistory{}, nil
-	return types.PrettyHistory{}, ErrNotImplemented
-}
-
 // MARK: PlayerStore
 // ------------------------------------------------------------
 

@@ -81,11 +81,6 @@ func (f *FileSystemHistoryStore) RecordInteraction(interaction types.Interaction
 	return nil
 }
 
-func (f *FileSystemHistoryStore) GetPrettyHistory(playerID *uuid.UUID) (types.PrettyHistory, error) {
-	// return []types.PrettyHistory{}, nil
-	return types.PrettyHistory{}, ErrNotImplemented
-}
-
 func (f *FileSystemHistoryStore) GetHistoryByPlayerID(playerID uuid.UUID) (types.History, error) {
 	historyByPlayer := make(types.History, 0)
 	for _, interaction := range f.history {
