@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.5.0](https://github.com/iancullinane/prisoner/compare/v1.4.0...v1.5.0) (2026-08-01)
+
+
+### Features
+
+* history displays names and relative times ([6870575](https://github.com/iancullinane/prisoner/commit/68705753b8bf5e957390f4150fe24ca5924708f7))
+* Start web app redesign ([356d388](https://github.com/iancullinane/prisoner/commit/356d3888d8d8f0e267fe87810819ae4eafe6efec))
+* **web:** deeper green, ochre accent, desktop background tokens ([9606896](https://github.com/iancullinane/prisoner/commit/960689629546a8687a93d13e40c60757cbdd316e))
+* **web:** render app inside centered WindowFrame ([9521cc3](https://github.com/iancullinane/prisoner/commit/9521cc31118dbbc45817ae676a4e78d4bf1769e3))
+* **web:** WindowFrame terminal-window chrome with route title and clock ([e611532](https://github.com/iancullinane/prisoner/commit/e611532ee2f546e084368c73f33a607d0cdfa0df))
+
+
+### Bug Fixes
+
+* implement pretty history on backend with optional interface patterm ([ff1309d](https://github.com/iancullinane/prisoner/commit/ff1309d6ce45f6f8d9d798787739425d682b8d27))
+* internal stores have separate GetPrettysHistory implementations ([b00f4fb](https://github.com/iancullinane/prisoner/commit/b00f4fbf53a98d760634dd0a595d1629171022f9))
+* remove wrong interface on store ([ae04503](https://github.com/iancullinane/prisoner/commit/ae045030f8b5e441d8e4799119b9304ab7a119d0))
+* sqlc support null uuids ([a3cb814](https://github.com/iancullinane/prisoner/commit/a3cb814b91f1e6322286e7edf151583abbe0c453))
+* strongly type sqlc outputs ([a34eea1](https://github.com/iancullinane/prisoner/commit/a34eea1c263e075f09c16e97681cfae4619d1342))
+* update claude code review prompt ([cfa3e9e](https://github.com/iancullinane/prisoner/commit/cfa3e9e4905c0548b58159aeb541266abf242de6))
+* **web:** give body real height for desktop texture, use dvh for frame ([625d1a9](https://github.com/iancullinane/prisoner/commit/625d1a94664cc6a668a532bb0416ccbf0b75a517))
+
 ## [1.4.0](https://github.com/iancullinane/prisoner/compare/v1.3.0...v1.4.0) (2026-07-10)
 
 
