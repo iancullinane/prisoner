@@ -22,6 +22,14 @@
   --color-dimmer: #33503c;
   --color-rule: #1b2a20;
 
+  --animate-blink: blink 1.1s steps(1) infinite;
+
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
   /* legacy aliases — remapped to the new palette; removed once all
      components use the tokens above */
   --font-army: var(--font-mono);
