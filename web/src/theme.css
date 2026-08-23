@@ -29,16 +29,6 @@
       opacity: 0;
     }
   }
-
-  /* legacy aliases — remapped to the new palette; removed once all
-     components use the tokens above */
-  --font-army: var(--font-mono);
-  --color-hacker-bg: var(--color-panel);
-  --color-hacker-desktop: var(--color-bg);
-  --color-hacker-chrome: #000000;
-  --color-hacker-green: var(--color-fg);
-  --color-hacker-ochre: var(--color-frame);
-  --color-hacker-fg-muted: var(--color-dim);
 }
 
 html,
