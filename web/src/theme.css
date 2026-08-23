@@ -1,34 +1,36 @@
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/700.css";
 @import "tailwindcss";
 
-@font-face {
-  font-family: "US Army";
-  src: url("./assets/fonts/USArmy-Bold.ttf") format("truetype");
-  font-weight: 700;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "US Army";
-  src: url("./assets/fonts/USArmy-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "US Army";
-  src: url("./assets/fonts/USArmy-Light.ttf") format("truetype");
-  font-weight: 300;
-  font-style: normal;
-}
-
 @theme {
-  --font-army: "US Army", ui-monospace, SFMono-Regular, monospace;
-  --color-hacker-bg: #0a0a0a;
-  --color-hacker-desktop: #050505;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas,
+    monospace;
+
+  --color-bg: #070907;
+  --color-panel: #0c100c;
+  --color-panel-2: #0f140f;
+  --color-frame: #e8a33d;
+  --color-frame-dim: #8a6224;
+  --color-coop: #4ade80;
+  --color-coop-deep: #1c5c33;
+  --color-betray: #ff6b57;
+  --color-betray-deep: #6b2318;
+  --color-fg: #86d9a2;
+  --color-fg-bright: #c9f5d8;
+  --color-dim: #4d6f58;
+  --color-dimmer: #33503c;
+  --color-rule: #1b2a20;
+
+  /* legacy aliases — remapped to the new palette; removed once all
+     components use the tokens above */
+  --font-army: var(--font-mono);
+  --color-hacker-bg: var(--color-panel);
+  --color-hacker-desktop: var(--color-bg);
   --color-hacker-chrome: #000000;
-  --color-hacker-green: #2bd94a;
-  --color-hacker-ochre: #d4a017;
-  --color-hacker-fg-muted: #7a9a85;
+  --color-hacker-green: var(--color-fg);
+  --color-hacker-ochre: var(--color-frame);
+  --color-hacker-fg-muted: var(--color-dim);
 }
 
 html,
@@ -37,16 +39,27 @@ body {
 }
 
 body {
-  background-color: var(--color-hacker-desktop);
-  color: var(--color-hacker-green);
-  /* faint CRT scanlines + soft center vignette, CSS-only */
-  background-image:
-    radial-gradient(ellipse at center, rgb(43 217 74 / 0.06), transparent 70%),
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* CRT vignette + scanlines */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99;
+  background:
     repeating-linear-gradient(
-      0deg,
-      rgb(43 217 74 / 0.03) 0px,
-      rgb(43 217 74 / 0.03) 1px,
-      transparent 1px,
-      transparent 3px
-    );
+      to bottom,
+      rgb(0 0 0 / 0) 0 2px,
+      rgb(0 0 0 / 0.22) 2px 3px
+    ),
+    radial-gradient(ellipse at center, rgb(0 0 0 / 0) 55%, rgb(0 0 0 / 0.55) 100%);
+  mix-blend-mode: multiply;
 }

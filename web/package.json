@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/jetbrains-mono": "^5.3.0",
     "@stytch/react": "^20.0.11",
     "dayjs": "^1.11.21",
     "react": "^19.1.0",
