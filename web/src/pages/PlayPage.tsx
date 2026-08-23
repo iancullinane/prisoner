@@ -7,11 +7,11 @@ import { resultToPoints } from "../lib/stats";
 import type { Move, Player, PlayResponse } from "../types";
 
 const LEGEND_CLASS =
-  "px-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-frame";
+  "px-1.5 text-[11px] font-bold uppercase tracking-[.16em] text-frame";
 const SELECT_CLASS =
   "w-full border border-rule bg-black px-2 py-1.5 text-fg-bright focus:border-coop focus:outline-none focus:ring-1 focus:ring-coop";
 const SEAT_LABEL_CLASS =
-  "mb-1 block text-[10px] uppercase tracking-[.12em] text-dim";
+  "mb-1 block text-[11px] uppercase tracking-[.12em] text-dim";
 
 function MoveButtons({
   label,
@@ -30,10 +30,10 @@ function MoveButtons({
         onClick={() => onChange("C")}
         className="w-[170px] border border-coop-deep bg-coop/5 py-3 text-center text-coop hover:bg-coop/15 aria-pressed:border-coop aria-pressed:bg-coop/20"
       >
-        <span className="block text-[20px] font-bold" aria-hidden="true">
+        <span className="block text-[22px] font-bold" aria-hidden="true">
           ✓
         </span>
-        <span className="block text-[11px] uppercase tracking-[.14em]">
+        <span className="block text-[12px] uppercase tracking-[.14em]">
           Cooperate
         </span>
       </button>
@@ -43,10 +43,10 @@ function MoveButtons({
         onClick={() => onChange("B")}
         className="w-[170px] border border-betray-deep bg-betray/5 py-3 text-center text-betray hover:bg-betray/15 aria-pressed:border-betray aria-pressed:bg-betray/20"
       >
-        <span className="block text-[20px] font-bold" aria-hidden="true">
+        <span className="block text-[22px] font-bold" aria-hidden="true">
           ✕
         </span>
-        <span className="block text-[11px] uppercase tracking-[.14em]">
+        <span className="block text-[12px] uppercase tracking-[.14em]">
           Betray
         </span>
       </button>
@@ -142,7 +142,7 @@ export default function PlayPage() {
               </div>
             </div>
             {selfPlay && (
-              <p className="mt-3 border-l-2 border-frame bg-frame/5 px-3 py-2 text-[11.5px] text-betray">
+              <p className="mt-3 border-l-2 border-frame bg-frame/5 px-3 py-2 text-[12.5px] text-betray">
                 A player can't face themselves.
               </p>
             )}
@@ -152,13 +152,13 @@ export default function PlayPage() {
             <legend className={LEGEND_CLASS}>Round</legend>
             <div className="flex flex-col gap-5 pt-1">
               <div>
-                <p className="mb-2 text-center text-[11px] uppercase tracking-[.16em] text-frame">
+                <p className="mb-2 text-center text-[12px] uppercase tracking-[.16em] text-frame">
                   {nameOf(playerA, "Player A")}'s move
                 </p>
                 <MoveButtons label="Move for A" move={moveA} onChange={setMoveA} />
               </div>
               <div>
-                <p className="mb-2 text-center text-[11px] uppercase tracking-[.16em] text-frame">
+                <p className="mb-2 text-center text-[12px] uppercase tracking-[.16em] text-frame">
                   {nameOf(playerB, "Player B")}'s move
                 </p>
                 <MoveButtons label="Move for B" move={moveB} onChange={setMoveB} />
@@ -166,7 +166,7 @@ export default function PlayPage() {
               <button
                 type="submit"
                 disabled={submitting || !playerA || !playerB || selfPlay}
-                className="mx-auto w-[230px] bg-coop py-2 text-[11.5px] font-bold uppercase tracking-[.1em] text-black hover:bg-fg-bright disabled:cursor-not-allowed disabled:bg-transparent disabled:text-dim disabled:outline disabled:outline-1 disabled:outline-rule"
+                className="mx-auto w-[230px] bg-coop py-2 text-[12.5px] font-bold uppercase tracking-[.1em] text-black hover:bg-fg-bright disabled:cursor-not-allowed disabled:bg-transparent disabled:text-dim disabled:outline disabled:outline-1 disabled:outline-rule"
               >
                 {submitting ? "Playing…" : "Play round"}
               </button>
@@ -174,7 +174,7 @@ export default function PlayPage() {
           </fieldset>
 
           {result && (
-            <p className="text-center text-[13px]">
+            <p className="text-center text-[15px]">
               Score — {nameOf(playerA, "Player A")}:{" "}
               <b className="text-fg-bright">
                 {resultToPoints(result.playerAScore)} pts
@@ -191,7 +191,7 @@ export default function PlayPage() {
           <fieldset className="border border-rule px-4 pb-4 pt-3">
             <legend className={LEGEND_CLASS}>Payoff</legend>
             <PayoffMatrix />
-            <p className="mt-3 text-[11px] leading-[1.75] text-dim">
+            <p className="mt-3 text-[12px] leading-[1.75] text-dim">
               Betraying always pays more <i>this</i> round — which is why both
               of you do it, and both of you end up with 1.
               <br />

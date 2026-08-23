@@ -37,7 +37,7 @@ export default function WindowFrame({ children }: { children: ReactNode }) {
   return (
     <div className="fixed inset-x-0 top-0 flex h-dvh items-center justify-center md:p-[max(1rem,3vmin)]">
       <div className="flex h-full w-full max-h-[860px] max-w-[1280px] flex-col border border-frame bg-panel shadow-[0_0_0_1px_rgba(232,163,61,.14),0_0_40px_rgba(74,222,128,.05)]">
-        <header className="flex items-center justify-between gap-4 border-b border-frame bg-black px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[.14em] text-frame">
+        <header className="flex items-center justify-between gap-4 border-b border-frame bg-black px-3.5 py-1.5 text-[12px] font-bold uppercase tracking-[.14em] text-frame">
           <span>prisoner — ~{pathname}</span>
           <span className="flex items-center gap-4 text-frame-dim">
             <span className="max-sm:hidden">

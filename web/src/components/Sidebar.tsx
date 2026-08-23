@@ -14,20 +14,20 @@ export default function Sidebar() {
           key={link.to}
           to={link.to}
           className={({ isActive }) =>
-            `flex items-center gap-2.5 border-l-[3px] px-3 py-2 text-[11.5px] uppercase tracking-[.13em] ${
+            `flex items-center gap-2.5 border-l-[3px] px-3 py-2 text-[12.5px] uppercase tracking-[.13em] ${
               isActive
                 ? "border-frame bg-frame/5 text-frame"
                 : "border-transparent text-dim hover:bg-coop/5 hover:text-fg"
             }`
           }
         >
-          <span className="text-[10.5px] text-dimmer" aria-hidden="true">
+          <span className="text-[11.5px] text-dimmer" aria-hidden="true">
             [{link.key}]
           </span>
           {link.label}
         </NavLink>
       ))}
-      <div className="mt-auto hidden px-4 text-[10.5px] leading-[1.9] text-dimmer md:block">
+      <div className="mt-auto hidden px-4 text-[11.5px] leading-[1.9] text-dimmer md:block">
         <div>
           <span className="inline-block w-3.5 text-center font-bold text-coop">
             C

@@ -6,7 +6,7 @@ export default function MoveChip({ move }: { move: Move }) {
   return (
     <span
       aria-label={coop ? "cooperate" : "betray"}
-      className={`inline-block min-w-[52px] border px-1.5 text-center text-[11px] font-bold tracking-[.06em] ${
+      className={`inline-block min-w-[52px] border px-1.5 text-center text-[12px] font-bold tracking-[.06em] ${
         coop
           ? "border-coop-deep bg-coop/10 text-coop"
           : "border-betray-deep bg-betray/10 text-betray"

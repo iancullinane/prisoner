@@ -32,7 +32,7 @@ const OUTCOME_COLORS: Record<OutcomeKind, string> = {
 };
 
 const TH_CLASS =
-  "sticky top-0 whitespace-nowrap border-b border-frame-dim bg-black px-3 py-2 text-left text-[10px] font-bold uppercase tracking-[.14em] text-frame";
+  "sticky top-0 whitespace-nowrap border-b border-frame-dim bg-black px-3 py-2 text-left text-[11px] font-bold uppercase tracking-[.14em] text-frame";
 
 function StripCell({
   label,
@@ -45,11 +45,11 @@ function StripCell({
 }) {
   return (
     <div className="bg-panel-2 px-3 py-2">
-      <div className="text-[10px] uppercase tracking-[.12em] text-dim">
+      <div className="text-[11px] uppercase tracking-[.12em] text-dim">
         {label}
       </div>
       <div
-        className={`mt-0.5 text-[17px] font-bold ${warn ? "text-betray" : "text-fg-bright"}`}
+        className={`mt-0.5 text-[19px] font-bold ${warn ? "text-betray" : "text-fg-bright"}`}
       >
         {children}
       </div>
@@ -102,7 +102,7 @@ export default function HistoryPage() {
           {summary.mostTrusting ? (
             <>
               {summary.mostTrusting.name}{" "}
-              <small className="text-[11px] font-normal text-dim">
+              <small className="text-[12px] font-normal text-dim">
                 {Math.round(summary.mostTrusting.rate * 100)}% coop
               </small>
             </>
@@ -114,7 +114,7 @@ export default function HistoryPage() {
           {summary.mostTreacherous ? (
             <>
               {summary.mostTreacherous.name}{" "}
-              <small className="text-[11px] font-normal text-dim">
+              <small className="text-[12px] font-normal text-dim">
                 {summary.mostTreacherous.betrayals} betrayals
               </small>
             </>
@@ -128,7 +128,7 @@ export default function HistoryPage() {
         <div>
           <label
             htmlFor="history-player-filter"
-            className="mr-2 text-[10.5px] uppercase tracking-[.1em] text-dim"
+            className="mr-2 text-[11.5px] uppercase tracking-[.1em] text-dim"
           >
             Filter by player
           </label>
@@ -157,7 +157,7 @@ export default function HistoryPage() {
               type="button"
               aria-pressed={outcome === f.value}
               onClick={() => setOutcome(f.value)}
-              className={`border-r border-rule px-2.5 py-1 text-[11px] uppercase tracking-[.06em] last:border-r-0 ${
+              className={`border-r border-rule px-2.5 py-1 text-[12px] uppercase tracking-[.06em] last:border-r-0 ${
                 outcome === f.value
                   ? "bg-frame font-bold text-black"
                   : "text-dim hover:text-fg"
@@ -169,7 +169,7 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      <p className="mb-3 text-[11px] text-dimmer">
+      <p className="mb-3 text-[12px] text-dimmer">
         <span className="mr-4">
           <b className="text-coop">C</b> cooperate · 3 pts each
         </span>
@@ -180,7 +180,7 @@ export default function HistoryPage() {
       </p>
 
       <div className="border border-rule">
-        <table className="w-full border-collapse text-left text-[12.5px]">
+        <table className="w-full border-collapse text-left text-[14px]">
           <thead>
             <tr>
               <th className={TH_CLASS}>Player A</th>
@@ -222,7 +222,7 @@ export default function HistoryPage() {
                       <MoveChip move={r.playerBMove} />
                     </td>
                     <td
-                      className={`whitespace-nowrap px-3 py-1.5 text-[11px] font-bold tracking-[.08em] ${OUTCOME_COLORS[kind]}`}
+                      className={`whitespace-nowrap px-3 py-1.5 text-[12px] font-bold tracking-[.08em] ${OUTCOME_COLORS[kind]}`}
                     >
                       {OUTCOME_LABELS[kind]}
                     </td>
@@ -231,7 +231,7 @@ export default function HistoryPage() {
                       {pb > pa ? <b className="text-fg-bright">{pb}</b> : pb}
                     </td>
                     <td
-                      className="whitespace-nowrap px-3 py-1.5 text-[11.5px] text-dim"
+                      className="whitespace-nowrap px-3 py-1.5 text-[12.5px] text-dim"
                       title={dayjs(r.playedAt).format("MMM D, h:mm A")}
                     >
                       {dayjs(r.playedAt).fromNow()}

@@ -5,7 +5,7 @@ import { playerStats } from "../lib/stats";
 import type { Player, PrettyInteraction } from "../types";
 
 const TH_CLASS =
-  "whitespace-nowrap border-b border-frame-dim bg-black px-3 py-2 text-left text-[10px] font-bold uppercase tracking-[.14em] text-frame";
+  "whitespace-nowrap border-b border-frame-dim bg-black px-3 py-2 text-left text-[11px] font-bold uppercase tracking-[.14em] text-frame";
 
 export default function PlayerManager() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -39,7 +39,7 @@ export default function PlayerManager() {
       {error && <p role="alert" className="mb-3 text-betray">{error}</p>}
 
       <div className="border border-rule">
-        <table className="w-full border-collapse text-left text-[12.5px]">
+        <table className="w-full border-collapse text-left text-[14px]">
           <thead>
             <tr>
               <th className={TH_CLASS}>Player</th>
@@ -88,7 +88,7 @@ export default function PlayerManager() {
                   <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums">
                     {s.games ? s.avgPts.toFixed(2) : "—"}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-1.5 text-[11.5px] text-dim">
+                  <td className="whitespace-nowrap px-3 py-1.5 text-[12.5px] text-dim">
                     {s.games ? `${s.w}W · ${s.l}L · ${s.d}D` : "no rounds yet"}
                   </td>
                 </tr>
@@ -119,7 +119,7 @@ export default function PlayerManager() {
           />
           <button
             type="submit"
-            className="bg-coop px-4 py-1.5 text-[11.5px] font-bold uppercase tracking-[.1em] text-black hover:bg-fg-bright"
+            className="bg-coop px-4 py-1.5 text-[12.5px] font-bold uppercase tracking-[.1em] text-black hover:bg-fg-bright"
           >
             Add
           </button>

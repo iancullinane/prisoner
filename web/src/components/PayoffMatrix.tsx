@@ -1,7 +1,7 @@
 import { PAYOFF } from "../lib/stats";
 
 const TH_CLASS =
-  "border border-rule px-1.5 py-1.5 text-[9.5px] font-medium uppercase tracking-[.1em] text-dim";
+  "border border-rule px-1.5 py-1.5 text-[10.5px] font-medium uppercase tracking-[.1em] text-dim";
 
 function Cell({
   pair,
@@ -23,7 +23,7 @@ function Cell({
     >
       {pair[0]} · {pair[1]}
       <small
-        className={`block text-[9px] font-normal tracking-[.08em] ${colors[1]}`}
+        className={`block text-[10px] font-normal tracking-[.08em] ${colors[1]}`}
       >
         {caption}
       </small>
@@ -35,7 +35,7 @@ export default function PayoffMatrix() {
   return (
     <table
       aria-label="Payoff matrix"
-      className="w-full border-collapse text-[11.5px]"
+      className="w-full border-collapse text-[12.5px]"
     >
       <tbody>
         <tr>
