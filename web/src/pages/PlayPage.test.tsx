@@ -33,13 +33,28 @@ describe("PlayPage", () => {
     await user.selectOptions(screen.getByLabelText(/player b/i), "p2");
     await user.click(screen.getByRole("button", { name: /play round/i }));
 
-    expect(await screen.findByText(/score/i)).toBeInTheDocument();
+    // S/T letters are translated to points (S=0, T=5)
+    const score = await screen.findByText(/score/i);
+    expect(score).toHaveTextContent("Chris: 0 pts");
+    expect(score).toHaveTextContent("Pepper: 5 pts");
     expect(playApi.playRound).toHaveBeenCalledWith({
       playerA: "p1",
       playerB: "p2",
       playerAMove: "C",
       playerBMove: "C",
     });
+  });
+
+  it("shows the payoff matrix reference", async () => {
+    vi.spyOn(playersApi, "listPlayers").mockResolvedValue(players);
+
+    render(<PlayPage />);
+
+    expect(
+      await screen.findByRole("table", { name: /payoff/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("mutual trust")).toBeInTheDocument();
+    expect(screen.getByText("mutual ruin")).toBeInTheDocument();
   });
 
   it("disables submit while a request is in flight", async () => {
