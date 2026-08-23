@@ -1,9 +1,10 @@
 import PlayerManager from "../components/PlayerManager";
+import SectionHeading from "../components/SectionHeading";
 
 export default function PlayersPage() {
   return (
     <section className="flex flex-1 flex-col">
-      <h1 className="font-army mb-4 text-2xl text-hacker-green">Players</h1>
+      <SectionHeading>Players</SectionHeading>
       <PlayerManager />
     </section>
   );

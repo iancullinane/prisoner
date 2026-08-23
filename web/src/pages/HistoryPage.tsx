@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { listHistory, listHistoryForPlayer } from "../api/history";
 import { listPlayers } from "../api/players";
+import SectionHeading from "../components/SectionHeading";
 import type { Player, PrettyInteraction } from "../types";
 
 dayjs.extend(relativeTime);
@@ -29,7 +30,7 @@ export default function HistoryPage() {
 
   return (
     <section>
-      <h1 className="font-army mb-4 text-2xl text-hacker-green">History</h1>
+      <SectionHeading>History</SectionHeading>
       {error && <p role="alert">{error}</p>}
 
       <label htmlFor="history-player-filter" className="mr-2">

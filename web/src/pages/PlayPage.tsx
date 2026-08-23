@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { listPlayers } from "../api/players";
 import { playRound } from "../api/play";
+import SectionHeading from "../components/SectionHeading";
 import type { Move, Player, PlayResponse } from "../types";
 
 export default function PlayPage() {
@@ -42,7 +43,7 @@ export default function PlayPage() {
 
   return (
     <section>
-      <h1 className="font-army mb-4 text-2xl text-hacker-green">Play</h1>
+      <SectionHeading>Play</SectionHeading>
       {error && <p role="alert">{error}</p>}
 
       <form onSubmit={handleSubmit} className="flex max-w-md flex-col gap-4">
