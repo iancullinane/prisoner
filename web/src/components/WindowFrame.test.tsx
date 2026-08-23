@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act } from "@testing-library/react";
+import { render, screen, act, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import WindowFrame from "./WindowFrame";
 
@@ -96,7 +96,11 @@ describe("WindowFrame", () => {
   it("shows total rounds and players in the titlebar", async () => {
     // render on /history so the path text doesn't also match /players/
     renderFrame("/history");
-    expect(await screen.findByText(/rounds/)).toHaveTextContent("rounds 3");
-    expect(screen.getByText(/players/)).toHaveTextContent("players 2");
+    await waitFor(() =>
+      expect(screen.getByText(/rounds/)).toHaveTextContent("rounds 3"),
+    );
+    await waitFor(() =>
+      expect(screen.getByText(/players/)).toHaveTextContent("players 2"),
+    );
   });
 });
