@@ -15,6 +15,13 @@ github.com/Microsoft/go-winio/pkg/guid
 # github.com/Pallinder/go-randomdata v1.2.0
 ## explicit
 github.com/Pallinder/go-randomdata
+# github.com/aws/aws-lambda-go v1.55.0
+## explicit; go 1.26
+github.com/aws/aws-lambda-go/events
+github.com/aws/aws-lambda-go/lambda
+github.com/aws/aws-lambda-go/lambda/handlertrace
+github.com/aws/aws-lambda-go/lambda/messages
+github.com/aws/aws-lambda-go/lambdacontext
 # github.com/cenkalti/backoff/v4 v4.3.0
 ## explicit; go 1.18
 github.com/cenkalti/backoff/v4
