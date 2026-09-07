@@ -103,7 +103,7 @@ func initConfig() {
 	}
 
 	viper.SetEnvPrefix("prisoner")
-	viper.SetDefault("store", StoreMemory)
+	viper.SetDefault("store", StorePostgres)
 	viper.SetDefault("scoring", "classic")
 	viper.SetDefault("log-level", "debug")
 	viper.SetDefault("log-format", "text")
