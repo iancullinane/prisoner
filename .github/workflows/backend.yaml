@@ -120,7 +120,8 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64
+          # MUST only be one architecture to work with lambda container
+          platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           provenance: false
