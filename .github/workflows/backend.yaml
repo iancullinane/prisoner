@@ -2,7 +2,7 @@ name: Build and Push to ECR
 
 on:
   push:
-    branches: [icullinane/version2]   # publish :sha + :latest on merge
+    branches: [icullinane/version2]    # publish :sha + :latest on merge
     tags: ['v*']                       # publish :version + :latest on release
   workflow_dispatch:                   # manual re-publish
 
@@ -39,7 +39,7 @@ jobs:
 
   build-and-push:
     name: Build and Push Docker Image
-    needs: changes
+    needs: [build-and-test, integration-test, changes]
     # build when non-web source changed, OR it's a release tag, OR a manual run
     if: >-
       needs.changes.outputs.backend == 'true' ||
@@ -85,7 +85,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # builds both arches and pushes the manifest list under all tags in one step
+      # deprecated: builds both arches and pushes the manifest list under all tags in one step
+      # This now only builds arm64 to satisfy a single arch requirement of lambda, this
+      # implies a general restriction on arm64 compatible resources
       - name: Build and push (arm64)
         uses: docker/build-push-action@v6
         with:
