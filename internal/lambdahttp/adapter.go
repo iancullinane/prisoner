@@ -57,6 +57,7 @@ func newRequest(ctx context.Context, ev events.LambdaFunctionURLRequest) (*http.
 	return req, nil
 }
 
+// Satisfy the http.ResponseWriter interface for ServeHttp
 // recorder is an http.ResponseWriter that buffers the handler's output instead
 // of writing it to a connection.
 type recorder struct {

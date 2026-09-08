@@ -1,0 +1,106 @@
+name: Deploy Web to S3
+
+# Sibling of ecr-publish-web.yaml, not a replacement: that one still builds the
+# nginx image for EKS. This one ships the same web/dist to the CloudFront bucket
+# created by sheeta-games WebStack.
+on:
+  push:
+    branches: [icullinane/version2]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: us-east-2
+  WEB_STACK: WebStack
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@7b450fff21473bca461d4b92ce414b9d0420d706 # v4.0.2
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'web/**'
+
+  deploy:
+    name: Build and Sync to S3
+    needs: changes
+    if: >-
+      needs.changes.outputs.web == 'true' ||
+      github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Same major as web/Dockerfile (node:22-alpine) so both paths build alike.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # web/.env.production sets VITE_API_BASE_URL="" so the bundle calls relative
+      # /api/v1/... — CloudFront routes that to Lambda, the ALB routes it to EKS.
+      # Without that file, web/.env would bake http://localhost:5001 in here.
+      - name: Build
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Stack outputs are the contract with sheeta-games; nothing hardcoded here.
+      - name: Resolve WebStack outputs
+        id: stack
+        run: |
+          out() { aws cloudformation describe-stacks --stack-name "$WEB_STACK" \
+                    --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
+          echo "bucket=$(out BucketName)"             >> "$GITHUB_OUTPUT"
+          echo "distribution=$(out DistributionId)"   >> "$GITHUB_OUTPUT"
+          echo "domain=$(out DistributionDomainName)" >> "$GITHUB_OUTPUT"
+
+      # Two syncs because the cache policy differs:
+      #   assets/  — content-hashed by Vite, safe to cache for a year. No --delete:
+      #              a browser holding a previous index.html can still load its
+      #              old chunks until it refreshes.
+      #   the rest — index.html must never go stale at the edge, so no-cache, and
+      #              --delete (assets/ excluded) removes files no longer built.
+      - name: Sync to S3
+        env:
+          BUCKET: ${{ steps.stack.outputs.bucket }}
+        run: |
+          aws s3 sync web/dist/assets "s3://$BUCKET/assets" \
+            --cache-control "public,max-age=31536000,immutable"
+          aws s3 sync web/dist "s3://$BUCKET" \
+            --exclude "assets/*" --delete \
+            --cache-control "no-cache"
+
+      # index.html is no-cache but CloudFront may still hold a copy; invalidate so
+      # the new hashed asset names are picked up immediately.
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id "${{ steps.stack.outputs.distribution }}" \
+            --paths "/" "/index.html"
+
+      - name: Summary
+        run: echo "Deployed to https://${{ steps.stack.outputs.domain }}"
