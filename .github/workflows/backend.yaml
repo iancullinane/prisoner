@@ -2,7 +2,7 @@ name: Build and Push to ECR
 
 on:
   push:
-    branches: [icullinane/version2]    # publish :sha + :latest on merge
+    branches: [icullinane/version2]   # publish :sha + :latest on merge
     tags: ['v*']                       # publish :version + :latest on release
   workflow_dispatch:                   # manual re-publish
 
@@ -16,6 +16,38 @@ env:
   ECR_REPOSITORY: prisoner
 
 jobs:
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-go-sqlc   # see Option 2
+      - run: go build ./...
+      - run: go test ./...
+
+
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Set up sqlc
+        uses: sqlc-dev/setup-sqlc@v4
+        with:
+          sqlc-version: "1.31.1"
+
+      - name: Generate sqlc
+        run: sqlc generate
+
+      - name: Integration test
+        run: make test-integration
+
+
   # Cheap gate: did any NON-frontend source change? Lets us skip the heavy image
   # build on web-only merges. Tag / dispatch runs bypass it via `if:`.
   # (No base ref on a tag push → paths-filter marks everything changed & succeeds.)
@@ -39,7 +71,7 @@ jobs:
 
   build-and-push:
     name: Build and Push Docker Image
-    needs: [build-and-test, integration-test, changes]
+    needs: changes
     # build when non-web source changed, OR it's a release tag, OR a manual run
     if: >-
       needs.changes.outputs.backend == 'true' ||
@@ -85,14 +117,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      # deprecated: builds both arches and pushes the manifest list under all tags in one step
-      # This now only builds arm64 to satisfy a single arch requirement of lambda, this
-      # implies a general restriction on arm64 compatible resources
-      - name: Build and push (arm64)
+      # builds both arches and pushes the manifest list under all tags in one step
+      - name: Build and push (multi-arch)
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           provenance: false
