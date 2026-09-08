@@ -2,7 +2,10 @@ name: Build and push backend
 
 on:
   push:
-    branches: [icullinane/version2]   # publish :sha + :latest on merge
+    # Every branch publishes :sha. Only the default branch also moves :latest
+    # (see the "Extract metadata" step). Note `branches` and `tags` are a union
+    # — once `branches` is set, tag pushes need their own key to fire at all.
+    branches: ['**']
     tags: ['v*']                       # publish :version + :latest on release
   workflow_dispatch:                   # manual re-publish
 
@@ -86,14 +89,23 @@ jobs:
       - name: Extract metadata
         id: meta
         run: |
-          # Generate tags based on git ref
+          IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}"
+          SHORT_SHA=$(git rev-parse --short HEAD)
+
+          # Every push gets an immutable :<short-sha>. On a feature branch this
+          # is the only tag produced — nothing there should move :latest.
+          TAGS="$IMAGE:$SHORT_SHA"
+
           if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/}
-            echo "tags=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${VERSION},${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
-          else
-            SHORT_SHA=$(git rev-parse --short HEAD)
-            echo "tags=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${SHORT_SHA},${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest" >> $GITHUB_OUTPUT
+            # Release tag → also publish :<version> and move :latest
+            TAGS="$TAGS,$IMAGE:${GITHUB_REF#refs/tags/},$IMAGE:latest"
+          elif [[ $GITHUB_REF == refs/heads/icullinane/version2 ]]; then
+            # Default branch → move :latest. Plain string compare, so the slash
+            # in the branch name needs no escaping.
+            TAGS="$TAGS,$IMAGE:latest"
           fi
+
+          echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
 
       # registers QEMU emulators so the x86 runner can execute arm64 steps
       # (needed for the `apk add` in the arm64 runtime stage)
