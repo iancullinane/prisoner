@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-go-sqlc   # see Option 2
+      - uses: ./.github/actions/setup-go-sqlc
       - run: go build ./...
       - run: go test ./...
 
@@ -30,20 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-
-      - name: Set up sqlc
-        uses: sqlc-dev/setup-sqlc@v4
-        with:
-          sqlc-version: "1.31.1"
-
-      - name: Generate sqlc
-        run: sqlc generate
-
+      - uses: ./.github/actions/setup-go-sqlc
       - name: Integration test
         run: make test-integration
 

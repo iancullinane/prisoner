@@ -27,6 +27,11 @@
           "type": "chore",
           "section": "Chores",
           "hidden": false
+        },
+        {
+          "type": "web",
+          "section": "web",
+          "hidden": false
         }
       ]
     }
