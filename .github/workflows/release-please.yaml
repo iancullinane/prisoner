@@ -1,7 +1,6 @@
 on:
-  push:
-    branches:
-      - icullinane/version2
+  workflow_dispatch:
+
 
 permissions:
   contents: write
