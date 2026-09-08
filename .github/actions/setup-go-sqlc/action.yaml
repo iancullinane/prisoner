@@ -1,0 +1,13 @@
+name: Setup Go and sqlc
+description: Installs Go from go.mod, installs sqlc, runs sqlc generate
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+    - uses: sqlc-dev/setup-sqlc@v4
+      with:
+        sqlc-version: "1.31.1"
+    - run: sqlc generate
+      shell: bash        # required on every composite `run`

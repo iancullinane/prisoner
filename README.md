@@ -61,6 +61,6 @@ make run-server-postgres
 
 ## On AI
 
-When I first started this refactor, I resolved to do nothing with AI. I am happy I took this route but as I progressed I found myself honestly too excited by the work to constrain myself to that working method.
+When I first started this refactor, I resolved to do nothing with AI. I am happy I took this route but as I progressed I found myself looking for a way to improve my skills in this space as well.
 
-To me the largest promise of AI is just how much I can produce (thoughtfully) and I don't want to slow myself down too much. To that effect I have since my initial start allowed more AI into my workflow. I am constraining myself to Claude to learn it more deeply (Similar to how I am constraining myself to the standard library). In addition I am not going too deep and set up a specific `/learning-review` skill to make sure that I am always focused on my original goal of deep learning.
+Ultimately I decided to write the Go code with no AI assistance, and the web code with AI.
