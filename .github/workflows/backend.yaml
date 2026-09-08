@@ -1,4 +1,4 @@
-name: Build and Push to ECR
+name: Build and push backend
 
 on:
   push:
@@ -58,7 +58,7 @@ jobs:
 
   build-and-push:
     name: Build and Push Docker Image
-    needs: changes
+    needs: [build-and-test, integration-test, changes]
     # build when non-web source changed, OR it's a release tag, OR a manual run
     if: >-
       needs.changes.outputs.backend == 'true' ||

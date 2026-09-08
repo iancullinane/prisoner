@@ -42,7 +42,6 @@ jobs:
     # build when web/ changed, OR it's a release tag, OR a manual run
     if: >-
       needs.changes.outputs.web == 'true' ||
-      startsWith(github.ref, 'refs/tags/') ||
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
